@@ -96,6 +96,16 @@ Done when: a devnet market is created, funded, resolved by a jury, and settled b
 
 Done when: a testnet harness runs for a week, accepting payment in at least two assets, renting its own host, paying its own model and hosting costs from its earnings, and serving one L2 contract on a proving route, with every conversion and payment logged and no manual transfers.
 
+## TinySVM: exact settlement next to the AI (phase 1 built, 2026-11-06)
+
+- [x] sBPF programs with no dependencies: `escrow`, `bond`, `ledger`, and the exit programs `graded_payout`, `ranked_split`, `milestone_escrow`, pinned by SHA-256 in `packages/tinysvm/programs.lock.json`
+- [x] LiteSVM 0.18.2 as an engine sidecar (JSON lines over stdio), restricted to the pinned programs, an allowlist per contract, and a compute cap. LiteSVM does not build for WebAssembly (`packages/tinysvm/README.md`)
+- [x] An optional `exitProgram` per exit with a params schema; params bounded before execution; settlement state kept across rulings. Existing contracts keep their hashes
+- [x] runtime.js and TinySVM side by side on every built-in exit, with a property test over random in-bounds rulings; disagreement is a fault
+- [ ] Move runtime.js's jury split to integer micro-units, so TinySVM can be integer only (needs Rex: it changes some future diffs by one micro-unit)
+- [ ] TinySVM as the default runtime (needs Rex)
+- [ ] Phase 2: Anza's `solana-svm` crate, and chain nodes re-running settlement when they verify a block
+
 ## Milestone 6: Proofs of inference
 
 - [ ] Optional proof per vote for open models that can be proven today

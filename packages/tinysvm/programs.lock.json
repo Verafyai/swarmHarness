@@ -1,0 +1,35 @@
+{
+  "toolchain": "solana-cargo-build-sbf 1.18.8, platform-tools v1.41, rustc 1.75.0",
+  "programs": {
+    "escrow": {
+      "sha256": "75740859c892b1cb22b6b3817624d5aa35e5bd023f3de2be43d8e6674d1f39d1",
+      "builtin": true,
+      "bytes": 41576
+    },
+    "bond": {
+      "sha256": "598885d15f3a8f8df2658388c24c15dc86e7407fb57ead803b4911f64da1871e",
+      "builtin": true,
+      "bytes": 15224
+    },
+    "ledger": {
+      "sha256": "ac47984c6780e63d92a4ade939f18f2b5bd3be7224a6597637c960bdc6677f5a",
+      "builtin": true,
+      "bytes": 20960
+    },
+    "graded_payout": {
+      "sha256": "e449115b16b47e34cf0aec4250458108edab11f09b9861217d348eab4c51f0e4",
+      "builtin": false,
+      "bytes": 24304
+    },
+    "ranked_split": {
+      "sha256": "0f31de8218bb47ab22e550b2fa6ff182f5489067f9b51d4cf5f8bbc89dd3968f",
+      "builtin": false,
+      "bytes": 27352
+    },
+    "milestone_escrow": {
+      "sha256": "ea7421526e5170539cd9b73e28fa92a2a21e0cb29dc819d87a8d4fc131031fc2",
+      "builtin": false,
+      "bytes": 17760
+    }
+  }
+}

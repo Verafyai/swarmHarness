@@ -5,6 +5,7 @@
  * @module @verafyharness/core/juror
  */
 import { contextHash } from './asc.js'
+import { paramsSchema, checkParams } from './exitprogram.js'
 
 /**
  * The context loader: check every pinned hash before the model reads a word.
@@ -36,10 +37,27 @@ export function buildPrompt(asc) {
     'If the context does not support an answer, say so with low confidence rather than guessing.',
     `Answer with ${form}.`,
     'Reply with JSON only: {"answer": ..., "confidence": 0..1, "reasoning": "two or three sentences", "sources": ["context ids you relied on"]}.',
+    ...paramsLines(asc),
   ].join('\n')
   const ctx = asc.context.map((c, i) => `<context id="c${i}" kind="${c.kind}" sha256="${c.sha256}"${c.url ? ` url="${c.url}"` : ''}${c.label ? ` label="${String(c.label).replace(/"/g, "'")}"` : ''}>\n${c.content}\n</context>`).join('\n\n')
   const user = `<instructions>\n${asc.instructions}\n</instructions>\n\n${ctx}\n\n<question>\n${asc.question.prompt}\n</question>`
   return { system, user }
+}
+
+/**
+ * The prompt lines that ask for structured params. Empty for a contract
+ * without exit programs, so its prompt is unchanged.
+ * @param {object} asc - the contract.
+ * @returns {string[]} the lines.
+ */
+function paramsLines(asc) {
+  const schema = paramsSchema(asc)
+  const keys = Object.keys(schema)
+  if (!keys.length) return []
+  const describe = k => schema[k].type === 'integer'
+    ? `"${k}": an integer from ${schema[k].min} to ${schema[k].max}`
+    : `"${k}": a list of ${schema[k].size} distinct entrant indexes${schema[k].of ? ` from 0 to ${schema[k].of - 1}` : ''}, best first`
+  return [`Also include "params": {${keys.map(describe).join(', ')}}. These measure the answer; they never change it.`]
 }
 
 /**
@@ -58,7 +76,14 @@ export function parseVote(asc, text) {
   } else if (!a.options.includes(json.answer)) {
     throw new Error(`answer ${JSON.stringify(json.answer)} is not one of the options: ${a.options.map(o => JSON.stringify(o)).join(', ')}`)
   }
-  return { answer: json.answer, confidence: Number(json.confidence) || 0, reasoning: String(json.reasoning ?? ''), sources: json.sources ?? [] }
+  const vote = { answer: json.answer, confidence: Number(json.confidence) || 0, reasoning: String(json.reasoning ?? ''), sources: json.sources ?? [] }
+  const schema = paramsSchema(asc)
+  if (Object.keys(schema).length && json.params !== undefined) {
+    const problems = checkParams(schema, json.params)
+    if (problems.length) throw new Error(`params out of bounds: ${problems.join('; ')}`)
+    vote.params = json.params
+  }
+  return vote
 }
 
 /** A proof hash is a SHA-256 hex digest of a proof held off chain. */

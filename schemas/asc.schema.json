@@ -265,6 +265,79 @@
                 "type": "string"
               }
             }
+          },
+          "exitProgram": {
+            "type": "object",
+            "description": "Optional. An exit program TinySVM or runtime.js runs with the ruling's params: the program's SHA-256, its entry point, the params schema that bounds what the jury may supply, and fixed args (amounts in base units, account names). Absent, the exit behaves as before and the contract keeps its hash.",
+            "required": [
+              "programHash",
+              "entry"
+            ],
+            "properties": {
+              "programHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "entry": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "min",
+                        "max"
+                      ],
+                      "properties": {
+                        "type": {
+                          "const": "integer"
+                        },
+                        "min": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "max": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "size"
+                      ],
+                      "properties": {
+                        "type": {
+                          "const": "ranking"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "of": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "args": {
+                "type": "object"
+              },
+              "computeCap": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1400000
+              }
+            }
           }
         }
       }
