@@ -69,7 +69,7 @@ Verafy Harness does two things.
 
 | | Status | Evidence |
 |---|---|---|
-| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (102 tests), `npm run demo` |
+| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (124 tests), `npm run demo` |
 | Live rulings by five labs' models through OpenRouter | **Measured** Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total | [results/live-2026-11-06.md](results/live-2026-11-06.md) |
 | Juror mode inside DeepSeek Harness: five DSH processes on five labs' models, block sealed from their reveals | **Measured** Nov 6, 2026: all five voted NO, 100% against an 80% bar; 24 of 24 other tools denied | [docs/dsh-juror.md](docs/dsh-juror.md) |
 | Payment router: accept lists, a local payout ledger | Works; on-chain routers planned | `verafy.config.json`, `.verafy/payouts.jsonl` |
@@ -79,6 +79,7 @@ Verafy Harness does two things.
 | Light client: reads the source chain across 3 RPC endpoints from 2 or more operators at `finalized`; disagreement is unknown and pauses the contract; intake checks escrow, the outbox confirms triggers landed | Works with mocked RPCs; **measured** read-only on Solana devnet Nov 6, 2026 (3 endpoints, 3 operators). Ethereum sync-committee verification (Helios) is an optional adapter, not yet run | `packages/lightclient`, `config/lightclient.devnet.json` |
 | Proof packing: an atomizer that drafts atom plans with a model, exact composition rules, dedupe across contracts, first-fit packing into 1,024-token requests, strict reply reading | Works with mock models; prove-once and the fidelity panel on devnet are planned | `packages/pack`, `packages/pack/test/pack.test.js` |
 | Economics of proven blocks and proof packing: cost per proof, per block and per decision, batch size, who earns what | Modeled, with every source labeled; packing itself is designed, not built | `packages/economics`, [harness.verafy.ai/economics](https://harness.verafy.ai/economics) |
+| TinySVM phase 1: exact settlement next to the AI. LiteSVM 0.18.2 as a sidecar running sBPF programs (escrow, bond, ledger, and exit programs for graded insurance, ranked prizes and milestone escrow); an optional `exitProgram` per exit with bounded params; runtime.js and TinySVM side by side, disagreement a fault | Works locally with scripted juries; runtime.js stays the default, and TinySVM needs Rex to become it | `packages/tinysvm`, `packages/core/test/exitprogram.test.js`, `packages/tinysvm/test/tinysvm.test.js` |
 | A network of harnesses, bonds and slashing, testnet | Planned | [ROADMAP.md](ROADMAP.md), [docs/testnet.md](docs/testnet.md) |
 
 ## Quick start
@@ -88,7 +89,7 @@ Needs Node 22 or later. The core has no dependencies.
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 102 tests
+npm test          # 124 tests
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
 ```
 
@@ -410,12 +411,15 @@ bin/swarm.js                      the pre-rename alias for bin/verafy.js
 bin/verafy-mcp.js                 the MCP server from a clone
 packages/economics/         modeled economics: proven blocks, proof packing, roles (zero dependencies)
 packages/pack/              proof packing: atomize contracts, dedupe and pack atoms into proven requests, compose outcomes exactly
+packages/tinysvm/           TinySVM: sBPF settlement programs, the LiteSVM engine sidecar, the cross-runtime check (optional)
 packages/core/              zero-dependency core
   src/asc.js                      Actually Smart Contract format and validation
   src/juror.js                    context loader, juror prompt, vote parsing
   src/signer.js                   Ed25519 keys, commit-then-reveal, attestations
   src/agreement.js                verdict, forecast and graded agreement
   src/runtime.js                  exits, escrow split, conservation check, triggers
+  src/exitprogram.js              optional exit programs in the contract format, params bounds
+  src/settle.js                   the reference settlement runtime and settle()
   src/payments.js                 payment routers: accept lists, ledger, planned on-chain routers
   src/routing.js                  payment wallet; inference routes by assurance level up to ZK proofs
   src/keyblock.js                 encrypted key vault; issues scoped keys
@@ -441,7 +445,7 @@ config/cordis.verafy.yml          DSH profile overlay: one model route per lab, 
 config/lightclient.devnet.json    three public Solana devnet endpoints for the light client
 scripts/                          setup-ubuntu.sh, run-vllm.sh, dsh-juror.mjs, dsh-link.mjs, scripted-llm.mjs,
                                   sync-integrations.mjs, mcp-smoke.mjs
-examples/                         five Actually Smart Contracts and scripted answers
+examples/                         eight Actually Smart Contracts (three with exit programs) and scripted answers
 schemas/asc.schema.json           JSON Schema for verafy.asc/1 (swarm.asc/0 still validates)
 verafy.config.json                the local pool, provider and payment router
 verafy.config.local.json          a pool with a local vLLM model beside hosted ones

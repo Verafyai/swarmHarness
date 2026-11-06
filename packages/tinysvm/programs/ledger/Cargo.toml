@@ -1,0 +1,12 @@
+[package]
+name = "tinysvm-ledger"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "ledger"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+abi = { package = "tinysvm-abi", path = "../abi" }

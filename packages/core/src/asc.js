@@ -9,6 +9,7 @@
  * @module @verafyharness/core/asc
  */
 import { sha256 } from './hash.js'
+import { validateExitProgram, paramsSchema } from './exitprogram.js'
 
 export const ASC_KIND = 'verafy.asc/1'
 /** The pre-rename contract kind. It still validates, and a contract that carries it keeps its hash. */
@@ -94,7 +95,14 @@ export function validate(asc) {
   if (!Array.isArray(asc?.exits) || asc.exits.length === 0) p.push('exits needs at least one entry')
   for (const [i, e] of (asc?.exits ?? []).entries()) {
     if (!EFFECT_TYPES.includes(e.effect?.type)) p.push(`exits[${i}].effect.type must be one of ${EFFECT_TYPES.join(', ')}`)
+    for (const x of validateExitProgram(e, i)) p.push(x)
   }
+  const declared = {}
+  for (const e of asc?.exits ?? []) for (const [k, s] of Object.entries(e.exitProgram?.params ?? {})) {
+    if (k in declared && JSON.stringify(declared[k]) !== JSON.stringify(s)) p.push(`params.${k} is declared differently by two exits`)
+    declared[k] ??= s
+  }
+  if (Object.keys(paramsSchema(asc)).length && q?.answer?.type === 'forecast') p.push('exit programs with params need a verdict or graded question')
   if (q?.answer?.type !== 'forecast') {
     const outcomes = new Set((asc?.exits ?? []).map(e => e.outcome))
     for (const o of q?.answer?.options ?? []) if (!outcomes.has(o)) p.push(`no exit for option "${o}"`)

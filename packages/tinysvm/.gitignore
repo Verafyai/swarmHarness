@@ -1,0 +1,7 @@
+# Build output: sBPF binaries, keypairs cargo-build-sbf writes next to them,
+# and the engine binary. Hashes of the programs are pinned in programs.lock.json.
+target/
+programs/target/
+engine/target/
+*.so
+*-keypair.json
