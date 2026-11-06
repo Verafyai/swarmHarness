@@ -1,0 +1,10 @@
+{
+  "name": "@verafyharness/pack",
+  "version": "0.1.0",
+  "description": "Proof packing for Verafy Harness: atomize contracts, dedupe and pack atoms into proven requests, compose outcomes exactly. Zero dependencies beyond the core.",
+  "type": "module",
+  "license": "MIT",
+  "exports": "./src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}
