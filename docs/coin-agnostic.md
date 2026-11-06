@@ -4,7 +4,7 @@
 
 That is deliberate. The goal is something useful regardless of which crypto you hold, and a new coin would only get in the way of that.
 
-> **The policy in one line:** no token, no presale, no airdrop, no points, no foundation, no UAE entity, no BVI company hidden somewhere. It is just a project. Come test it.
+> **The policy in one line:** no token, no presale, no airdrop, no points, no UAE entity, no BVI company hidden somewhere. It is just a project. Come test it.
 
 ## Contents
 
@@ -212,7 +212,7 @@ Two things are harder without a coin, and they are open problems rather than sol
 
 - Launch a Verafy token, coin, points program, presale or airdrop.
 - Mint any asset from a Verafy Chain contract or config.
-- Set up a foundation, a UAE entity, a BVI company, or any other entity to hold a treasury.
+- Set up a UAE entity, a BVI company, or any other entity to hold a treasury.
 - Charge a protocol fee on top of what juries earn.
 - Describe testnet participation as earning anything that converts into a future token.
 
