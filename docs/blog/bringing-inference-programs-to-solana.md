@@ -2,7 +2,7 @@
 
 *Rex St John, November 5, 2026. Canonical version: [blog.verafy.ai](https://blog.verafy.ai/articles/20261105-simd-verifiable-inference). The three draft SIMDs it introduces are in [docs/simds](../simds).*
 
-This is the essay that started Swarm Harness. The SIMDs bring inference programs to Solana as ordinary programs; [Swarm Chain](https://swarmchain.verafy.ai) asks what happens if you take the same idea all the way, and Swarm Harness is the validator for it.
+This is the essay that started Verafy Harness. The SIMDs bring inference programs to Solana as ordinary programs; [Swarm Chain](https://swarmchain.verafy.ai) asks what happens if you take the same idea all the way, and Verafy Harness is the validator for it.
 
 ---
 

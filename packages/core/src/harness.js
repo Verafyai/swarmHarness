@@ -1,7 +1,7 @@
 /**
  * A harnessed validator: one AI model wrapped with intake, a context loader,
  * guardrails, a signer, a contract runtime, a bond and a track record.
- * @module swarm-core/harness
+ * @module @verafyharness/core/harness
  */
 import { ascHash, validate } from './asc.js'
 import { loadContext, deliberate } from './juror.js'

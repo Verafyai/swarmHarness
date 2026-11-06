@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Serve an open-weights model on this machine for a Swarm Harness, through vLLM's
+# Serve an open-weights model on this machine for a Verafy Harness, through vLLM's
 # OpenAI-compatible server on 127.0.0.1:8000. Needs Docker, the NVIDIA Container
 # Toolkit, and enough GPU memory for the model (see docs/run-a-harness.md).
 #

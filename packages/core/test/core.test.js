@@ -171,3 +171,33 @@ test('payment routers: a harness refuses assets it does not accept, and the ledg
   assert.equal(read(file, 'utf8').trim().split('\n').length, lines.length)
   await assert.rejects(createRouter({ router: 'solana-usdc' }).settle(r, asc), /planned, not built/)
 })
+
+test('the routing agent picks the cheapest route that meets the contract\'s assurance, up to proofs', async () => {
+  const { routeInference, routeAssurance } = await import('../src/index.js')
+  const routes = [
+    { id: 'hosted', lab: 'anthropic', model: 'anthropic/claude-haiku-4.5', kind: 'hosted', usdPerVote: 0.003 },
+    { id: 'local', lab: 'openai', model: 'openai/gpt-oss-120b', kind: 'open-weights', usdPerVote: 0.001 },
+    { id: 'proving', lab: 'meta', model: 'meta-llama/llama-4-maverick', kind: 'open-weights', proofs: true, usdPerVote: 0.03 },
+  ]
+  assert.equal(routeAssurance(routes[0]), 'L1')
+  assert.equal(routeAssurance(routes[2]), 'L2')
+  const asc = ex('market-resolution')
+  assert.equal(routeInference(asc, routes).route.id, 'local')
+  asc.payment.jury.assurance = 'L2'
+  assert.equal(routeInference(asc, routes).route.id, 'proving')
+  assert.throws(() => routeInference(asc, routes.slice(0, 2)), /no inference route meets L2; the best this harness offers is L1\+/)
+})
+
+test('the payment wallet pays only allowlisted suppliers, within caps, above the bond reserve', async () => {
+  const { PaymentWallet } = await import('../src/index.js')
+  const w = new PaymentWallet({ payees: [{ id: 'openrouter', asset: 'USDC', monthlyCap: 5 }, { id: 'gpu-host', asset: 'USDC', monthlyCap: 400 }], bondReserve: { USDC: 10 }, approvalAbove: 100 })
+  w.receive('USDC', 12, 'ruling dffd2186')
+  assert.equal(w.pay('openrouter', 1.5, 'inference', { month: '2026-11' }).amount, 1.5)
+  assert.throws(() => w.pay('unknown', 1, 'hosting'), /not on the allowlist/)
+  assert.throws(() => w.pay('openrouter', 4, 'inference', { month: '2026-11' }), /monthly cap/)
+  assert.throws(() => w.pay('gpu-host', 1, 'hosting', { month: '2026-11' }), /bond reserve/)
+  w.receive('USDC', 200, 'rulings')
+  assert.throws(() => w.pay('gpu-host', 150, 'hosting', { month: '2026-11' }), /needs operator approval/)
+  assert.equal(w.pay('gpu-host', 150, 'hosting', { month: '2026-11', approved: true }).purpose, 'hosting')
+  assert.equal(w.log.filter(e => e.type === 'pay').length, 2)
+})

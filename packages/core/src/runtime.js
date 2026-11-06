@@ -3,7 +3,7 @@
  * turns it into an exact state diff, splits the escrow, and checks that the diff
  * conserves totals. Every harness runs the same function, so every harness can
  * check every other harness's diff.
- * @module swarm-core/runtime
+ * @module @verafyharness/core/runtime
  */
 import { BELOW_BAR } from './asc.js'
 

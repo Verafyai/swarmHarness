@@ -1,6 +1,6 @@
 /**
- * Swarm Harness core: Actually Smart Contracts, harnessed validators, and Proof of Judgment.
- * @module swarm-core
+ * Verafy Harness core: Actually Smart Contracts, harnessed validators, and Proof of Judgment.
+ * @module @verafyharness/core
  */
 export * from './hash.js'
 export * from './asc.js'
@@ -12,3 +12,4 @@ export * from './providers.js'
 export * from './harness.js'
 export * from './network.js'
 export * from './payments.js'
+export * from './routing.js'

@@ -1,5 +1,5 @@
 {
-  "name": "@swarmharness/core",
+  "name": "@verafyharness/core",
   "version": "0.1.0",
   "description": "Actually Smart Contracts, harnessed validators and Proof of Judgment. Zero dependencies.",
   "type": "module",

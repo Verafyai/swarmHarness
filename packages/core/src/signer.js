@@ -2,7 +2,7 @@
  * The harness signer: Ed25519 keys, commit-then-reveal, and signed attestations.
  * A juror commits to a hash of its vote and a salt before any vote is revealed,
  * so no harness can copy another.
- * @module swarm-core/signer
+ * @module @verafyharness/core/signer
  */
 import { generateKeyPairSync, sign, verify, createPublicKey } from 'node:crypto'
 import { canonical, sha256, salt as newSalt } from './hash.js'
