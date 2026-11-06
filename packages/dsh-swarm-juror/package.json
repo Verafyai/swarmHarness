@@ -1,0 +1,15 @@
+{
+  "name": "@swarmharness/dsh-swarm-juror",
+  "version": "0.1.0",
+  "description": "Juror mode for DeepSeek Harness: turns a DSH agent into a harnessed Swarm Chain validator.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["dsh-plugin", "deepseek-harness", "swarm-chain"],
+  "exports": "./src/index.ts",
+  "dependencies": { "@swarmharness/core": "workspace:*" },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/schemastery": "*",
+    "@deepseek-ai/dsh-tools": "*"
+  }
+}

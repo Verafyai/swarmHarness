@@ -1,0 +1,30 @@
+# Swarm juror profile overlay for DeepSeek Harness.
+#
+# Mount on top of the headless profile:
+#   pnpm dsh --profile headless --patch ../config/cordis.swarm.yml \
+#     "Rule on the contract at examples/market-resolution.json"
+#
+# Swapping the AI: each harness picks ONE route below and commits to that model.
+# Keys are credential references, never secrets.
+plugins:
+  - name: '@deepseek-ai/dsh-llm-pi-ai'
+    config:
+      providers:
+        anthropic:
+          apiKeyEnv: ANTHROPIC_API_KEY
+        openai:
+          apiKeyEnv: OPENAI_API_KEY
+        google:
+          apiKeyEnv: GEMINI_API_KEY
+        openrouter:
+          displayName: OpenRouter
+          apiKeyEnv: OPENROUTER_API_KEY
+          api: openai-completions
+          baseURL: https://openrouter.ai/api/v1
+          models:
+            - id: meta-llama/llama-4-maverick
+            - id: qwen/qwen3-235b-a22b-2507
+  - name: '@swarmharness/dsh-swarm-juror'
+    config:
+      lockTools: true
+      sectionOrder: 50

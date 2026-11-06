@@ -1,0 +1,10 @@
+{
+  "name": "@swarmharness/core",
+  "version": "0.1.0",
+  "description": "Actually Smart Contracts, harnessed validators and Proof of Judgment. Zero dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "exports": "./src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}
