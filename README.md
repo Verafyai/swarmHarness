@@ -14,6 +14,8 @@ Related: [Actually Smart Contracts and the three draft SIMDs](https://asc.verafy
 ## Contents
 
 - [Quick start](#quick-start)
+- [Run a harness: the full guide](docs/run-a-harness.md)
+- [Testnet](docs/testnet.md)
 - [Anatomy of an Actually Smart Contract](#anatomy-of-an-actually-smart-contract)
 - [The harnessed validator](#the-harnessed-validator)
 - [How a ruling works](#how-a-ruling-works)
@@ -66,7 +68,9 @@ export SWARM_API_KEY=...        # never commit it
 node bin/swarm.js run examples/market-resolution.json --live
 ```
 
-Other commands: `swarm validate <file>`, `swarm pin <file>` (writes SHA-256 pins for every context entry), `swarm seal <file> <juror-dir...>` (seals a block from reveals that separate harness processes wrote, such as DSH jurors), `swarm chain`, and `--json` for machine output.
+To run a harness on your own machine, with hardware, models, costs, earnings and the testnet, see **[Run a Swarm Harness](docs/run-a-harness.md)** and **[Swarm Testnet](docs/testnet.md)**.
+
+Other commands: `swarm doctor [--live]`, `swarm validate <file>`, `swarm pin <file>` (writes SHA-256 pins for every context entry), `swarm seal <file> <juror-dir...>` (seals a block from reveals that separate harness processes wrote, such as DSH jurors), `swarm chain`, and `--json` for machine output.
 
 ## Anatomy of an Actually Smart Contract
 
@@ -278,7 +282,12 @@ Security is economic: lying has to cost an operator more than it pays.
 ## Repository layout
 
 ```
-bin/swarm.js                      CLI: run, validate, pin, chain
+bin/swarm.js                      CLI: run, doctor, validate, pin, chain
+docs/run-a-harness.md             getting started: hardware, models, proving, install, run, costs, earnings
+docs/testnet.md                   local devnet now, Testnet 0 plan
+scripts/setup-ubuntu.sh           machine setup
+scripts/run-vllm.sh               serve an open-weights model locally
+swarm.config.local.json           a pool with a local vLLM model beside hosted ones
 packages/swarm-core/              zero-dependency core
   src/asc.js                      Actually Smart Contract format and validation
   src/juror.js                    context loader, juror prompt, vote parsing

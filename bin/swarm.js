@@ -8,6 +8,7 @@
  *   swarm seal <asc.json> <juror-dir...>     seal a block from reveals that separate
  *                                            harness processes wrote (DSH jurors)
  *   swarm chain                              print the local chain
+ *   swarm doctor [--live]                    check Node, the pool, and each model endpoint
  *
  * Mock mode (default) uses examples/mock-answers.json. --live calls real models
  * through the OpenAI-compatible endpoint in swarm.config.json.
@@ -24,7 +25,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CHAIN = join(ROOT, '.swarm', 'chain.json')
 const args = process.argv.slice(2)
 const flag = f => args.includes(f)
-const [cmd, file, ...rest] = args.filter(a => !a.startsWith('--'))
+const positional = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--config')
+const [cmd, file, ...rest] = positional
 
 const c = process.stdout.isTTY && !flag('--json')
   ? { b: s => `\x1b[1m${s}\x1b[0m`, d: s => `\x1b[2m${s}\x1b[0m`, g: s => `\x1b[32m${s}\x1b[0m`, y: s => `\x1b[33m${s}\x1b[0m`, a: s => `\x1b[34m${s}\x1b[0m` }
@@ -36,7 +38,45 @@ async function loadChain() {
   try { return await readJson(CHAIN) } catch { return [] }
 }
 
+/**
+ * The live provider for one pool entry. An entry may override the default
+ * endpoint, for example to point at a local vLLM server.
+ * @param {object} config - the swarm config.
+ * @param {object} h - one pool entry.
+ * @returns {object} an OpenAI-compatible provider.
+ */
+function providerFor(config, h) {
+  const baseURL = h.baseURL ?? config.provider.baseURL
+  const apiKey = process.env[h.apiKeyEnv ?? config.provider.apiKeyEnv]
+  return openaiProvider({ baseURL, apiKey })
+}
+
+async function loadConfig() {
+  const i = args.indexOf('--config')
+  return readJson(i >= 0 ? args[i + 1] : join(ROOT, 'swarm.config.json'))
+}
+
+async function doctor() {
+  const config = await loadConfig()
+  const major = Number(process.versions.node.split('.')[0])
+  console.log(`${major >= 22 ? 'ok  ' : 'FAIL'} node ${process.versions.node} (need 22 or later)`)
+  const labs = new Set(config.pool.map(h => h.lab))
+  console.log(`ok   pool: ${config.pool.length} harnesses across ${labs.size} labs`)
+  if (!flag('--live')) { console.log('skip model checks (add --live to call each model once)'); return }
+  for (const h of config.pool) {
+    const t = Date.now()
+    try {
+      const out = await providerFor(config, h).complete({ model: h.model, system: 'Reply with JSON only.', user: 'Return {"ok": true}.' })
+      console.log(`ok   ${h.id.padEnd(16)} ${h.model}  ${Date.now() - t} ms  ${out.slice(0, 40).replace(/\s+/g, ' ')}`)
+    } catch (err) {
+      console.log(`FAIL ${h.id.padEnd(16)} ${h.model}  ${err.message.slice(0, 120)}`)
+      process.exitCode = 1
+    }
+  }
+}
+
 async function main() {
+  if (cmd === 'doctor') return doctor()
   if (cmd === 'validate') {
     const problems = validate(await readJson(file))
     console.log(problems.length ? problems.map(p => `- ${p}`).join('\n') : 'valid')
@@ -55,16 +95,15 @@ async function main() {
   }
   if (cmd === 'seal' && file && rest.length) return sealFromJurors(await readJson(file), rest)
   if (cmd !== 'run' || !file) {
-    console.log('usage: swarm run <asc.json> [--live] [--json] | swarm seal <asc.json> <juror-dir...> | swarm validate <asc.json> | swarm pin <asc.json> | swarm chain')
+    console.log('usage: swarm run <asc.json> [--live] [--json] [--config file] | swarm seal <asc.json> <juror-dir...> | swarm doctor [--live] [--config file] | swarm validate <asc.json> | swarm pin <asc.json> | swarm chain')
     process.exitCode = 2
     return
   }
 
   const asc = await readJson(file)
-  const config = await readJson(join(ROOT, 'swarm.config.json'))
+  const config = await loadConfig()
   const script = flag('--live') ? null : await readJson(join(ROOT, 'examples', 'mock-answers.json'))
-  const live = flag('--live') ? openaiProvider({ baseURL: config.provider.baseURL, apiKey: process.env[config.provider.apiKeyEnv] }) : null
-  const pool = config.pool.map(h => new Harness({ ...h, provider: live ?? mockProvider(script, asc.id, h.lab) }))
+  const pool = config.pool.map(h => new Harness({ ...h, provider: flag('--live') ? providerFor(config, h) : mockProvider(script, asc.id, h.lab) }))
   const chain = await loadChain()
   const parent = chain.at(-1) ?? null
   const jury = drawJury(pool, asc.payment.jury, parent?.hash ?? 'genesis')
