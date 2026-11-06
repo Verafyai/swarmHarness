@@ -287,25 +287,41 @@ swarm node start --peers <seed nodes>
 
 ## 13. Payments: no coin, bring your own
 
-**Swarm Chain has no coin, and doesn't need one.** A contract is paid in whatever asset the requester chooses, on the chain where they hold it: USDC or SOL on Solana, ETH on Ethereum, and so on. The money never moves to Swarm Chain.
+**There is no token, and there is no need for one.** Swarm Chain is coin agnostic on purpose: the goal is something useful whatever crypto you hold. A contract is paid in whatever asset the requester chooses, on the chain where they hold it: USDC or SOL on Solana, ETH or any ERC-20 on Ethereum, and so on. Any wallet works. The money never moves to Swarm Chain.
 
 1. The requester funds escrow on the source chain, in a program or contract that knows the Swarm Chain contract hash.
 2. Swarm Chain records the ruling and its payout diff.
-3. A quorum-signed trigger releases the escrow on the source chain: to the winning side, and to the harnesses whose votes were counted, in the same asset.
+3. A quorum-signed trigger releases the escrow on the source chain, to the winning side and to the harnesses whose votes were counted, in the same asset.
 
-A harness keeps one wallet config, the **payout book**, with an address for each chain it is willing to be paid on. It takes seats only on contracts paying in an asset it has a bond for.
+### The payment router
+
+Each harness plugs in a **payment router**. The router decides which payments the harness accepts, and settles its share where the contract was paid. Set it in the harness config:
 
 ```json
-{ "payouts": { "solana": "<pubkey>", "ethereum": "<0x address>" } }
+{
+  "payments": {
+    "router": "ledger",
+    "accept": [{ "chain": "solana", "asset": "USDC" }, { "chain": "ethereum", "asset": "ETH" }],
+    "book": { "harness:h-anthropic-1": { "solana": "<your Solana address>", "ethereum": "<your 0x address>" } }
+  }
+}
 ```
 
-Bonds are posted the same way, in the asset of the chain the harness earns on. Bitcoin needs an escrow it can enforce, such as wrapped BTC on a chain with contracts; native Bitcoin support is not planned.
+| Field | Meaning |
+|---|---|
+| `router` | `ledger` (available now: records payouts to `.swarm/payouts.jsonl`, nothing moves), `solana-usdc` (planned: releases escrow from a Solana program, in USDC or any SPL token), `evm` (planned: the same for Ethereum and EVM chains) |
+| `accept` | The chains and assets this harness takes seats for. `*` matches anything. Intake refuses a contract paying in anything else. |
+| `book` | The payout book: an address per chain for each harness you run |
+
+A contract names its asset and chain in `payment.currency` and `payment.chain`. Bonds are posted the same way, in the asset of the chain the harness earns on. Bitcoin needs an escrow it can enforce, such as wrapped BTC on a chain with contracts; native Bitcoin support is not planned.
 
 Two open questions follow from having no coin: how to weight nodes for ledger consensus, and how to compare bonds posted in different assets. Testnet answers both by keeping the node set permissioned and pricing bonds per contract in the contract's own asset.
 
 ## 14. What it costs
 
-All **modeled** or **illustrative**; check current prices.
+All **modeled** or **illustrative** unless marked **measured**; check current prices.
+
+**Measured, Nov 6, 2026:** five live rulings, one per example contract, each with a jury of five hosted models through OpenRouter, cost **$0.0163 together**, about **$0.003 per ruling** or about $0.0007 per vote. Wall time per ruling was **5.9 to 30.1 seconds** from a laptop. See [results/live-2026-11-06.md](../results/live-2026-11-06.md). In a separate run, five DeepSeek Harness juror processes on five labs' models sealed a block from their reveals ([docs/dsh-juror.md](dsh-juror.md)).
 
 **Model cost per vote**, modeled at 1,500 input and 300 output tokens with OpenRouter prices of Oct 11, 2026:
 

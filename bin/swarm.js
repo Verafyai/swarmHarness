@@ -18,7 +18,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   Harness, drawJury, rule, ruleFromReveals, seal, validate, pin, ascHash, short,
-  mockProvider, openaiProvider,
+  mockProvider, openaiProvider, createRouter,
 } from '../packages/swarm-core/src/index.js'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -116,12 +116,15 @@ async function main() {
   }
   const ruling = await rule(asc, jury, sealer, log)
   const block = seal(parent, [ruling], sealer)
+  const router = createRouter(config.payments)
+  const payouts = ruling.passed ? await router.settle(ruling, asc, config.payments?.book) : []
   await mkdir(dirname(CHAIN), { recursive: true })
   await writeFile(CHAIN, JSON.stringify([...chain, block], null, 2))
   if (flag('--json')) { console.log(JSON.stringify(block, null, 2)); return }
   console.log(c.b('\nSEAL'))
   console.log(`  block ${block.height}  ${short(block.hash)}  parent ${short(block.parent)}  sealed by ${block.sealer}`)
-  console.log(c.d(`  rulings root ${short(block.rulingsRoot)} · written to .swarm/chain.json\n`))
+  console.log(c.d(`  rulings root ${short(block.rulingsRoot)} · written to .swarm/chain.json`))
+  console.log(c.d(`  payment router ${router.name}: ${payouts.length} payouts in ${asc.payment.currency}${asc.payment.chain ? ` on ${asc.payment.chain}` : ''}${router.name === 'ledger' ? ' recorded to .swarm/payouts.jsonl' : ''}\n`))
 }
 
 /**
@@ -150,12 +153,15 @@ async function sealFromJurors(asc, dirs) {
   }
   const ruling = ruleFromReveals(asc, entries, sealer.id, parent?.hash ?? 'genesis', flag('--json') ? () => {} : event => print(event, asc))
   const block = seal(parent, [ruling], sealer)
+  const router = createRouter(config.payments)
+  const payouts = ruling.passed ? await router.settle(ruling, asc, config.payments?.book) : []
   await mkdir(dirname(CHAIN), { recursive: true })
   await writeFile(CHAIN, JSON.stringify([...chain, block], null, 2))
   if (flag('--json')) { console.log(JSON.stringify(block, null, 2)); return }
   console.log(c.b('\nSEAL'))
   console.log(`  block ${block.height}  ${short(block.hash)}  parent ${short(block.parent)}  sealed by ${block.sealer}`)
-  console.log(c.d(`  rulings root ${short(block.rulingsRoot)} · written to .swarm/chain.json\n`))
+  console.log(c.d(`  rulings root ${short(block.rulingsRoot)} · written to .swarm/chain.json`))
+  console.log(c.d(`  payment router ${router.name}: ${payouts.length} payouts in ${asc.payment.currency}${asc.payment.chain ? ` on ${asc.payment.chain}` : ''}${router.name === 'ledger' ? ' recorded to .swarm/payouts.jsonl' : ''}\n`))
 }
 
 function print(e, asc) {

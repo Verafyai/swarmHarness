@@ -6,13 +6,15 @@
 import { ascHash, validate } from './asc.js'
 import { loadContext, deliberate } from './juror.js'
 import { createIdentity, commit, signMessage } from './signer.js'
+import { acceptsPayment } from './payments.js'
 
 export class Harness {
   /**
-   * @param {{id: string, lab: string, model: string, bond: number, provider: object}} options - the harness setup.
+   * @param {{id: string, lab: string, model: string, bond: number, provider: object, payments?: object}} options - the harness setup; `payments` is the harness's payment router config.
    */
-  constructor({ id, lab, model, bond, provider }) {
+  constructor({ id, lab, model, bond, provider, payments }) {
     this.id = id
+    this.payments = payments
     this.lab = lab
     this.model = model
     this.bond = bond
@@ -36,6 +38,7 @@ export class Harness {
   intake(asc) {
     const problems = validate(asc)
     if (asc.payment?.maxValuePerVote && asc.payment.maxValuePerVote > this.bond) problems.push(`bond ${this.bond} is below the contract's ${asc.payment.maxValuePerVote} per vote`)
+    if (asc.payment && !acceptsPayment(this.payments, asc.payment)) problems.push(`does not accept ${asc.payment.currency} on ${asc.payment.chain ?? 'any chain'}`)
     return problems
   }
 
