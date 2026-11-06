@@ -12,9 +12,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "-p",
-        "github:Verafyai/verafyHarness",
-        "verafy-mcp"
+        "@verafy/mcp"
       ]
     }
   },

@@ -641,12 +641,12 @@ npm run demo      # five contracts, five rulings, five blocks
 </tbody>
 </table></div>
 <p>Every config starts the server with:</p>
-<pre><code class="language-sh">npx -y -p github:Verafyai/verafyHarness verafy-mcp
+<pre><code class="language-sh">npx -y @verafy/mcp
 </code></pre>
 <p>From a clone, the same server is:</p>
 <pre><code class="language-sh">node /path/to/verafyHarness/bin/verafy-mcp.js
 </code></pre>
-<p>The first start of the <code>npx</code> form fetches the repo from GitHub: 1 min 55 s here, and about 56 s on later starts (measured Nov 6, 2026, macOS). If an agent times out, use the clone form or raise its MCP startup timeout. The server takes <code>--allow-live</code>, <code>--home &lt;dir&gt;</code> for the workspace, and <code>--config &lt;file&gt;</code> for the harness config.</p>
+<p>The <code>npx</code> form installs the published package <code>@verafy/mcp</code> from npm (a smoke test took 1.5 s from a cached install, measured Nov 6, 2026, macOS). The server takes <code>--allow-live</code>, <code>--home &lt;dir&gt;</code> for the workspace, and <code>--config &lt;file&gt;</code> for the harness config.</p>
 <p><strong>The live and spend rule.</strong> <code>verafy_run</code> uses scripted mock answers unless all three hold: the server was started with <code>--allow-live</code> (or <code>VERAFY_ALLOW_LIVE=1</code>), the call says <code>live: true</code>, and the call gives a <code>maxSpendUsd</code>. Before any call the server models a ceiling for the run (one call per juror, input at characters / 3, output at 1,000 tokens, priced at the pool entry's <code>price</code> or 5 and 25 USD per million tokens) and refuses with <code>SPEND_CAP</code> if the ceiling is over the cap. Live runs make one call per juror with no retries. After the run it reports the measured cost, from the endpoint's <code>usage.cost</code> where it gives one. Payouts go to the local ledger file; nothing moves on any chain.</p>
 <h2 id="11-configure">11. Configure</h2>
 <p>A harness's setup lives in a JSON config. <code>verafy.config.json</code> is the default (a setup from before the rename that has only <code>swarm.config.json</code> still works); pass another with <code>--config</code>.</p>

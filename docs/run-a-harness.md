@@ -240,7 +240,7 @@ The safety model:
 Every config starts the server with:
 
 ```sh
-npx -y -p github:Verafyai/verafyHarness verafy-mcp
+npx -y @verafy/mcp
 ```
 
 From a clone, the same server is:
@@ -249,7 +249,7 @@ From a clone, the same server is:
 node /path/to/verafyHarness/bin/verafy-mcp.js
 ```
 
-The first start of the `npx` form fetches the repo from GitHub: 1 min 55 s here, and about 56 s on later starts (measured Nov 6, 2026, macOS). If an agent times out, use the clone form or raise its MCP startup timeout. The server takes `--allow-live`, `--home <dir>` for the workspace, and `--config <file>` for the harness config.
+The `npx` form installs the published package `@verafy/mcp` from npm (a smoke test took 1.5 s from a cached install, measured Nov 6, 2026, macOS). The server takes `--allow-live`, `--home <dir>` for the workspace, and `--config <file>` for the harness config.
 
 **The live and spend rule.** `verafy_run` uses scripted mock answers unless all three hold: the server was started with `--allow-live` (or `VERAFY_ALLOW_LIVE=1`), the call says `live: true`, and the call gives a `maxSpendUsd`. Before any call the server models a ceiling for the run (one call per juror, input at characters / 3, output at 1,000 tokens, priced at the pool entry's `price` or 5 and 25 USD per million tokens) and refuses with `SPEND_CAP` if the ceiling is over the cap. Live runs make one call per juror with no retries. After the run it reports the measured cost, from the endpoint's `usage.cost` where it gives one. Payouts go to the local ledger file; nothing moves on any chain.
 

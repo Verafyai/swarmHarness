@@ -9,12 +9,12 @@ Append [`config.toml`](config.toml) to `~/.codex/config.toml`:
 ```toml
 [mcp_servers.verafy]
 command = "npx"
-args = ["-y", "-p", "github:Verafyai/verafyHarness", "verafy-mcp"]
+args = ["-y", "@verafy/mcp"]
 env_vars = ["VERAFY_API_KEY"]
 startup_timeout_sec = 180
 ```
 
-That is the launch command `npx -y -p github:Verafyai/verafyHarness verafy-mcp`. The first start fetches the repo from GitHub, which took 1 min 55 s here, and later starts still took about 56 s (measured on Nov 6, 2026, macOS, npm cache warm). If your agent gives up on a slow server, use the clone form below, or raise its MCP startup timeout. The npm package will start faster once it is published.  From a clone, use `command = "node"` and `args = ["/path/to/verafyHarness/bin/verafy-mcp.js"]`, which is:
+That is the launch command `npx -y @verafy/mcp`. It installs the published package from npm. A smoke test through `npx` took 1.5 s from a cached install (measured on Nov 6, 2026, macOS); the first download depends on your network.  From a clone, use `command = "node"` and `args = ["/path/to/verafyHarness/bin/verafy-mcp.js"]`, which is:
 
 ```
 node /path/to/verafyHarness/bin/verafy-mcp.js

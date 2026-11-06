@@ -9,7 +9,7 @@ Verafy Harness is the validator for Verafy Chain, a Verafy research concept with
 - **payment**: escrow, the jury rules, and the bar: the agreement the jury must reach.
 - **exits**: the only things the contract can do with an answer, plus one for `*below-bar`.
 
-The tools come from the `verafy` MCP server (started with `npx -y -p github:Verafyai/verafyHarness verafy-mcp`).
+The tools come from the `verafy` MCP server (started with `npx -y @verafy/mcp`).
 
 ## The tools, and when to use each
 
