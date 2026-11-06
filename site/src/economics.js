@@ -4,14 +4,17 @@
     ['Machine', ['gpuHourUsd', 'cpuHourUsd', 'utilizationPct', 'warmupMinutes']],
     ['Proof', ['proverBatch', 'proverBatchSeconds', 'contextTokens', 'proofMB', 'verifySeconds']],
     ['Jury and block', ['jurors', 'verifiersPerProof', 'contracts', 'tokensPerContract']],
-    ['Proof packing', ['packing', 'proveOnce', 'decisionsPerRequest', 'briefMaxTokens', 'answerTokensPerDecision', 'headerTokens', 'fidelityCheckUsd']],
+    ['Proof packing', ['atomize', 'proveOnce', 'atomsPerContract', 'atomTokens', 'atomAnswerTokens', 'atomHeaderTokens', 'dedupePct', 'fidelityCheckUsd', 'packing', 'decisionsPerRequest', 'briefMaxTokens', 'answerTokensPerDecision', 'headerTokens']],
+    ['Fast screen (System 1)', ['screen', 'screenPct', 'screenFidelityPct', 'screenUsd']],
     ['Storage and margin', ['storageUsdPerGBMonth', 'retentionMonths', 'marginPct']],
   ]
   var NAMES = {
     gpuHourUsd: 'GPU, $ per hour', cpuHourUsd: 'Verifier CPU box, $ per hour', utilizationPct: 'GPU utilization, %', warmupMinutes: 'Warm-up per session, minutes',
     proverBatch: 'Requests per prover batch', proverBatchSeconds: 'Seconds per batch', contextTokens: 'Tokens per proven request', proofMB: 'Proof size, MB', verifySeconds: 'Verify time, seconds',
     jurors: 'Jurors per jury', verifiersPerProof: 'Verifiers per proof', contracts: 'Contracts in the block', tokensPerContract: 'Tokens per contract',
-    packing: 'Proof packing (briefs)', proveOnce: 'Prove once, verify many', decisionsPerRequest: 'Decisions per request', briefMaxTokens: 'Brief budget, tokens', answerTokensPerDecision: 'Answer tokens per decision', headerTokens: 'Header tokens', fidelityCheckUsd: 'Fidelity check per brief, $',
+    atomize: 'Atomize and pack', atomsPerContract: 'Atoms per contract', atomTokens: 'Tokens per atom slot', atomAnswerTokens: 'Answer tokens per atom', atomHeaderTokens: 'Packed header tokens', dedupePct: 'Atoms shared across contracts, %',
+    screen: 'Use a fast screen (Jev)', screenPct: 'Atoms the screen settles, %', screenFidelityPct: 'Fidelity checks the screen settles, %', screenUsd: 'Screen cost per decision, $',
+    packing: 'Briefs, fixed decisions per request', proveOnce: 'Prove once, verify many', decisionsPerRequest: 'Decisions per request', briefMaxTokens: 'Brief budget, tokens', answerTokensPerDecision: 'Answer tokens per decision', headerTokens: 'Header tokens', fidelityCheckUsd: 'Fidelity check per brief, $',
     storageUsdPerGBMonth: 'Storage, $ per GB-month', retentionMonths: 'Retention, months', marginPct: 'Operator margin, %',
   }
   var TAGCLS = { 'vendor-reported': 'vr', measured: 'm', modeled: 'mo' }
@@ -81,9 +84,11 @@
 
   function render() {
     var e = estimate(state)
-    var u = estimate(Object.assign({}, state, { packing: false, proveOnce: false }))
-    var p = estimate(Object.assign({}, state, { packing: true, proveOnce: true }))
-    document.getElementById('mode').textContent = state.packing ? (state.proveOnce ? 'packed, proved once' : 'packed') : (state.proveOnce ? 'unpacked, proved once' : 'unpacked')
+    var u = estimate(Object.assign({}, state, { packing: false, atomize: false, proveOnce: false, screen: false }))
+    var p = estimate(Object.assign({}, state, { packing: false, atomize: true, proveOnce: true, screen: false }))
+    var bq = estimate(Object.assign({}, state, { packing: true, atomize: false, proveOnce: true, screen: false }))
+    var jq = estimate(Object.assign({}, state, { packing: false, atomize: true, proveOnce: true, screen: true, screenPct: state.screen ? state.screenPct : 50, screenFidelityPct: state.screen ? state.screenFidelityPct : 70 }))
+    document.getElementById('mode').textContent = (state.atomize ? 'atomized' : state.packing ? 'briefs' : 'unpacked') + (state.proveOnce ? ', proved once' : '') + (state.atomize && state.screen ? ', screened' : '')
     out('blockCostUsd', money(e.blockCostUsd))
     out('perContractUsd', money(e.perContractUsd))
     out('priceWithMarginUsd', money(e.priceWithMarginUsd))
@@ -94,7 +99,7 @@
     out('proofGB', num(e.proofGB, 2) + ' GB, in the availability layer, never on chain')
     out('capacityPerHour', num(e.capacityPerHour, 0))
     out('breakEvenFeePerProof', money(e.breakEvenFeePerProof) + ' at ' + num(state.utilizationPct, 0) + '% utilization')
-    out('minWarmLine', num(e.minRequestsForWarmup, 0) + ' requests per prover' + (state.packing ? ', about ' + num(e.minDecisionsForWarmup, 0) + ' decisions' : ''))
+    out('minWarmLine', num(e.minRequestsForWarmup, 0) + ' requests per prover' + (state.packing || state.atomize ? ', about ' + num(e.minDecisionsForWarmup, 0) + ' contracts' : ''))
     out('proveUsd', money(e.proveUsd))
     out('warmShare', num(100 * u.parts.warmup / u.blockCostUsd, 0) + '%')
     out('packGain', num(u.perDecisionUsd / p.perDecisionUsd, 0) + 'x')
@@ -103,8 +108,8 @@
     if (state.packing && !e.packingFits) { w.hidden = false; w.textContent = 'This packing does not fit: ' + num(e.packedTokens, 0) + ' tokens per request against a limit of ' + num(state.contextTokens, 0) + '. Lower the decisions per request or the brief budget.' }
     else w.hidden = true
 
-    var COLORS = { proving: 'var(--accent)', verifying: 'var(--allow)', storing: 'var(--mute)', warmup: 'var(--hold)', fidelity: '#8A5CC7' }
-    var LABELS = { proving: 'Proving', verifying: 'Verifying', storing: 'Storing proofs', warmup: 'Warm-up', fidelity: 'Brief fidelity checks' }
+    var COLORS = { proving: 'var(--accent)', verifying: 'var(--allow)', storing: 'var(--mute)', warmup: 'var(--hold)', fidelity: '#8A5CC7', screening: '#C79A2E' }
+    var LABELS = { proving: 'Proving', verifying: 'Verifying', storing: 'Storing proofs', warmup: 'Warm-up', fidelity: 'Fidelity checks', screening: 'Fast screen' }
     var bar = '', leg = ''
     Object.keys(e.parts).forEach(function (k) {
       var v = e.parts[k]; if (v <= 0) return
@@ -116,18 +121,21 @@
     document.getElementById('legend').innerHTML = leg
 
     var rows = [
-      ['Proven requests', num(u.requestsInBlock, 0), num(p.requestsInBlock, 0)],
-      ['Provers', u.provers, p.provers],
-      ['Proofs', num(u.proofs, 0), num(p.proofs, 0)],
-      ['Proof data', num(u.proofGB, 2) + ' GB', num(p.proofGB, 2) + ' GB'],
-      ['Warm-up', money(u.parts.warmup), money(p.parts.warmup)],
-      ['Fidelity checks', money(u.parts.fidelity), money(p.parts.fidelity)],
-      ['Block cost', money(u.blockCostUsd), money(p.blockCostUsd)],
-      ['Per contract', money(u.perContractUsd), money(p.perContractUsd)],
-      ['Per decision, before warm-up', money(u.perDecisionUsd), money(p.perDecisionUsd)],
-      ['Time to seal', dur(u.sealSeconds), dur(p.sealSeconds)],
+      ['Proven requests', u.requestsInBlock, bq.requestsInBlock, p.requestsInBlock, jq.requestsInBlock],
+      ['Provers', u.provers, bq.provers, p.provers, jq.provers],
+      ['Proofs', u.proofs, bq.proofs, p.proofs, jq.proofs],
+      ['Proof data', u.proofGB, bq.proofGB, p.proofGB, jq.proofGB],
+      ['Warm-up', u.parts.warmup, bq.parts.warmup, p.parts.warmup, jq.parts.warmup],
+      ['Proving', u.parts.proving, bq.parts.proving, p.parts.proving, jq.parts.proving],
+      ['Fidelity checks', u.parts.fidelity, bq.parts.fidelity, p.parts.fidelity, jq.parts.fidelity],
+      ['Fast screen', u.parts.screening, bq.parts.screening, p.parts.screening, jq.parts.screening],
+      ['Block cost', u.blockCostUsd, bq.blockCostUsd, p.blockCostUsd, jq.blockCostUsd],
+      ['Per contract', u.perContractUsd, bq.perContractUsd, p.perContractUsd, jq.perContractUsd],
+      ['Per decision, before warm-up', u.perDecisionUsd, bq.perDecisionUsd, p.perDecisionUsd, jq.perDecisionUsd],
+      ['Time to seal', u.sealSeconds, bq.sealSeconds, p.sealSeconds, jq.sealSeconds],
     ]
-    document.getElementById('compare').innerHTML = rows.map(function (r) { return '<tr><td class="k">' + r[0] + '</td><td class="v">' + r[1] + '</td><td class="v">' + r[2] + '</td></tr>' }).join('')
+    var fmt = function (label, v) { return label === 'Proof data' ? num(v, 2) + ' GB' : label === 'Time to seal' ? dur(v) : /Proven|Provers|Proofs/.test(label) ? num(v, 0) : money(v) }
+    document.getElementById('compare').innerHTML = rows.map(function (r) { return '<tr><td class="k">' + r[0] + '</td>' + r.slice(1).map(function (v) { return '<td class="v">' + fmt(r[0], v) + '</td>' }).join('') + '</tr>' }).join('')
 
     var R = e.roles
     document.getElementById('roles').innerHTML =
@@ -140,8 +148,8 @@
 
   function chart(s) {
     var sizes = [1, 2, 4, 8, 12, 16, 24, 32, 48, 64, 96, 128, 160, 200]
-    var a = curve(Object.assign({}, s, { packing: false, proveOnce: false }), sizes)
-    var b = curve(Object.assign({}, s, { packing: true, proveOnce: true }), sizes)
+    var a = curve(Object.assign({}, s, { packing: false, atomize: false, proveOnce: false, screen: false }), sizes)
+    var b = curve(Object.assign({}, s, { packing: false, atomize: true, proveOnce: true, screen: false }), sizes)
     var W = 760, H = 300, L = 70, B = 40, T = 16, Rr = 16
     var ymax = Math.max.apply(null, a.concat(b).map(function (p) { return p.perContractUsd }))
     var lg = function (n) { return Math.log(n) / Math.log(200) }
@@ -155,13 +163,13 @@
     svg += '<path d="' + path(a) + '" fill="none" stroke="var(--hold)" stroke-width="2.5"/>'
     svg += '<path d="' + path(b) + '" fill="none" stroke="var(--accent)" stroke-width="2.5"/>'
     var n = Math.min(200, Math.max(1, s.contracts))
-    var cu = estimate(Object.assign({}, s, { packing: false, proveOnce: false })).perContractUsd
-    var cp = estimate(Object.assign({}, s, { packing: true, proveOnce: true })).perContractUsd
+    var cu = estimate(Object.assign({}, s, { packing: false, atomize: false, proveOnce: false, screen: false })).perContractUsd
+    var cp = estimate(Object.assign({}, s, { packing: false, atomize: true, proveOnce: true, screen: false })).perContractUsd
     svg += '<line x1="' + X(n) + '" x2="' + X(n) + '" y1="' + T + '" y2="' + (H - B) + '" stroke="var(--ink)" stroke-dasharray="3 4"/>'
     svg += '<circle cx="' + X(n) + '" cy="' + Y(cu) + '" r="5" fill="var(--hold)"/><circle cx="' + X(n) + '" cy="' + Y(cp) + '" r="5" fill="var(--accent)"/>'
     svg += '<rect x="' + (W - 230) + '" y="' + T + '" width="214" height="48" fill="var(--sheet)" stroke="var(--rule)"/>'
     svg += '<line x1="' + (W - 220) + '" x2="' + (W - 196) + '" y1="' + (T + 16) + '" y2="' + (T + 16) + '" stroke="var(--hold)" stroke-width="2.5"/><text x="' + (W - 188) + '" y="' + (T + 20) + '" fill="var(--ink)">unpacked</text>'
-    svg += '<line x1="' + (W - 220) + '" x2="' + (W - 196) + '" y1="' + (T + 34) + '" y2="' + (T + 34) + '" stroke="var(--accent)" stroke-width="2.5"/><text x="' + (W - 188) + '" y="' + (T + 38) + '" fill="var(--ink)">proof packing</text>'
+    svg += '<line x1="' + (W - 220) + '" x2="' + (W - 196) + '" y1="' + (T + 34) + '" y2="' + (T + 34) + '" stroke="var(--accent)" stroke-width="2.5"/><text x="' + (W - 188) + '" y="' + (T + 38) + '" fill="var(--ink)">atomized and packed</text>'
     document.getElementById('chart').innerHTML = svg + '</svg>'
   }
 

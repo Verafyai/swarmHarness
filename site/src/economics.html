@@ -6,7 +6,7 @@
 <div class="facts3">
   <div class="fact"><span class="big" data-out="proveUsd">$0.0103</span><p>GPU cost of one proof, about 750 words of question, evidence and answer.</p></div>
   <div class="fact"><span class="big" data-out="warmShare">67%</span><p>of a small unpacked block's cost is warm-up: loading the model before proving starts. Fixed cost, not proofs, is what makes small blocks expensive.</p></div>
-  <div class="fact"><span class="big" data-out="packGain">12x</span><p>cheaper per decision with proof packing: compact briefs, four decisions per proven request, each request proven once.</p></div>
+  <div class="fact"><span class="big" data-out="packGain">18x</span><p>cheaper per decision with proof packing: contracts atomized into small yes or no questions, about 16 per proven request, each request proven once. 120 proofs become 3.</p></div>
 </div>
 <p class="note">Figures in this box use the defaults (an H100 at $4.00 an hour, FlashProve's vendor-reported speed, 24 contracts of about 600 words) and update with the calculator.</p>
 </section>
@@ -15,7 +15,9 @@
 <h2>Calculator</h2>
 <div class="presets" role="group" aria-label="Presets">
   <button type="button" data-preset="unpacked">L2, FlashProve, unpacked</button>
-  <button type="button" data-preset="packed">L2, FlashProve, proof packing</button>
+  <button type="button" data-preset="packed">Briefs, 4 per request</button>
+  <button type="button" data-preset="atomized">Atomized and packed</button>
+  <button type="button" data-preset="jev">Atomized, with a Jev screen</button>
   <button type="button" data-preset="deepprove">L2 prototype, DeepProve on CPU</button>
   <button type="button" id="share">Copy link to this scenario</button>
 </div>
@@ -49,23 +51,34 @@
 
 <section id="packing">
 <h2>Proof packing</h2>
-<p>A proof covers one request of up to 1,024 tokens, about 750 words. Proof packing fills those requests tightly and stops paying for the same proof twice. It has three parts.</p>
+<p>A proof covers one request of up to 1,024 tokens, about 750 words. That limit comes from today's prover, not the model: it has to keep and check every intermediate value for every token. Proof packing fills those requests as tightly as possible and stops paying for the same proof twice. It has four parts, and the first three run today in <a href="https://github.com/Verafyai/verafyHarness/tree/main/packages/pack">packages/pack</a>.</p>
 <ol class="steps">
-  <li><b>Briefs.</b> Each contract is compiled into a short brief in plain, dense English: the question, the exits, and only the facts that decide it, each with a citation to a pinned source. Made-up shorthand is avoided on purpose: models read English tokens best, and invented codes cost more tokens per idea.</li>
-  <li><b>Packed requests.</b> Several briefs share one proven request, each in a numbered slot with its own answer line. The slot order is shuffled by the block hash, so nobody chooses their neighbors. Contracts that must stand alone opt out.</li>
+  <li><b>Atomize.</b> Each contract is broken into atoms: small questions that ask one thing (yes or no, a choice, or a bounded integer) and carry only the facts that decide it, each citing a pinned source. An exact composition rule turns the atoms' answers back into the contract's outcome. That rule is code, integer math only, and any UNKNOWN atom sends the contract to its declared fallback instead of a guess. Plain dense English, never invented shorthand: models read English tokens best.</li>
+  <li><b>Dedupe.</b> The same atomic question over the same pinned facts has the same hash. Thirty markets that all hinge on "did the Fed cut rates on December 10?" share one slot and one proof.</li>
+  <li><b>Pack.</b> Atoms are packed first-fit by size into 1,024-token requests, about 16 to 18 per request in our tests, each in a numbered slot with its own answer line. The slot order is shuffled by the block hash, so nobody chooses their neighbors. A reply that misses or mangles any slot is rejected whole. Contracts that must stand alone opt out.</li>
   <li><b>Prove once, verify many.</b> Today only one model can be proven, and with integer weights and greedy decoding, every juror running it on the same input gets the same answer. So each packed request is proven once, by a prover drawn from the block hash, and the other jurors become verifiers. Lab diversity returns as soon as a second model is provable: one proof per distinct model.</li>
 </ol>
-<div class="callout"><b>The safeguard.</b> A proof shows the model ruled correctly on the brief, not that the brief is faithful to the sources. So every brief is either agreed by the contract's parties before funding, or checked by a cheap unproven panel from several labs (counted in the cost as the fidelity check), and auditors spot-check its citations. A brief that drops the deciding fact fails the check, and that contract runs unpacked.</div>
+<div class="callout"><b>The safeguard.</b> A proof shows the model answered the atoms correctly, not that the atoms and the rule capture the original question. So every atom plan is either agreed by the contract's parties before funding, or checked by a cheap unproven panel from several labs (the fidelity check), and auditors spot-check its citations. A plan that drops the deciding fact or reaches a different outcome fails the check, and that contract runs unpacked.</div>
+<div class="callout"><b>What the numbers show.</b> Once contracts are packed, proving stops being the big cost. At 1,000 contracts, the proving GPU costs about $1.29 and the fidelity checks about $3.26 (modeled). The next savings come from cheaper checks, not cheaper proofs.</div>
 
 <h3>Unpacked and packed, on your inputs</h3>
 <div class="tbl"><table>
-  <thead><tr><th></th><th>Unpacked</th><th>Proof packing</th></tr></thead>
+  <thead><tr><th></th><th>Unpacked</th><th>Briefs, 4 per request</th><th>Atomized</th><th>Atomized, Jev screen</th></tr></thead>
   <tbody id="compare"></tbody>
 </table></div>
 
 <h3>Cost per contract as blocks grow</h3>
 <div class="chart" id="chart" role="img" aria-label="Cost per contract falls as the block grows, for unpacked and packed blocks"></div>
 <p class="note">Both lines use your current inputs. The marker is your block size. The curve falls because warm-up is a fixed cost shared by every contract in the block.</p>
+
+<h3>Where a fast screen fits (Jev)</h3>
+<p>A System 1 model such as <a href="https://thenewstack.io/typesafe-jev-system-one/">TypeSafe's Jev</a> returns a typed answer with a calibrated probability in 70 to 500 ms for about $0.0004 a decision (vendor-reported, not reproduced). Atoms are exactly the shape it reads. It fits in three places:</p>
+<ul>
+  <li><b>Screening the fidelity checks,</b> the biggest cost after packing. Clear plans pass on the screen; unclear ones go to the multi-lab panel.</li>
+  <li><b>Settling low-stakes atoms,</b> only where a contract allows it. Those atoms are fast and cheap, but not proven.</li>
+  <li><b>Triage and sizing:</b> its probability decides which atoms need a proof at all, and how big the jury should be.</li>
+</ul>
+<p>It can't be the court. It's one hosted, closed model, so it adds no lab diversity and can't carry a proof of inference, and on its vendor's own benchmark it scored 67.8% against 73 to 74% for frontier models. Calibrated isn't the same as correct.</p>
 
 <h3>What packing does not change</h3>
 <ul>

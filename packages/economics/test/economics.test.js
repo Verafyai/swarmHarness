@@ -45,6 +45,22 @@ test('proof packing vectors', () => {
   assert.equal(p.minDecisionsForWarmup, 1728)
 })
 
+test('atomize and screen vectors', () => {
+  const a = estimate(PRESETS.atomized.values)
+  assert.equal(a.atomsPerRequest, 16)
+  assert.equal(a.requestsInBlock, 3)
+  near(a.perDecisionUsd, 0.0059, 'atomized per decision')
+  near(a.blockCostUsd, 1.1408, 'atomized block')
+  const j = estimate(PRESETS.jev.values)
+  assert.equal(j.requestsInBlock, 2)
+  near(j.perDecisionUsd, 0.0039, 'with a screen')
+  const big = estimate({ ...PRESETS.atomized.values, contracts: 1000 })
+  near(big.parts.proving, 1.2905, 'proving at 1000 contracts')
+  near(big.parts.fidelity, 3.26, 'fidelity checks outweigh proving once packed')
+  near(estimate({ ...PRESETS.jev.values, contracts: 1000 }).perContractUsd, 0.0045, 'screen at 1000')
+  near(estimate({ ...PRESETS.atomized.values, contracts: 1000, dedupePct: 30 }).requestsInBlock, 88, 'dedupe')
+})
+
 test('packing fits in one request', () => {
   const e = estimate({ packing: true, proveOnce: true })
   assert.equal(e.packedTokens, 1024)

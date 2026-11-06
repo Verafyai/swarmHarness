@@ -34,6 +34,16 @@ export const DEFAULTS = {
   briefMaxTokens: { value: 200, label: 'illustrative', source: 'Token budget for one decision brief' },
   answerTokensPerDecision: { value: 40, label: 'illustrative', source: 'Tokens reserved for each packed answer line' },
   headerTokens: { value: 64, label: 'illustrative', source: 'Fixed juror rules and answer format at the top of a packed request' },
+  atomize: { value: false, label: 'design', source: 'Atomize: split each contract into small yes or no questions, dedupe them across contracts, pack as many as fit' },
+  atomsPerContract: { value: 2, label: 'illustrative', source: 'Atoms one contract breaks into' },
+  atomTokens: { value: 50, label: 'measured', source: 'Tokens per packed atom slot, question plus one cited fact, counted by packages/pack (about four characters per token)', url: 'https://github.com/Verafyai/verafyHarness/tree/main/packages/pack', date: '2026-11-06' },
+  atomAnswerTokens: { value: 6, label: 'illustrative', source: 'Tokens reserved per atom answer line, such as "S12: YES"' },
+  atomHeaderTokens: { value: 94, label: 'measured', source: 'Tokens in the packed-request header used by packages/pack', url: 'https://github.com/Verafyai/verafyHarness/tree/main/packages/pack', date: '2026-11-06' },
+  dedupePct: { value: 0, label: 'input', source: 'Share of atoms already asked by another contract in the same block' },
+  screen: { value: false, label: 'design', source: 'A fast System 1 screen (for example TypeSafe Jev) answers atoms first' },
+  screenPct: { value: 0, label: 'illustrative', source: 'Share of atoms the screen settles, only where the contract allows a screen to settle them' },
+  screenFidelityPct: { value: 0, label: 'illustrative', source: 'Share of brief and plan fidelity checks the screen settles; the rest go to the unproven multi-lab panel' },
+  screenUsd: { value: 0.0004, label: 'vendor-reported', source: 'TypeSafe Jev, about $0.0004 a decision in 70 to 500 ms; not reproduced', url: 'https://thenewstack.io/typesafe-jev-system-one/', date: '2026-11' },
   fidelityCheckUsd: { value: 0.0163 / 5, label: 'measured', source: 'One unproven multi-lab check per brief, from the measured live run: $0.0163 for five contracts', url: 'https://github.com/Verafyai/verafyHarness/blob/main/results/live-2026-11-06.md', date: '2026-11-06' },
 }
 
@@ -41,6 +51,8 @@ export const DEFAULTS = {
 export const PRESETS = {
   unpacked: { name: 'L2, FlashProve, unpacked', values: {} },
   packed: { name: 'L2, FlashProve, proof packing', values: { packing: true, proveOnce: true } },
+  atomized: { name: 'L2, FlashProve, atomized', values: { atomize: true, proveOnce: true } },
+  jev: { name: 'L2, atomized, with a Jev screen', note: 'The screen settles half the atoms and 70% of the fidelity checks here (illustrative), only where a contract allows it. Screened atoms are not proven: a hosted, closed model cannot carry a proof of inference.', values: { atomize: true, proveOnce: true, screen: true, screenPct: 50, screenFidelityPct: 70 } },
   deepprove: {
     name: 'L2 prototype, DeepProve on CPU (Gemma 3)',
     note: 'Gemma 3: 19 min to prove, 4.3 s to verify, 27 MiB per proof, 512-token sequences, on a 24-core 504 GB CPU server (vendor-reported, Lagrange DeepProve). For testing the pipeline, not for real juries.',
@@ -74,12 +86,33 @@ export function estimate(raw = {}) {
 
   // Packing: each contract becomes a brief; several briefs share one request.
   // Unpacked: a long contract splits into ceil(tokens / context) requests.
-  const requestsPerContract = i.packing ? 1 / i.decisionsPerRequest : ceil(i.tokensPerContract / i.contextTokens)
-  const requestsInBlock = i.packing ? ceil(i.contracts / i.decisionsPerRequest) : i.contracts * requestsPerContract
-  const fidelityUsd = i.packing ? i.contracts * i.fidelityCheckUsd : 0
-  const perDecisionUsd = i.packing
-    ? perRequestUsd / i.decisionsPerRequest + i.fidelityCheckUsd
-    : perRequestUsd * requestsPerContract
+  // Atomize: contracts split into atoms; atoms dedupe across the block; an
+  // optional screen settles some; the rest pack as many per request as fit.
+  const atomsPerRequest = Math.max(1, Math.floor((i.contextTokens - i.atomHeaderTokens) / (i.atomTokens + i.atomAnswerTokens)))
+  const atomsTotal = i.contracts * i.atomsPerContract
+  const uniqueAtoms = ceil(atomsTotal * (1 - i.dedupePct / 100))
+  const screenedAtoms = i.screen ? Math.floor(uniqueAtoms * i.screenPct / 100) : 0
+  const provenAtoms = uniqueAtoms - screenedAtoms
+  const screenUsdTotal = i.atomize && i.screen ? uniqueAtoms * i.screenUsd : 0
+
+  let requestsPerContract, requestsInBlock, fidelityUsd, perDecisionUsd
+  if (i.atomize) {
+    requestsInBlock = ceil(provenAtoms / atomsPerRequest)
+    requestsPerContract = requestsInBlock / i.contracts
+    const sf = i.screen ? i.screenFidelityPct / 100 : 0
+    fidelityUsd = i.contracts * ((i.screen ? i.screenUsd : 0) + (1 - sf) * i.fidelityCheckUsd)
+    perDecisionUsd = (requestsInBlock * perRequestUsd + fidelityUsd + screenUsdTotal) / i.contracts
+  } else if (i.packing) {
+    requestsPerContract = 1 / i.decisionsPerRequest
+    requestsInBlock = ceil(i.contracts / i.decisionsPerRequest)
+    fidelityUsd = i.contracts * i.fidelityCheckUsd
+    perDecisionUsd = perRequestUsd / i.decisionsPerRequest + i.fidelityCheckUsd
+  } else {
+    requestsPerContract = ceil(i.tokensPerContract / i.contextTokens)
+    requestsInBlock = i.contracts * requestsPerContract
+    fidelityUsd = 0
+    perDecisionUsd = perRequestUsd * requestsPerContract
+  }
 
   const proofs = provers * requestsInBlock
   const verifications = proofs * i.verifiersPerProof
@@ -90,6 +123,7 @@ export function estimate(raw = {}) {
     storing: proofs * storeUsd,
     warmup: warmupUsd,
     fidelity: fidelityUsd,
+    screening: screenUsdTotal,
   }
   const blockCostUsd = Object.values(parts).reduce((a, b) => a + b, 0)
   const perContractUsd = blockCostUsd / i.contracts
@@ -135,12 +169,13 @@ export function estimate(raw = {}) {
 
   return {
     packedTokens, packingFits, briefRatio,
+    atomsPerRequest, atomsTotal, uniqueAtoms, screenedAtoms, provenAtoms,
     secondsPerProof, proveUsd, setupUsd, verifyUsd, storeUsd, provers,
     perProofAllIn, perRequestUsd, perDecisionUsd, requestsPerContract, requestsInBlock,
     proofs, verifications, parts, blockCostUsd, perContractUsd,
     priceWithMarginUsd: perContractUsd * m, sealSeconds, proofGB, capacityPerHour,
     breakEvenFeePerProof, minRequestsForWarmup,
-    minDecisionsForWarmup: i.packing ? minRequestsForWarmup * i.decisionsPerRequest : minRequestsForWarmup,
+    minDecisionsForWarmup: i.atomize ? Math.ceil(minRequestsForWarmup * atomsPerRequest / i.atomsPerContract) : i.packing ? minRequestsForWarmup * i.decisionsPerRequest : minRequestsForWarmup,
     roles, inputs: i,
   }
 }
