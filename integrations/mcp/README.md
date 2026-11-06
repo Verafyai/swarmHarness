@@ -18,7 +18,7 @@ Most clients take an `mcpServers` entry like the one in [`mcp.json`](mcp.json):
 }
 ```
 
-That runs `npx -y -p github:Verafyai/verafyHarness verafy-mcp`. From a clone:
+That runs `npx -y -p github:Verafyai/verafyHarness verafy-mcp`. The first start fetches the repo from GitHub, which took 1 min 55 s here, and later starts still took about 56 s (measured on Nov 6, 2026, macOS, npm cache warm). If your agent gives up on a slow server, use the clone form below, or raise its MCP startup timeout. The npm package will start faster once it is published.  From a clone:
 
 ```
 node /path/to/verafyHarness/bin/verafy-mcp.js

@@ -18,6 +18,8 @@ cp integrations/cursor/rules/verafy.mdc .cursor/rules/verafy.mdc
 npx -y -p github:Verafyai/verafyHarness verafy-mcp
 ```
 
+The first start fetches the repo from GitHub, which took 1 min 55 s here, and later starts still took about 56 s (measured on Nov 6, 2026, macOS, npm cache warm). If your agent gives up on a slow server, use the clone form below, or raise its MCP startup timeout. The npm package will start faster once it is published.
+
 From a clone, set `"command": "node"` and `"args": ["/path/to/verafyHarness/bin/verafy-mcp.js"]`:
 
 ```

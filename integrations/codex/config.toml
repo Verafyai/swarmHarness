@@ -5,4 +5,5 @@
 command = "npx"
 args = ["-y", "-p", "github:Verafyai/verafyHarness", "verafy-mcp"]
 env_vars = ["VERAFY_API_KEY"]
-startup_timeout_sec = 60
+# The npx form fetches the repo from GitHub on start; it took about 56 s on a warm cache.
+startup_timeout_sec = 180

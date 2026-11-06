@@ -19,6 +19,8 @@ The server starts with:
 npx -y -p github:Verafyai/verafyHarness verafy-mcp
 ```
 
+The first start fetches the repo from GitHub, which took 1 min 55 s here, and later starts still took about 56 s (measured on Nov 6, 2026, macOS, npm cache warm). If your agent gives up on a slow server, use the clone form below, or raise its MCP startup timeout. The npm package will start faster once it is published.
+
 From a clone, load the plugin for one session with `claude --plugin-dir /path/to/verafyHarness/integrations/claude-code`, or point `.mcp.json` at the clone form:
 
 ```

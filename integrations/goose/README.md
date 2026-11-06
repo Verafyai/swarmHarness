@@ -10,6 +10,8 @@ Either run `goose configure`, choose **Add Extension**, then **Command-line Exte
 npx -y -p github:Verafyai/verafyHarness verafy-mcp
 ```
 
+The first start fetches the repo from GitHub, which took 1 min 55 s here, and later starts still took about 56 s (measured on Nov 6, 2026, macOS, npm cache warm). If your agent gives up on a slow server, use the clone form below, or raise its MCP startup timeout. The npm package will start faster once it is published.
+
 Add `VERAFY_API_KEY` when it asks about environment variables, only if you want live runs.
 
 Or paste the `verafy` entry from [`config.yaml`](config.yaml) under `extensions:` in `~/.config/goose/config.yaml`.
