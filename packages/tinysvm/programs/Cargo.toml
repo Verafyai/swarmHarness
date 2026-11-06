@@ -1,0 +1,17 @@
+# The TinySVM programs. No dependencies: each program reads the loader's input
+# buffer through `abi`, does integer settlement math, and writes its result into
+# an account it owns. Built with cargo-build-sbf (see ../scripts/build.sh).
+[workspace]
+members = ["abi", "escrow", "bond", "ledger", "graded_payout", "ranked_split", "milestone_escrow"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[profile.release]
+overflow-checks = true
+codegen-units = 1
+lto = true
+panic = "abort"

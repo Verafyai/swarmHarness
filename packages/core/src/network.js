@@ -13,6 +13,7 @@ import { ascHash, validate } from './asc.js'
 import { checkReveal, verifyMessage } from './signer.js'
 import { measure } from './agreement.js'
 import { chooseExit, buildDiff, conserves, triggers, accountFor, checkPay } from './runtime.js'
+import { aggregateParams } from './exitprogram.js'
 import { PROOF_HASH } from './juror.js'
 import { sha256, canonical } from './hash.js'
 
@@ -299,6 +300,7 @@ export function tally(asc, reveals, sealer, onEvent = () => {}, round) {
     dissent: reveals.filter(r => isDissent(asc.question, r.vote.answer, result.answer)).map(r => ({ harness: r.harness, answer: r.vote.answer, reasoning: r.vote.reasoning })),
     diff,
     triggers: triggers(exit, passed),
+    params: exit.exitProgram && passed && Object.keys(exit.exitProgram.params ?? {}).length ? aggregateParams(exit.exitProgram.params, reveals.map(r => r.vote), result.answer) : undefined,
     round,
   }
   onEvent({ phase: 'rule', ruling })

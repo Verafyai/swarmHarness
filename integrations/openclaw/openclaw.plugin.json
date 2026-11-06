@@ -1,0 +1,47 @@
+{
+  "id": "verafy-harness",
+  "name": "Verafy Harness",
+  "description": "Draft, check, pin and run Actually Smart Contracts with Verafy Harness, and read the rulings it seals. Your agent is the client; the jurors stay inside the harness.",
+  "version": "0.1.0",
+  "skills": [
+    "./skills"
+  ],
+  "mcpServers": {
+    "verafy": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "-p",
+        "github:Verafyai/verafyHarness",
+        "verafy-mcp"
+      ]
+    }
+  },
+  "setup": {
+    "providers": [
+      {
+        "id": "verafy",
+        "envVars": [
+          "VERAFY_API_KEY"
+        ]
+      }
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "allowLive": {
+        "type": "boolean",
+        "default": false,
+        "description": "Live model calls. Off by default. The server itself turns live on only with --allow-live."
+      },
+      "maxSpendUsd": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "The most one live run may spend, in USD."
+      }
+    }
+  }
+}

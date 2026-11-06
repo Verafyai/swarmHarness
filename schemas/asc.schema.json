@@ -220,6 +220,40 @@
         "chain": {
           "type": "string",
           "description": "The chain the escrow is held on, such as solana or ethereum."
+        },
+        "source": {
+          "type": "object",
+          "description": "Optional. Where the escrow is held on its source chain, for the light-client funding check at intake. Leaving it out changes nothing for existing contracts.",
+          "properties": {
+            "chain": {
+              "type": "string",
+              "description": "Defaults to payment.chain. \"solana\", \"ethereum\", or \"evm:<chainId>\"."
+            },
+            "account": {
+              "type": "string",
+              "description": "Solana: the escrow account (an SPL token account when mint is set)."
+            },
+            "mint": {
+              "type": "string",
+              "description": "Solana: the SPL mint, such as USDC."
+            },
+            "address": {
+              "type": "string",
+              "description": "EVM: the escrow address."
+            },
+            "token": {
+              "type": "string",
+              "description": "EVM: the ERC-20 contract; omit for the native asset."
+            },
+            "decimals": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "native": {
+              "type": "boolean",
+              "description": "Check the chain's native balance (SOL, ETH) when the currency is not SOL or ETH by name."
+            }
+          }
         }
       }
     },
@@ -273,6 +307,79 @@
               },
               "to": {
                 "type": "string"
+              }
+            }
+          },
+          "exitProgram": {
+            "type": "object",
+            "description": "Optional. An exit program TinySVM or runtime.js runs with the ruling's params: the program's SHA-256, its entry point, the params schema that bounds what the jury may supply, and fixed args (amounts in base units, account names). Absent, the exit behaves as before and the contract keeps its hash.",
+            "required": [
+              "programHash",
+              "entry"
+            ],
+            "properties": {
+              "programHash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "entry": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "min",
+                        "max"
+                      ],
+                      "properties": {
+                        "type": {
+                          "const": "integer"
+                        },
+                        "min": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "max": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "size"
+                      ],
+                      "properties": {
+                        "type": {
+                          "const": "ranking"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "of": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "args": {
+                "type": "object"
+              },
+              "computeCap": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1400000
               }
             }
           }

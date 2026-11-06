@@ -1,0 +1,12 @@
+[package]
+name = "tinysvm-milestone_escrow"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "milestone_escrow"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+abi = { package = "tinysvm-abi", path = "../abi" }

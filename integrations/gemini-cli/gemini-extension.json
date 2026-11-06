@@ -1,0 +1,28 @@
+{
+  "name": "verafy-harness",
+  "version": "0.1.0",
+  "description": "Draft, check, pin and run Actually Smart Contracts with Verafy Harness, and read the rulings it seals. Your agent is the client; the jurors stay inside the harness.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "verafy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "-p",
+        "github:Verafyai/verafyHarness",
+        "verafy-mcp"
+      ],
+      "env": {
+        "VERAFY_API_KEY": "$VERAFY_API_KEY"
+      }
+    }
+  },
+  "settings": [
+    {
+      "name": "Verafy API key (only for live runs)",
+      "description": "Read from VERAFY_API_KEY. Leave it empty for mock runs.",
+      "envVar": "VERAFY_API_KEY",
+      "sensitive": true
+    }
+  ]
+}

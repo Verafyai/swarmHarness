@@ -10,6 +10,7 @@
  * @module @verafyharness/core/asc
  */
 import { sha256 } from './hash.js'
+import { validateExitProgram, paramsSchema } from './exitprogram.js'
 
 export const ASC_KIND = 'verafy.asc/1'
 /** The pre-rename contract kind. It still validates, and a contract that carries it keeps its hash. */
@@ -84,13 +85,25 @@ export function validate(asc) {
   const j = pay?.jury
   if (!(j?.size >= 1)) p.push('payment.jury.size must be at least 1')
   if (!(j?.minLabs >= 1 && j.minLabs <= j.size)) p.push('payment.jury.minLabs must be between 1 and jury.size')
+  if (pay?.source !== undefined) {
+    const s = pay.source
+    if (typeof s !== 'object' || s === null) p.push('payment.source must be an object')
+    else if (!(typeof s.account === 'string' && s.account) && !(typeof s.address === 'string' && s.address)) p.push('payment.source needs the escrow account (Solana) or address (EVM)')
+  }
   const split = pay?.split ?? {}
   const total = ['jurors', 'auditors', 'storage', 'sealer'].reduce((s, k) => s + (split[k] ?? 0), 0)
   if (Math.abs(total - 1) > 1e-9) p.push('payment.split must sum to 1')
   if (!Array.isArray(asc?.exits) || asc.exits.length === 0) p.push('exits needs at least one entry')
   for (const [i, e] of (asc?.exits ?? []).entries()) {
     if (!EFFECT_TYPES.includes(e.effect?.type)) p.push(`exits[${i}].effect.type must be one of ${EFFECT_TYPES.join(', ')}`)
+    for (const x of validateExitProgram(e, i)) p.push(x)
   }
+  const declared = {}
+  for (const e of asc?.exits ?? []) for (const [k, s] of Object.entries(e.exitProgram?.params ?? {})) {
+    if (k in declared && JSON.stringify(declared[k]) !== JSON.stringify(s)) p.push(`params.${k} is declared differently by two exits`)
+    declared[k] ??= s
+  }
+  if (Object.keys(paramsSchema(asc)).length && q?.answer?.type === 'forecast') p.push('exit programs with params need a verdict or graded question')
   if (q?.answer?.type !== 'forecast') {
     const outcomes = new Set((asc?.exits ?? []).map(e => e.outcome))
     for (const o of q?.answer?.options ?? []) if (!outcomes.has(o)) p.push(`no exit for option "${o}"`)

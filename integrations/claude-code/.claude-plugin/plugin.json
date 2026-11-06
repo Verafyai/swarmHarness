@@ -1,0 +1,17 @@
+{
+  "name": "verafy-harness",
+  "version": "0.1.0",
+  "description": "Draft, check, pin and run Actually Smart Contracts with Verafy Harness, and read the rulings it seals. Your agent is the client; the jurors stay inside the harness.",
+  "author": {
+    "name": "Verafy",
+    "url": "https://verafy.ai"
+  },
+  "homepage": "https://harness.verafy.ai",
+  "repository": "https://github.com/Verafyai/verafyHarness",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "actually-smart-contracts",
+    "verafy"
+  ]
+}
