@@ -26,6 +26,7 @@ MARK = ('<svg class="mark" viewBox="0 0 64 64" width="28" height="28" aria-hidde
 
 TABS = [
     ('https://chain.verafy.ai', 'Verafy Chain'),
+    ('https://chain.verafy.ai/constitution', 'Constitution'),
     ('/', 'Verafy Harness'),
     ('/run', 'Run a harness'),
     ('/testnet', 'Testnet'),
