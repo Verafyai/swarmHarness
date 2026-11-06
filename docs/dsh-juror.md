@@ -2,7 +2,7 @@
 
 Milestone 2 on the [roadmap](../ROADMAP.md). Prototype only: not a running network, no token, nothing audited.
 
-A Swarm juror here is an ordinary DeepSeek Harness (DSH) headless process with one extra plugin, [`@swarmharness/dsh-swarm-juror`](../packages/dsh-swarm-juror/src/index.ts), and one overlay, [`config/cordis.swarm.yml`](../config/cordis.swarm.yml). The upstream tree at `upstream/deepseek-harness` is built in place and never edited.
+A Swarm juror here is an ordinary DeepSeek Harness (DSH) headless process with one extra plugin, [`@verafyharness/dsh-swarm-juror`](../packages/dsh-swarm-juror/src/index.ts), and one overlay, [`config/cordis.swarm.yml`](../config/cordis.swarm.yml). The upstream tree at `upstream/deepseek-harness` is built in place and never edited.
 
 ## How it fits together
 
@@ -46,7 +46,7 @@ A keyless session snapshot of a scripted juror run with the probe is in [`result
 
 First attempt, before the reminder and the options list in the vote error: 2 of 5 committed. claude-haiku-4.5 and gpt-5-mini voted through the tool. gemini-2.5-flash called `swarm_cast_vote` with `"yes"` and then `"0"`, got `answer "yes" is not one of the options`, and gave up saying the contract was truncated (it was not; the tool result was 2,135 characters). llama-4-maverick wrote the tool call as text. qwen3-235b replied with the vote as plain JSON. No block was sealed; the launcher stops when any juror has no commitment.
 
-Changes made in this repo, not in DSH: the vote error now lists the options (`packages/swarm-core/src/juror.js`), and the plugin steers the juror at `agent/turn-stopping`, at most twice, when no vote was cast.
+Changes made in this repo, not in DSH: the vote error now lists the options (`packages/core/src/juror.js`), and the plugin steers the juror at `agent/turn-stopping`, at most twice, when no vote was cast.
 
 Second attempt, sealed:
 

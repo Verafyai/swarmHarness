@@ -9,7 +9,7 @@ Come test it. There is no foundation, no offshore entity and no token behind thi
 A complete Swarm Chain round on your own machine: a pool of harnesses, seeded jury draws across labs, commit and reveal, agreement against the bar, contract exits, payouts and linked blocks.
 
 ```sh
-git clone https://github.com/Verafyai/swarmHarness.git && cd swarmHarness
+git clone https://github.com/Verafyai/verafyHarness.git && cd verafyHarness
 npm run demo                                    # scripted answers, five blocks
 export SWARM_API_KEY=...                        # OpenRouter key
 node bin/swarm.js run examples/market-resolution.json --live
@@ -51,7 +51,7 @@ Ten or more independently run harnesses, on at least five labs' models, ruling o
 ### How to join
 
 1. Run the local devnet and a live ruling. Keep the `doctor --live` output.
-2. Open an issue on [Verafyai/swarmHarness](https://github.com/Verafyai/swarmHarness/issues) titled `Testnet harness: <your handle>` with: setup type (API, open weights or node), lab and model, GPU if any, region, and your `doctor --live` output. Never paste keys.
+2. Open an issue on [Verafyai/verafyHarness](https://github.com/Verafyai/verafyHarness/issues) titled `Testnet harness: <your handle>` with: setup type (API, open weights or node), lab and model, GPU if any, region, and your `doctor --live` output. Never paste keys.
 3. When phase 1 opens, invited operators get the seed node addresses and the `testnet-0` registry. Then:
 
 ```sh

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Set up a Swarm Harness on Ubuntu 22.04 or 24.04.
+# Set up a Verafy Harness on Ubuntu 22.04 or 24.04.
 #   API harness (no GPU):        bash scripts/setup-ubuntu.sh
 #   Open-weights harness (GPU):  bash scripts/setup-ubuntu.sh --gpu
 # Prototype. Read it before running it; it uses sudo for apt.
@@ -20,11 +20,11 @@ if ! command -v node >/dev/null || [[ "$(node -p 'process.versions.node.split(".
 fi
 node --version
 
-echo "== Swarm Harness"
-if [[ ! -d "$HOME/swarmHarness" ]]; then
-  git clone https://github.com/Verafyai/swarmHarness.git "$HOME/swarmHarness"
+echo "== Verafy Harness"
+if [[ ! -d "$HOME/verafyHarness" ]]; then
+  git clone https://github.com/Verafyai/verafyHarness.git "$HOME/verafyHarness"
 fi
-cd "$HOME/swarmHarness"
+cd "$HOME/verafyHarness"
 npm test
 npm run demo
 

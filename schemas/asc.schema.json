@@ -1,71 +1,248 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Verafyai/swarmHarness/schemas/asc.schema.json",
+  "$id": "https://github.com/Verafyai/verafyHarness/schemas/asc.schema.json",
   "title": "Actually Smart Contract (swarm.asc/0)",
   "type": "object",
-  "required": ["kind", "id", "instructions", "context", "question", "payment", "exits"],
+  "required": [
+    "kind",
+    "id",
+    "instructions",
+    "context",
+    "question",
+    "payment",
+    "exits"
+  ],
   "properties": {
-    "kind": { "const": "swarm.asc/0" },
-    "id": { "type": "string" },
-    "title": { "type": "string" },
-    "instructions": { "type": "string", "description": "The compressed intention: what to decide and how to judge it." },
+    "kind": {
+      "const": "swarm.asc/0"
+    },
+    "id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "instructions": {
+      "type": "string",
+      "description": "The compressed intention: what to decide and how to judge it."
+    },
     "context": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "object", "required": ["kind", "sha256"],
+        "type": "object",
+        "required": [
+          "kind",
+          "sha256"
+        ],
         "properties": {
-          "kind": { "enum": ["link", "text", "policy", "document", "repo"] },
-          "url": { "type": "string" },
-          "commit": { "type": "string", "description": "For kind repo: the pinned commit." },
-          "snapshotAt": { "type": "string", "format": "date-time" },
-          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-          "content": { "type": "string", "description": "Snapshot text. Optional on chain; fetched from the availability layer by sha256." }
+          "kind": {
+            "enum": [
+              "link",
+              "text",
+              "policy",
+              "document",
+              "repo"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "commit": {
+            "type": "string",
+            "description": "For kind repo: the pinned commit."
+          },
+          "snapshotAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "content": {
+            "type": "string",
+            "description": "Snapshot text. Optional on chain; fetched from the availability layer by sha256."
+          }
         }
       }
     },
     "question": {
-      "type": "object", "required": ["prompt", "answer"],
+      "type": "object",
+      "required": [
+        "prompt",
+        "answer"
+      ],
       "properties": {
-        "prompt": { "type": "string" },
+        "prompt": {
+          "type": "string"
+        },
         "answer": {
-          "type": "object", "required": ["type"],
+          "type": "object",
+          "required": [
+            "type"
+          ],
           "properties": {
-            "type": { "enum": ["verdict", "forecast", "graded"] },
-            "options": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
-            "tolerance": { "type": "number", "description": "Forecasts: spread at which agreement reaches zero." }
+            "type": {
+              "enum": [
+                "verdict",
+                "forecast",
+                "graded"
+              ]
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2
+            },
+            "tolerance": {
+              "type": "number",
+              "description": "Forecasts: spread at which agreement reaches zero."
+            }
           }
         }
       }
     },
     "payment": {
-      "type": "object", "required": ["escrow", "currency", "bar", "jury", "split"],
+      "type": "object",
+      "required": [
+        "escrow",
+        "currency",
+        "bar",
+        "jury",
+        "split"
+      ],
       "properties": {
-        "escrow": { "type": "number", "exclusiveMinimum": 0 },
-        "currency": { "type": "string" },
-        "bar": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "description": "Agreement the jury must reach." },
-        "maxValuePerVote": { "type": "number", "description": "Minimum bond a juror must hold." },
+        "escrow": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "currency": {
+          "type": "string"
+        },
+        "bar": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "description": "Agreement the jury must reach."
+        },
+        "maxValuePerVote": {
+          "type": "number",
+          "description": "Minimum bond a juror must hold."
+        },
         "jury": {
-          "type": "object", "required": ["size", "minLabs"],
-          "properties": { "size": { "type": "integer", "minimum": 1 }, "minLabs": { "type": "integer", "minimum": 1 }, "quorum": { "type": "integer", "minimum": 1 } }
+          "type": "object",
+          "required": [
+            "size",
+            "minLabs"
+          ],
+          "properties": {
+            "size": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "minLabs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "quorum": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "assurance": {
+              "enum": [
+                "L0",
+                "L1",
+                "L1+",
+                "L2",
+                "L3"
+              ],
+              "description": "Minimum assurance for the AI that rules: L1+ re-executable, L2 a proof of inference per vote."
+            }
+          }
         },
         "split": {
-          "type": "object", "required": ["jurors", "auditors", "storage", "sealer"],
-          "properties": { "jurors": { "type": "number" }, "auditors": { "type": "number" }, "storage": { "type": "number" }, "sealer": { "type": "number" } }
+          "type": "object",
+          "required": [
+            "jurors",
+            "auditors",
+            "storage",
+            "sealer"
+          ],
+          "properties": {
+            "jurors": {
+              "type": "number"
+            },
+            "auditors": {
+              "type": "number"
+            },
+            "storage": {
+              "type": "number"
+            },
+            "sealer": {
+              "type": "number"
+            }
+          }
+        },
+        "chain": {
+          "type": "string",
+          "description": "The chain the escrow is held on, such as solana or ethereum."
         }
       }
     },
     "exits": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "object", "required": ["outcome", "effect"],
+        "type": "object",
+        "required": [
+          "outcome",
+          "effect"
+        ],
         "properties": {
-          "outcome": { "type": "string", "description": "An option, *forecast, or *below-bar." },
+          "outcome": {
+            "type": "string",
+            "description": "An option, *forecast, or *below-bar."
+          },
           "effect": {
-            "type": "object", "required": ["type"],
+            "type": "object",
+            "required": [
+              "type"
+            ],
             "properties": {
-              "type": { "enum": ["pay", "refund", "hold", "record", "call", "escalate"] },
-              "chain": { "type": "string" }, "target": { "type": "string" }, "args": { "type": "array" },
-              "jurySize": { "type": "integer" }, "hours": { "type": "number" }, "label": { "type": "string" }, "to": { "type": "string" }
+              "type": {
+                "enum": [
+                  "pay",
+                  "refund",
+                  "hold",
+                  "record",
+                  "call",
+                  "escalate"
+                ]
+              },
+              "chain": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "args": {
+                "type": "array"
+              },
+              "jurySize": {
+                "type": "integer"
+              },
+              "hours": {
+                "type": "number"
+              },
+              "label": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
             }
           }
         }

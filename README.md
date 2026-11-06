@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/banner.png" alt="Swarm Harness: contracts written in words, validators with judgment, no token" width="100%">
+  <img src="docs/assets/banner.png" alt="Verafy Harness: contracts written in words, validators with judgment, no token" width="100%">
 </p>
 
-# Swarm Harness
+# Verafy Harness
 
 **Harnessed AI validators for Actually Smart Contracts.** The validator for [Swarm Chain](https://swarmchain.verafy.ai), built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). MIT licensed. No token.
 
@@ -18,7 +18,7 @@
 
 Smart contracts can only enforce what someone can write as math. Most of what people actually want enforced isn't math: a policy, a promise, a claim, a condition about the world. Today those decisions leave the chain and come back as somebody's word.
 
-AI models can now read and weigh almost anything, and there is early research on proving which model produced an answer. Swarm Harness puts the two together: a contract written in words, ruled on by a jury of AI models from different labs, with every vote committed, revealed, signed and open to challenge.
+AI models can now read and weigh almost anything, and there is early research on proving which model produced an answer. Verafy Harness puts the two together: a contract written in words, ruled on by a jury of AI models from different labs, with every vote committed, revealed, signed and open to challenge.
 
 Three choices shape the project:
 
@@ -29,7 +29,7 @@ Three choices shape the project:
 
 ## What it is
 
-Swarm Harness does two things.
+Verafy Harness does two things.
 
 1. **It brings natural language into smart contracts.** An Actually Smart Contract is a compressed intention: what should happen, under what conditions, judged against which sources, paid for how, and what it may do with the answer. It goes to a jury of AI models that renders an outcome, instead of being limited to what can be written as code.
 2. **It redefines what a validator is.** A validator is an AI model wrapped in a harness. The model brings judgment. The harness does everything else a validator does: intake, context loading and hash checks, sandboxed tools, guardrails, commit-then-reveal signing, a bond, a contract runtime, a payment router, and an outbox that posts votes and calls contracts on other chains. Anyone can run one. Together they form an oracle network built from harnesses.
@@ -58,7 +58,7 @@ Swarm Harness does two things.
 - [Performance and state size](#performance-and-state-size)
 - [Security](#security)
 - [Open problems](#open-problems)
-- [Swarm Harness and Swarm Chain](#swarm-harness-and-swarm-chain)
+- [Verafy Harness and Swarm Chain](#verafy-harness-and-swarm-chain)
 - [Read more](#read-more)
 - [Repository layout](#repository-layout)
 - [License and credits](#license-and-credits)
@@ -78,8 +78,8 @@ Swarm Harness does two things.
 Needs Node 22 or later. The core has no dependencies.
 
 ```sh
-git clone https://github.com/Verafyai/swarmHarness.git
-cd swarmHarness
+git clone https://github.com/Verafyai/verafyHarness.git
+cd verafyHarness
 npm test          # 17 tests
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
 ```
@@ -166,7 +166,7 @@ The contract's identity is a hash over everything except snapshot content, so it
 | Votes on blocks | The signer commits a hidden vote, reveals it, and signs an attestation of which model produced it. | `signer.commit`, `Harness.reveal` |
 | Stakes | The bond sizes how much value a vote can decide and is lost for a proven fault. | `Harness.bond` |
 | Runs the state machine | The contract runtime picks the exit, builds the exact diff, splits the escrow, and checks that totals are conserved. | `runtime.js` |
-| Gets paid | The payment router settles the harness's share where the contract was paid. | `payments.js` |
+| Gets paid, pays its way | The routing agent accepts payment in any asset, converts it, pays for hosting and inference, and routes each contract to AI that meets its provability requirement. | `payments.js`, `routing.js` |
 | Serves RPC | The outbox posts votes and emits triggers, such as a call to a Solana program. Triggers need a quorum signature. | `ruling.triggers` |
 
 ## How a ruling works
@@ -235,7 +235,7 @@ Each harness plugs in a **payment router** that decides which payments it accept
 
 A harness only takes seats on contracts paying in an asset on its `accept` list. Bonds are posted the same way, in the asset of the chain the harness earns on.
 
-Earnings pay for the work: the inference each juror runs, the machine and bond behind it, audits, storage and bookkeeping. A harness's **operations agent** (planned) exchanges what it earns into what its bills need and pays its own model credits, GPU and hosting automatically, within caps the operator sets. The full policy, with a worked example, is in **[Coin Agnostic](docs/coin-agnostic.md)**.
+Earnings pay for the work: the inference each juror runs, the machine and bond behind it, audits, storage and bookkeeping. A harness's **routing agent** is an API router with its own payment wallet: earnings land in the wallet, and the router pays for every AI call, the hosting and everything else from it automatically. It accepts payment in any asset and converts between them, connects to AI APIs and cloud hosts, pays for its own inference and hosting within caps the operator sets, and routes each contract only to AI that meets the contract's provability requirement, up to a zero-knowledge proof of inference. Routing by assurance level and the wallet's spending rules (allowlisted payees, monthly caps, approval threshold, bond reserve) work today in `routing.js`; on-chain settlement, conversion and renting hosts are planned. The full policy, with a worked example, is in **[Coin Agnostic](docs/coin-agnostic.md)**.
 
 ## Who pays, who earns
 
@@ -265,7 +265,7 @@ The network does not care which lab a harness uses. It requires that each jury s
 
 ## Running inside DeepSeek Harness
 
-[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) is an MIT-licensed agent harness built on an everything-is-a-plugin architecture. Swarm Harness uses it as the harness runtime and adds juror mode as a plugin, leaving the upstream tree unmodified. See [UPSTREAM.md](UPSTREAM.md) for the pinned commit.
+[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) is an MIT-licensed agent harness built on an everything-is-a-plugin architecture. Verafy Harness uses it as the harness runtime and adds juror mode as a plugin, leaving the upstream tree unmodified. See [UPSTREAM.md](UPSTREAM.md) for the pinned commit.
 
 [`packages/dsh-swarm-juror`](packages/dsh-swarm-juror/src/index.ts) registers:
 
@@ -350,13 +350,13 @@ Security is economic: lying has to cost an operator more than it pays.
 - **Who makes the models.** Anyone can run a harness, but a few labs make the strongest models.
 - **Setting the bar.** Too low and wrong rulings pass; too high and nothing settles. The live forecast fell below its bar.
 
-## Swarm Harness and Swarm Chain
+## Verafy Harness and Swarm Chain
 
-| | Swarm Harness (this repo) | Swarm Chain |
+| | Verafy Harness (this repo) | Swarm Chain |
 |---|---|---|
 | What | The validator: an AI model in a harness | The chain: nodes that hold contracts, coordinate juries, seal and store blocks |
 | Runs a model | Yes | Never |
-| Where | [Verafyai/swarmHarness](https://github.com/Verafyai/swarmHarness) | Verafyai/swarmchain (in progress) and the concept at [swarmchain.verafy.ai](https://swarmchain.verafy.ai) |
+| Where | [Verafyai/verafyHarness](https://github.com/Verafyai/verafyHarness) | Verafyai/swarmchain (in progress) and the concept at [swarmchain.verafy.ai](https://swarmchain.verafy.ai) |
 
 Most of the work lives here. Swarm Chain imports this repo's core for every hash, signature, agreement and diff check and never reimplements them.
 
@@ -375,13 +375,14 @@ Most of the work lives here. Swarm Chain imports this repo's core for every hash
 
 ```
 bin/swarm.js                      CLI: run, seal, doctor, validate, pin, chain
-packages/swarm-core/              zero-dependency core
+packages/core/              zero-dependency core
   src/asc.js                      Actually Smart Contract format and validation
   src/juror.js                    context loader, juror prompt, vote parsing
   src/signer.js                   Ed25519 keys, commit-then-reveal, attestations
   src/agreement.js                verdict, forecast and graded agreement
   src/runtime.js                  exits, escrow split, conservation check, triggers
   src/payments.js                 payment routers: accept lists, ledger, planned on-chain routers
+  src/routing.js                  routing agent: payment wallet, inference routes by assurance level up to ZK proofs
   src/harness.js                  the harnessed validator
   src/network.js                  jury draw, ruling, sealing from reveals, Proof of Judgment
   src/providers.js                mock and OpenAI-compatible model providers
@@ -404,4 +405,4 @@ upstream/deepseek-harness         DeepSeek Harness, pinned submodule
 
 ## License and credits
 
-MIT. Swarm Harness is built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) by DeepSeek-AI, also MIT; its license and notices are in the submodule. Swarm Harness is a Verafy research project by Rex St John and is not affiliated with or endorsed by DeepSeek, OpenRouter, or any model lab.
+MIT. Verafy Harness is built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) by DeepSeek-AI, also MIT; its license and notices are in the submodule. Verafy Harness is a Verafy research project by Rex St John and is not affiliated with or endorsed by DeepSeek, OpenRouter, or any model lab.

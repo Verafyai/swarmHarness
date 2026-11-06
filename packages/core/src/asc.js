@@ -6,7 +6,7 @@
  *   payment   escrow, jury rules and the bar the jury must clear
  *   exits     the only things the contract can do with an answer
  *
- * @module swarm-core/asc
+ * @module @verafyharness/core/asc
  */
 import { sha256 } from './hash.js'
 

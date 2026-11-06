@@ -8,7 +8,7 @@
  *   solana-usdc   planned: releases escrow from a Solana program with a quorum-signed trigger.
  *   evm           planned: the same for Ethereum and EVM chains.
  *
- * @module swarm-core/payments
+ * @module @verafyharness/core/payments
  */
 import { appendFile, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'

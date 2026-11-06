@@ -1,4 +1,4 @@
-# Run a Swarm Harness
+# Run a Verafy Harness
 
 This guide covers what a harness is, what machine it needs, which models it can run, how models are proven, how to install, configure and run one, what it costs and earns, and how it joins the network. The [testnet guide](testnet.md) covers the test network.
 
@@ -28,16 +28,16 @@ This guide covers what a harness is, what machine it needs, which models it can 
 
 Swarm Chain has two kinds of machine. They can run on the same box.
 
-| | **Swarm Harness** | **Swarm Node** |
+| | **Verafy Harness** | **Swarm Node** |
 |---|---|---|
 | What it is | An AI model wrapped in a harness. This is Swarm Chain's validator. | The chain's bookkeeper. It never runs a model. |
 | What it does | Takes jury seats, loads and checks context, deliberates, commits and reveals votes, runs contract exits, audits other harnesses, and serves stored context. | Holds funded contracts waiting for juries, draws juries, relays commitments and reveals, seals and stores blocks, checks every diff and signature, and serves the read API. |
-| Software | [Verafyai/swarmHarness](https://github.com/Verafyai/swarmHarness) | Verafyai/swarmchain (planned) |
+| Software | [Verafyai/verafyHarness](https://github.com/Verafyai/verafyHarness) | Verafyai/swarmchain (planned) |
 | Needs | A model: an API key or a GPU | CPU, disk and bandwidth |
 | Earns | Juror, auditor and storage shares | The sealer share |
 | Agave equivalent | Voting validator | RPC node and leader duties |
 
-**Naming.** The software is Swarm Harness, and the thing you run to judge is called a **harness**. The thing that stores and relays blocks is a **node**. "Validator" is fine in conversation: a harness is what validates. A harness can take three roles, sometimes all at once: **juror** (votes), **auditor** (re-runs sealed rulings with a different lab's model) and **storage** (keeps context fetchable by hash).
+**Naming.** The software is Verafy Harness, and the thing you run to judge is called a **harness**. The thing that stores and relays blocks is a **node**. "Validator" is fine in conversation: a harness is what validates. A harness can take three roles, sometimes all at once: **juror** (votes), **auditor** (re-runs sealed rulings with a different lab's model) and **storage** (keeps context fetchable by hash).
 
 ## 2. What consensus means on Swarm Chain
 
@@ -199,8 +199,8 @@ Hosted models stop at L1: only the provider knows which model it served. Re-exec
 
 ```sh
 # Ubuntu 22.04 or 24.04
-git clone https://github.com/Verafyai/swarmHarness.git
-cd swarmHarness
+git clone https://github.com/Verafyai/verafyHarness.git
+cd verafyHarness
 bash scripts/setup-ubuntu.sh            # API harness
 bash scripts/setup-ubuntu.sh --gpu      # also checks the GPU for an open-weights harness
 ```
@@ -208,7 +208,7 @@ bash scripts/setup-ubuntu.sh --gpu      # also checks the GPU for an open-weight
 On macOS or anywhere else with Node 22:
 
 ```sh
-git clone https://github.com/Verafyai/swarmHarness.git && cd swarmHarness
+git clone https://github.com/Verafyai/verafyHarness.git && cd verafyHarness
 npm test          # 14 tests, no dependencies to install
 npm run demo      # five contracts, five rulings, five blocks
 ```
@@ -360,7 +360,7 @@ profit = sum of shares  +  audit fees and caught bonds  -  model cost  -  machin
 
 Dissenting votes are paid too, as long as they were committed and revealed honestly, so there is no reward for following the majority. A ruling below the bar pays nothing; its escrow carries to the larger jury. Faults cost the bond: running a model other than the one committed, missing a reveal, or failing an audit.
 
-Earnings don't have to be converted by hand: a harness's operations agent (planned) keeps the bond topped up, swaps what it earns into what its bills need, and pays its own model, GPU and hosting costs within limits you set. See [Coin Agnostic](coin-agnostic.md#harnesses-that-pay-their-own-bills).
+Earnings don't have to be converted by hand: a harness's routing agent, an API router with its own payment wallet, accepts payment in any asset, converts it, rents and pays for its own hosting, pays for inference, and keeps the bond topped up, within limits you set. It also routes each contract only to AI that meets the contract's provability requirement, up to zero-knowledge proofs. See [The routing agent](coin-agnostic.md#the-routing-agent).
 
 On testnet, everything is play money.
 

@@ -1,6 +1,6 @@
 # Upstream: DeepSeek Harness
 
-Swarm Harness is built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (MIT), pinned as a git submodule at `upstream/deepseek-harness`.
+Verafy Harness is built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (MIT), pinned as a git submodule at `upstream/deepseek-harness`.
 
 | Field | Value |
 |---|---|
@@ -11,7 +11,7 @@ Swarm Harness is built on [DeepSeek Harness](https://github.com/deepseek-ai/deep
 
 ## Why a submodule and plugins, not a patched copy
 
-DeepSeek Harness is built so that new behavior goes on documented extension points rather than into the agent loop. Swarm Harness follows that rule: juror mode is a plugin (`packages/dsh-swarm-juror`), model swapping is configuration (`config/cordis.swarm.yml`, through `@deepseek-ai/dsh-llm-pi-ai`), and the upstream tree stays unmodified so it can be updated by moving the pin.
+DeepSeek Harness is built so that new behavior goes on documented extension points rather than into the agent loop. Verafy Harness follows that rule: juror mode is a plugin (`packages/dsh-swarm-juror`), model swapping is configuration (`config/cordis.swarm.yml`, through `@deepseek-ai/dsh-llm-pi-ai`), and the upstream tree stays unmodified so it can be updated by moving the pin.
 
 ## Updating the pin
 

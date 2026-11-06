@@ -1,7 +1,7 @@
 /**
- * Canonical JSON and SHA-256 helpers. Every hash in Swarm Harness is taken over
+ * Canonical JSON and SHA-256 helpers. Every hash in Verafy Harness is taken over
  * canonical JSON (sorted keys, no whitespace) so two harnesses always agree on it.
- * @module swarm-core/hash
+ * @module @verafyharness/core/hash
  */
 import { createHash, randomBytes } from 'node:crypto'
 

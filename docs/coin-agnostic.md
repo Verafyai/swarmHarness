@@ -10,7 +10,7 @@ That is deliberate. The goal is something useful regardless of which crypto you 
 
 - [Why there is no coin](#why-there-is-no-coin)
 - [What the money pays for](#what-the-money-pays-for)
-- [Harnesses that pay their own bills](#harnesses-that-pay-their-own-bills)
+- [The routing agent](#the-routing-agent)
 - [How money moves](#how-money-moves)
 - [The payment router](#the-payment-router)
 - [What you can pay and be paid in](#what-you-can-pay-and-be-paid-in)
@@ -62,44 +62,80 @@ The market-resolution example escrows **1.20 USDC** for a jury of five. **Illust
 
 For scale, the **measured** model cost of a five-model ruling on Nov 6, 2026 was about **$0.003**, or about $0.0007 per vote ([results](../results/live-2026-11-06.md)). So in this example inference is a small part of what a juror's share covers; the rest pays for the machine, the bond and the operator's time. Real escrow amounts will be set by requesters and by competition between harnesses, and will likely be much lower than this example.
 
-## Harnesses that pay their own bills
+## The routing agent
 
-A harness earns in whatever assets its contracts pay in. Its bills are in whatever its suppliers charge: model API credits, GPU hours, a cloud server, bandwidth, storage. Because there is no coin to bridge the two, each harness carries an **operations agent** that does it automatically.
+Every harness carries a **routing agent**: an API router with its own **payment wallet**. It is the part of the harness that deals with money and suppliers, so the AI can stay focused on judging. Earnings land in the wallet, and the router pays for the AI calls, the hosting and everything else the harness uses out of that wallet, automatically. It does four jobs.
 
-1. **Earn.** Shares arrive in the contract's asset: USDC on Solana, ETH on Ethereum, and so on.
-2. **Reserve.** The agent first keeps the bond topped up and holds back a reserve the operator sets.
-3. **Exchange.** It swaps the rest into what the bills need, such as USDC, on venues the operator has approved.
-4. **Pay.** It pays the harness's own running costs: model credits at providers that take crypto, the GPU or cloud host, storage and bandwidth. Where a supplier only takes cards or bank transfers, it routes through an off-ramp the operator has set up.
-5. **Report.** Every swap and payment is logged next to the votes that earned it, so the operator can see what each ruling cost and paid.
+![Block diagram: the routing agent inside the harness, with its payment wallet, inference router and hosting and bills, taking payments in any asset and paying AI APIs, provers and cloud hosts](assets/harness-diagram.png)
 
-The effect is a validator that runs itself: it earns from rulings, pays for the AI and the machine that produced them, and keeps the bond in place, without anyone converting anything by hand and without a native token in the middle.
+| Job | What the routing agent does |
+|---|---|
+| **Payments in** | Accepts payment in any asset on any chain the operator allows, and converts between them: USDC, SOL, ETH or any token, swapped on venues the operator approves. This is the payment router. |
+| **Inference routing** | Connects to AI APIs and to models the operator hosts, and sends each contract to a route that meets the contract's provability requirement. A contract that demands a zero-knowledge proof of inference only goes to a route that can produce one. |
+| **Hosting** | Connects to cloud backends to rent and pay for what the harness runs on: GPU servers for open-weights or proving routes, a small VM for an API harness, storage and bandwidth. |
+| **Bills** | Pays the harness's own running costs from what it earns: model API credits, GPU or cloud hosting, storage. It keeps the bond topped up first, holds a reserve, and uses an off-ramp where a supplier only takes cards or bank transfers. |
 
-The operator stays in charge through limits in the harness config:
+The effect is a validator that runs itself: it takes payment in whatever the requester holds, buys exactly the inference the contract asks for, pays for the machine it runs on, and keeps its bond in place, with no native coin in the middle.
+
+### The payment wallet
+
+The wallet is how the harness pays its own way.
+
+1. **In.** Each ruling's share for this harness arrives in the wallet, in the contract's asset, on the contract's chain.
+2. **Hold.** The wallet keeps the bond reserve untouched and a cash reserve the operator sets.
+3. **Convert.** When a bill is due in a different asset, the router converts on an approved venue within a slippage limit.
+4. **Out.** The router pays each supplier as the harness uses it: the AI API for every model call, the cloud backend for the GPU or VM, storage and bandwidth. Payees must be on the operator's allowlist, each with a monthly cap, and anything above the approval threshold waits for the operator.
+5. **Log.** Every receipt, conversion and payment is recorded against the ruling that funded it, so the operator sees what each ruling earned and cost.
+
+The wallet's key is separate from the harness's identity key: the identity key signs votes, the wallet key moves money, and a stolen identity key can't spend. In the prototype, `PaymentWallet` in `packages/core/src/routing.js` enforces the allowlist, caps, approval threshold and bond reserve on a ledger; signing real transactions comes with the chain-specific routers.
+
+### Provability comes first
+
+The routing agent never trades provability for price. Each contract sets the minimum assurance for the AI that rules on it, in `payment.jury.assurance`, and the agent picks the cheapest route that meets it, or refuses the seat.
+
+| Level | What the route must offer | Example routes |
+|---|---|---|
+| **L0, L1** | Any model; the jury supplies lab diversity and commit-reveal | Hosted APIs: Claude, GPT, Gemini, through a provider or a router |
+| **L1+** | Re-executable by auditors: open weights at temperature 0 on a pinned runtime, or a hardware attestation of what ran | `gpt-oss-120b` or Qwen3 on a GPU the agent rents, pinned by weights hash and container digest |
+| **L2** | A zero-knowledge proof of inference per vote, checked off chain by auditors | Today only Llama 4 Maverick, through research proving systems such as FlashProve, on a GPU host with large memory |
+
+A hosted API can't prove which model it served, so it tops out at L1. When a contract asks for L2, the routing agent has to rent a proving-capable GPU and run an open model itself, or decline. That is available in the prototype today as `routeInference()` in `packages/core/src/routing.js`, which picks the cheapest qualifying route and refuses when none qualifies.
+
+### Configuration
+
+The operator stays in charge through limits in the harness config. The routing section is **planned**; `payments` already works with the `ledger` router.
 
 ```json
 {
-  "operations": {
-    "agent": "auto",
-    "reserve": { "bond": "100%", "cash": "10%" },
-    "swapTo": { "asset": "USDC", "venues": ["<approved venue>"], "maxSlippage": 0.005 },
-    "bills": [
-      { "payee": "model provider", "asset": "USDC", "monthlyCap": 50 },
-      { "payee": "GPU or cloud host", "asset": "USDC", "monthlyCap": 400 }
+  "routing": {
+    "inference": [
+      { "id": "hosted-haiku", "kind": "hosted", "provider": "openrouter", "model": "anthropic/claude-haiku-4.5", "usdPerVote": 0.003 },
+      { "id": "local-gptoss", "kind": "open-weights", "model": "openai/gpt-oss-120b", "host": "gpu-1", "usdPerVote": 0.001 },
+      { "id": "proving-maverick", "kind": "open-weights", "model": "meta-llama/llama-4-maverick", "proofs": true, "host": "gpu-proving", "usdPerVote": 0.03 }
     ],
+    "hosting": [
+      { "id": "gpu-1", "backend": "<cloud provider>", "gpu": "1x80GB", "monthlyCap": 2000 },
+      { "id": "gpu-proving", "backend": "<cloud provider>", "gpu": "1x80GB", "hostRamGB": 290, "onDemand": true }
+    ],
+    "convert": { "to": "USDC", "venues": ["<approved venue>"], "maxSlippage": 0.005 },
+    "bills": [{ "payee": "openrouter", "asset": "USDC", "monthlyCap": 50 }],
+    "reserve": { "bond": "100%", "cash": "10%" },
     "approvalAbove": 100
-  }
+  },
+  "payments": { "router": "solana-usdc", "accept": [{ "chain": "*", "asset": "*" }] }
 }
 ```
 
 | Guardrail | What it does |
 |---|---|
-| Allowlisted payees | The agent can only pay the suppliers the operator listed |
-| Caps | Monthly limits per bill; anything above `approvalAbove` waits for the operator |
-| Approved venues and slippage | Swaps happen only where the operator allows, within a price limit |
+| Provability floor | A route below the contract's required level is never used, however cheap |
+| Allowlisted payees and backends | The agent only pays, and only rents from, suppliers the operator listed |
+| Caps | Monthly limits per bill and per host; anything above `approvalAbove` waits for the operator |
+| Approved venues and slippage | Conversions happen only where the operator allows, within a price limit |
 | Bond first | The bond is never spent to pay a bill |
-| Full log | Every swap and payment is recorded and attributable to the rulings that funded it |
+| Full log | Every conversion, rental and payment is recorded against the ruling that funded it |
 
-**Status: planned.** The prototype records payouts with the `ledger` router and does not swap or pay anything. The operations agent is on the [roadmap](../ROADMAP.md) after the on-chain payment routers.
+**Status.** Inference routing by assurance level, and the payment wallet's spending rules, work in the core today. Accepting and converting payments on chain, renting hosts and paying bills are **planned**, after the on-chain payment routers; see the [roadmap](../ROADMAP.md).
 
 ## How money moves
 
@@ -109,11 +145,11 @@ Money never moves to Swarm Chain. It stays on the chain where the requester hold
 2. **Rule.** Swarm Chain draws a jury of harnesses, who commit and reveal their votes. The ruling and its payout diff are sealed into a block.
 3. **Release.** A trigger signed by a quorum of harnesses tells the escrow on the source chain to pay out: to the winning side of a market, to a claimant, back to the requester on a refund, and to the harnesses whose votes were counted. Everything is paid in the same asset that was put in.
 
-Swarm Chain itself only records decisions. It has no balance of its own to protect. What a harness does with its share afterwards, including exchanging it to pay its own bills, is up to its [operations agent](#harnesses-that-pay-their-own-bills).
+Swarm Chain itself only records decisions. It has no balance of its own to protect. What a harness does with its share afterwards, including converting it to pay its own bills, is up to its [routing agent](#the-routing-agent).
 
 ## The payment router
 
-Every harness plugs in a **payment router**. The router decides which payments the harness accepts and where its share is sent. Set it in the harness config:
+The payment router is the payments-in part of the [routing agent](#the-routing-agent). Every harness plugs one in. The router decides which payments the harness accepts and where its share is sent. Set it in the harness config:
 
 ```json
 {

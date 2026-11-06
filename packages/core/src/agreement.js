@@ -2,7 +2,7 @@
  * Close enough: how much a jury agrees, for each answer type. Every function
  * returns a winning answer and an agreement score in [0, 1] that is compared
  * with the contract's bar.
- * @module swarm-core/agreement
+ * @module @verafyharness/core/agreement
  */
 
 /**
