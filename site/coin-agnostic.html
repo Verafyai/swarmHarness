@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Coin Agnostic</title>
+<meta name="description" content="Why there is no coin, what the money pays for, and how the Verafy Harness routing agent moves it.">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="canonical" href="https://harness.verafy.ai/coin-agnostic">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Verafy Harness">
+<meta property="og:title" content="Coin Agnostic">
+<meta property="og:description" content="Why there is no coin, what the money pays for, and how the Verafy Harness routing agent moves it.">
+<meta property="og:url" content="https://harness.verafy.ai/coin-agnostic">
+<meta property="og:image" content="https://harness.verafy.ai/banner.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://harness.verafy.ai/banner.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--paper:#EDF0F3;--sheet:#FFFFFF;--ink:#16212C;--mute:#566473;--rule:#CDD5DD;--accent:#3640C9;--accent-soft:#DADDF7;--allow:#1C7A4E;--hold:#A0561A;--code:#F4F6F8;
+--display:"Archivo","Helvetica Neue",Arial,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#0F151B;--sheet:#161E26;--ink:#E4EAF0;--mute:#93A1AF;--rule:#2A3541;--accent:#8A92FF;--accent-soft:#252A55;--allow:#5CC995;--hold:#E0A060;--code:#1B242E;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0F151B;--sheet:#161E26;--ink:#E4EAF0;--mute:#93A1AF;--rule:#2A3541;--accent:#8A92FF;--accent-soft:#252A55;--allow:#5CC995;--hold:#E0A060;--code:#1B242E;color-scheme:dark}
+*{box-sizing:border-box}body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17.5px;line-height:1.6;margin:0}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+img{max-width:100%;height:auto}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.coinfree{background:var(--sheet);border-top:3px solid var(--accent);border-bottom:1px solid var(--rule)}
+.coinfree .wrap{padding-block:18px 20px;display:flex;flex-direction:column;gap:6px}
+.coinfree h2{font-family:var(--display);font-weight:750;font-size:clamp(22px,2.4vw,28px);margin:0}
+.coinfree p{max-width:46em;margin:0;overflow-wrap:break-word}
+.top{display:flex;align-items:center;gap:16px;padding-block:20px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;font-stretch:110%;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:10px}
+.brand .mark{color:var(--ink);flex:none}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-right:auto;margin-left:12px}
+.tabs a{font-family:var(--display);font-weight:600;font-size:15px;color:var(--mute);text-decoration:none;padding:6px 10px;border-radius:2px;border:1px solid transparent}
+.tabs a:hover{color:var(--ink);border-color:var(--rule)}.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--ink)}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--hold);border:1px solid currentColor;padding:4px 10px;border-radius:2px}
+.tabs{order:3;width:100%;margin:0 0 0 -10px}
+.top .status{margin-left:auto}
+@media (max-width:560px){.top .status{margin-left:0}}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:48px;padding-block:40px 80px}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.side{position:static!important;max-height:none!important}}
+.side{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;font-size:15px}
+.side .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:8px}
+.side ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.side ul ul{padding-left:14px;margin:2px 0 6px}
+.side a{color:var(--mute);text-decoration:none;display:block;padding:3px 8px;border-left:2px solid transparent}
+.side a:hover{color:var(--ink)}.side a.on{color:var(--ink);border-left-color:var(--accent)}
+article{min-width:0;max-width:52rem}
+article h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,4.6vw,52px);line-height:1.05;letter-spacing:-.015em;margin:0 0 18px}
+article h2{font-family:var(--display);font-weight:750;font-size:28px;line-height:1.15;margin:48px 0 14px;padding-top:18px;border-top:1px solid var(--rule)}
+article h3{font-family:var(--display);font-weight:700;font-size:20px;margin:28px 0 10px}
+article p,article li{max-width:44em}
+article img{display:block;border:1px solid var(--rule);border-radius:3px;background:#fff}
+article blockquote{margin:18px 0;padding:14px 18px;background:var(--sheet);border:1px solid var(--hold);border-radius:2px;color:var(--ink)}
+article blockquote p{margin:0}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);padding:1px 5px;border-radius:2px}
+pre{background:var(--code);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;overflow-x:auto;font-size:14px;line-height:1.5}
+pre code{background:none;padding:0;font-size:inherit}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--sheet);margin:16px 0}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:400}
+tr:last-child td{border-bottom:0}
+.foot{padding-block:24px 48px;border-top:1px solid var(--rule);font-size:15px;color:var(--mute);display:flex;flex-direction:column;gap:6px}
+.foot p{margin:0}
+
+</style>
+</head>
+<body>
+<section class="coinfree" aria-labelledby="coinfreeH">
+  <div class="wrap">
+    <h2 id="coinfreeH">Coin-free guarantee.</h2>
+    <p>There is no coin, and Verafy Harness will never need one. A harness is paid in whatever token a contract offers and pays its own AI and hosting bills from that. No presale, no airdrop, no points, no treasury. <a href="/coin-agnostic">How payment works</a></p>
+  </div>
+</section>
+<header class="wrap top">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 64 64" width="28" height="28" aria-hidden="true"><path d="M6 20V6h14M44 6h14v14M58 44v14H44M20 58H6V44" stroke="currentColor" stroke-width="5" stroke-linecap="square" fill="none"/><path d="M32 13v7M32 44v7M13 32h7M44 32h7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="32" r="11" fill="var(--accent)"/><circle cx="32" cy="32" r="4" fill="var(--paper)"/></svg>Verafy Harness</a>
+  <nav class="tabs" aria-label="Verafy Chain and Verafy Harness">
+    <a href="https://chain.verafy.ai">Verafy Chain</a>
+    <a href="/">Verafy Harness</a>
+    <a href="/run">Run a harness</a>
+    <a href="/testnet">Testnet</a>
+    <a href="/coin-agnostic" aria-current="page">Coin Agnostic</a>
+    <a href="https://asc.verafy.ai">Actually Smart Contracts</a>
+    <a href="https://github.com/Verafyai/verafyHarness">GitHub</a>
+    <a href="https://chain.verafy.ai/#roadmap">Roadmap</a>
+  </nav>
+  <span class="status">Prototype. Not a running network.</span>
+</header>
+<div class="wrap layout"><aside class="side" aria-label="On this page"><span class="lbl">On this page</span><div class="toc">
+<ul>
+<li><a href="#contents">Contents</a></li>
+<li><a href="#why-there-is-no-coin">Why there is no coin</a></li>
+<li><a href="#what-the-money-pays-for">What the money pays for</a><ul>
+<li><a href="#a-worked-example">A worked example</a></li>
+</ul>
+</li>
+<li><a href="#the-routing-agent">The routing agent</a><ul>
+<li><a href="#the-payment-wallet">The payment wallet</a></li>
+<li><a href="#provability-comes-first">Provability comes first</a></li>
+<li><a href="#configuration">Configuration</a></li>
+</ul>
+</li>
+<li><a href="#how-money-moves">How money moves</a></li>
+<li><a href="#the-payment-router">The payment router</a></li>
+<li><a href="#what-you-can-pay-and-be-paid-in">What you can pay and be paid in</a></li>
+<li><a href="#bonds-without-a-coin">Bonds without a coin</a></li>
+<li><a href="#what-we-will-never-do">What we will never do</a></li>
+<li><a href="#what-this-costs-us">What this costs us</a></li>
+<li><a href="#questions">Questions</a></li>
+</ul>
+</div>
+</aside><article><h1 id="coin-agnostic">Coin Agnostic</h1>
+<p><strong>Verafy Chain has no token, and it doesn't need one.</strong> It runs on whatever asset people want to put into it. You can pay for a ruling, and be paid for judging one, in USDC, SOL, ETH or any other asset on any chain with smart contracts, from any wallet.</p>
+<p>That is deliberate. The goal is something useful regardless of which crypto you hold, and a new coin would only get in the way of that.</p>
+<blockquote>
+<p><strong>The policy in one line:</strong> no token, no presale, no airdrop, no points, no foundation, no UAE entity, no BVI company hidden somewhere. It is just a project. Come test it.</p>
+</blockquote>
+<h2 id="contents">Contents</h2>
+<ul>
+<li><a href="#why-there-is-no-coin">Why there is no coin</a></li>
+<li><a href="#what-the-money-pays-for">What the money pays for</a></li>
+<li><a href="#the-routing-agent">The routing agent</a></li>
+<li><a href="#how-money-moves">How money moves</a></li>
+<li><a href="#the-payment-router">The payment router</a></li>
+<li><a href="#what-you-can-pay-and-be-paid-in">What you can pay and be paid in</a></li>
+<li><a href="#bonds-without-a-coin">Bonds without a coin</a></li>
+<li><a href="#what-we-will-never-do">What we will never do</a></li>
+<li><a href="#what-this-costs-us">What this costs us</a></li>
+<li><a href="#questions">Questions</a></li>
+</ul>
+<h2 id="why-there-is-no-coin">Why there is no coin</h2>
+<p>A blockchain usually needs a token for three jobs: paying for work, securing the network through staking, and rewarding early participants. Verafy Chain does each without one.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Job</th>
+<th>Usual answer</th>
+<th>Verafy Chain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Paying for work</td>
+<td>Gas in the native token</td>
+<td>The requester pays in their own asset, in escrow on their own chain</td>
+</tr>
+<tr>
+<td>Rewarding validators</td>
+<td>Block rewards in newly minted tokens</td>
+<td>A share of each ruling's escrow, in the asset the contract was paid in</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>Stake in the native token, slashed for faults</td>
+<td>Bonds in the asset each harness earns in, slashed for proven faults</td>
+</tr>
+<tr>
+<td>Rewarding early people</td>
+<td>Allocations, airdrops, points</td>
+<td>None. The reward is a useful tool, and the code is MIT licensed.</td>
+</tr>
+</tbody>
+</table></div>
+<p>A token would add a price to speculate on, a treasury to manage, and a reason to build the network around the coin instead of around the rulings. Without one, the only way the network is worth anything is if people find the rulings worth paying for.</p>
+<p>This is also being built without venture capital, so the idea has to stand on its own. If it works, other people will copy it, and they are welcome to.</p>
+<h2 id="what-the-money-pays-for">What the money pays for</h2>
+<p>There is no coin to pay for anything, so every ruling pays its own way. The escrow a requester puts in covers the real work of producing a decision, and nothing else.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Work</th>
+<th>Who does it</th>
+<th>What it costs them</th>
+<th>Paid from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Inference</strong></td>
+<td>Jurors: each one runs its committed AI model on the contract's instructions, context and question</td>
+<td>Model tokens, either per call to a provider or GPU time on their own hardware</td>
+<td><code>split.jurors</code>, shared across counted votes</td>
+</tr>
+<tr>
+<td><strong>Running the harness</strong></td>
+<td>Jurors</td>
+<td>The machine, the network, uptime, keeping the model pinned and the endpoint healthy, and the capital locked in the bond</td>
+<td>The same juror share</td>
+</tr>
+<tr>
+<td><strong>Audits</strong></td>
+<td>Auditors: they re-run a sample of sealed rulings with a different lab's model</td>
+<td>More inference, on rulings they didn't sit on</td>
+<td><code>split.auditors</code>, plus the bond of any juror they catch</td>
+</tr>
+<tr>
+<td><strong>Keeping the words available</strong></td>
+<td>Storage harnesses: they serve every prompt, context file and piece of evidence by hash for as long as a ruling can be challenged</td>
+<td>Disk and bandwidth</td>
+<td><code>split.storage</code></td>
+</tr>
+<tr>
+<td><strong>Bookkeeping</strong></td>
+<td>Sealers and nodes: they collect reveals, check quorum, signatures and diffs, seal blocks and keep the chain</td>
+<td>CPU, disk and bandwidth</td>
+<td><code>split.sealer</code></td>
+</tr>
+<tr>
+<td><strong>Settlement</strong></td>
+<td>Whoever submits the quorum-signed trigger on the source chain</td>
+<td>That chain's own transaction fee, in its own asset</td>
+<td>Covered by the sealer share in the current design</td>
+</tr>
+</tbody>
+</table></div>
+<p>The requester sets the split in the contract. The examples use 80 percent to jurors, 10 to auditors, 5 to storage and 5 to the sealer. A ruling below the bar pays none of this yet; its escrow carries over to fund the larger jury.</p>
+<h3 id="a-worked-example">A worked example</h3>
+<p>The market-resolution example escrows <strong>1.20 USDC</strong> for a jury of five. <strong>Illustrative</strong> split, using the example's numbers:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Share</th>
+<th>Amount</th>
+<th>Pays for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Jurors, 80 percent</td>
+<td>0.96 USDC, or 0.192 per counted vote</td>
+<td>Five model runs and five harnesses' operating costs</td>
+</tr>
+<tr>
+<td>Auditors, 10 percent</td>
+<td>0.12 USDC</td>
+<td>Re-running a sample of rulings</td>
+</tr>
+<tr>
+<td>Storage, 5 percent</td>
+<td>0.06 USDC</td>
+<td>Serving the context through the challenge window</td>
+</tr>
+<tr>
+<td>Sealer, 5 percent</td>
+<td>0.06 USDC</td>
+<td>Sealing, bookkeeping and settlement fees</td>
+</tr>
+</tbody>
+</table></div>
+<p>For scale, the <strong>measured</strong> model cost of a five-model ruling on Nov 6, 2026 was about <strong>$0.003</strong>, or about $0.0007 per vote (<a href="https://github.com/Verafyai/verafyHarness/blob/main/results/live-2026-11-06.md">results</a>). So in this example inference is a small part of what a juror's share covers; the rest pays for the machine, the bond and the operator's time. Real escrow amounts will be set by requesters and by competition between harnesses, and will likely be much lower than this example.</p>
+<h2 id="the-routing-agent">The routing agent</h2>
+<p>Every harness carries a <strong>routing agent</strong>: the part of the harness that deals with keys, money and outside services, so the AI can stay focused on judging. It is built from four blocks.</p>
+<p><img alt="Block diagram: the routing agent inside the harness, with its keyblock, banker, API router and payment wallet, taking payments in any asset and paying AI APIs, provers and cloud hosts" src="/assets/harness-diagram.png" /></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Block</th>
+<th>What it does</th>
+<th>In the code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Keyblock</strong></td>
+<td>The vault. Holds every API key and wallet key encrypted at rest, and never hands a raw secret to the rest of the harness. It issues <strong>scoped keys</strong> instead: short-lived, signed grants such as "call the OpenRouter API" or "pay the GPU host", with an expiry and a use limit. The API router and the banker present a scoped key each time they need a secret used. Revoke one key, or lock the keyblock, and every use stops.</td>
+<td><code>Keyblock</code> in <code>keyblock.js</code></td>
+</tr>
+<tr>
+<td><strong>Banker</strong></td>
+<td>The exchange. Accepts any digital token the operator allows, swaps one token for another at the best quote across approved venues within a slippage limit, never sells into the bond reserve, and funds payments in whatever token the payee takes.</td>
+<td><code>Banker</code> in <code>banker.js</code></td>
+</tr>
+<tr>
+<td><strong>API router</strong></td>
+<td>One door to every outside API: AI model APIs, external API routers such as OpenRouter, proving services, cloud hosting backends and payment endpoints. It attaches the right API key from the keyblock, meters each call, and pays each API through the banker, per call or accrued and settled. It sends each contract only to AI that meets the contract's provability requirement.</td>
+<td><code>ApiRouter</code> in <code>apirouter.js</code>, <code>routeInference()</code> in <code>routing.js</code></td>
+</tr>
+<tr>
+<td><strong>Payment wallet</strong></td>
+<td>Where earnings land and bills are paid from. Allowlisted payees, monthly caps, an approval threshold, the bond reserve, and a log of every receipt, swap and payment against the ruling that funded it.</td>
+<td><code>PaymentWallet</code> in <code>routing.js</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>How they work together on one juror vote:</p>
+<ol>
+<li>The juror asks the API router for a model call, presenting a scoped key that allows <code>call:openrouter</code> and nothing else.</li>
+<li>The API router checks that the route meets the contract's assurance level, asks the keyblock to lend the OpenRouter key for this one call, and sends the request. The juror never sees the key.</li>
+<li>The response's token usage is priced from the API's price card.</li>
+<li>The banker pays OpenRouter in USDC from the payment wallet. If the wallet holds SOL instead, the banker swaps just enough SOL to USDC first, on an approved venue, leaving the bond reserve alone.</li>
+<li>The wallet logs the swap and the payment against the ruling.</li>
+</ol>
+<p>The same path rents and pays a GPU host (<code>call:gpucloud</code>, accrued and settled monthly), pays a proving service for an L2 contract, or pays any other API the operator plugs in.</p>
+<p>The effect is a validator that runs itself: it takes payment in whatever the requester holds, buys exactly the inference the contract asks for, pays for the machine it runs on, and keeps its bond in place, with no native coin in the middle and no secret in the open.</p>
+<h3 id="the-payment-wallet">The payment wallet</h3>
+<p>The wallet is how the harness pays its own way.</p>
+<ol>
+<li><strong>In.</strong> Each ruling's share for this harness arrives in the wallet, in the contract's asset, on the contract's chain.</li>
+<li><strong>Hold.</strong> The wallet keeps the bond reserve untouched and a cash reserve the operator sets.</li>
+<li><strong>Convert.</strong> When a bill is due in a different asset, the router converts on an approved venue within a slippage limit.</li>
+<li><strong>Out.</strong> The router pays each supplier as the harness uses it: the AI API for every model call, the cloud backend for the GPU or VM, storage and bandwidth. Payees must be on the operator's allowlist, each with a monthly cap, and anything above the approval threshold waits for the operator.</li>
+<li><strong>Log.</strong> Every receipt, conversion and payment is recorded against the ruling that funded it, so the operator sees what each ruling earned and cost.</li>
+</ol>
+<p>The wallet's key is separate from the harness's identity key: the identity key signs votes, the wallet key moves money, and a stolen identity key can't spend. In the prototype, <code>PaymentWallet</code> in <code>packages/core/src/routing.js</code> enforces the allowlist, caps, approval threshold and bond reserve on a ledger; signing real transactions comes with the chain-specific routers.</p>
+<h3 id="provability-comes-first">Provability comes first</h3>
+<p>The routing agent never trades provability for price. Each contract sets the minimum assurance for the AI that rules on it, in <code>payment.jury.assurance</code>, and the agent picks the cheapest route that meets it, or refuses the seat.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Level</th>
+<th>What the route must offer</th>
+<th>Example routes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L0, L1</strong></td>
+<td>Any model; the jury supplies lab diversity and commit-reveal</td>
+<td>Hosted APIs: Claude, GPT, Gemini, through a provider or a router</td>
+</tr>
+<tr>
+<td><strong>L1+</strong></td>
+<td>Re-executable by auditors: open weights at temperature 0 on a pinned runtime, or a hardware attestation of what ran</td>
+<td><code>gpt-oss-120b</code> or Qwen3 on a GPU the agent rents, pinned by weights hash and container digest</td>
+</tr>
+<tr>
+<td><strong>L2</strong></td>
+<td>A zero-knowledge proof of inference per vote, checked off chain by auditors</td>
+<td>Today only Llama 4 Maverick, through research proving systems such as FlashProve, on a GPU host with large memory</td>
+</tr>
+</tbody>
+</table></div>
+<p>A hosted API can't prove which model it served, so it tops out at L1. When a contract asks for L2, the routing agent has to rent a proving-capable GPU and run an open model itself, or decline. That is available in the prototype today as <code>routeInference()</code> in <code>packages/core/src/routing.js</code>, which picks the cheapest qualifying route and refuses when none qualifies.</p>
+<h3 id="configuration">Configuration</h3>
+<p>The operator stays in charge through limits in the harness config. The keyblock, banker, API router and wallet run in the core today with test venues and test APIs; reading this section from the config file, real exchange venues and signing on chain are <strong>planned</strong>.</p>
+<pre><code class="language-json">{
+  &quot;keyblock&quot;: { &quot;file&quot;: &quot;~/.swarm/keyblock.json&quot;, &quot;passphraseEnv&quot;: &quot;SWARM_KEYBLOCK_PASSPHRASE&quot; },
+  &quot;banker&quot;: {
+    &quot;accept&quot;: [{ &quot;chain&quot;: &quot;*&quot;, &quot;asset&quot;: &quot;*&quot; }],
+    &quot;venues&quot;: [&quot;&lt;approved Solana DEX aggregator&gt;&quot;, &quot;&lt;approved EVM DEX aggregator&gt;&quot;],
+    &quot;maxSlippage&quot;: 0.005,
+    &quot;prefer&quot;: [&quot;USDC&quot;, &quot;SOL&quot;, &quot;ETH&quot;]
+  },
+  &quot;apis&quot;: [
+    { &quot;id&quot;: &quot;openrouter&quot;, &quot;kind&quot;: &quot;inference&quot;, &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot;, &quot;secret&quot;: &quot;openrouter&quot;, &quot;payee&quot;: &quot;openrouter&quot;, &quot;billing&quot;: &quot;per-call&quot; },
+    { &quot;id&quot;: &quot;gpucloud&quot;, &quot;kind&quot;: &quot;hosting&quot;, &quot;baseURL&quot;: &quot;&lt;cloud provider API&gt;&quot;, &quot;secret&quot;: &quot;gpucloud&quot;, &quot;payee&quot;: &quot;gpucloud&quot;, &quot;billing&quot;: &quot;accrue&quot; }
+  ],
+  &quot;routing&quot;: {
+    &quot;inference&quot;: [
+      { &quot;id&quot;: &quot;hosted-haiku&quot;, &quot;kind&quot;: &quot;hosted&quot;, &quot;provider&quot;: &quot;openrouter&quot;, &quot;model&quot;: &quot;anthropic/claude-haiku-4.5&quot;, &quot;usdPerVote&quot;: 0.003 },
+      { &quot;id&quot;: &quot;local-gptoss&quot;, &quot;kind&quot;: &quot;open-weights&quot;, &quot;model&quot;: &quot;openai/gpt-oss-120b&quot;, &quot;host&quot;: &quot;gpu-1&quot;, &quot;usdPerVote&quot;: 0.001 },
+      { &quot;id&quot;: &quot;proving-maverick&quot;, &quot;kind&quot;: &quot;open-weights&quot;, &quot;model&quot;: &quot;meta-llama/llama-4-maverick&quot;, &quot;proofs&quot;: true, &quot;host&quot;: &quot;gpu-proving&quot;, &quot;usdPerVote&quot;: 0.03 }
+    ],
+    &quot;hosting&quot;: [
+      { &quot;id&quot;: &quot;gpu-1&quot;, &quot;backend&quot;: &quot;&lt;cloud provider&gt;&quot;, &quot;gpu&quot;: &quot;1x80GB&quot;, &quot;monthlyCap&quot;: 2000 },
+      { &quot;id&quot;: &quot;gpu-proving&quot;, &quot;backend&quot;: &quot;&lt;cloud provider&gt;&quot;, &quot;gpu&quot;: &quot;1x80GB&quot;, &quot;hostRamGB&quot;: 290, &quot;onDemand&quot;: true }
+    ],
+    &quot;convert&quot;: { &quot;to&quot;: &quot;USDC&quot;, &quot;venues&quot;: [&quot;&lt;approved venue&gt;&quot;], &quot;maxSlippage&quot;: 0.005 },
+    &quot;bills&quot;: [{ &quot;payee&quot;: &quot;openrouter&quot;, &quot;asset&quot;: &quot;USDC&quot;, &quot;monthlyCap&quot;: 50 }],
+    &quot;reserve&quot;: { &quot;bond&quot;: &quot;100%&quot;, &quot;cash&quot;: &quot;10%&quot; },
+    &quot;approvalAbove&quot;: 100
+  },
+  &quot;payments&quot;: { &quot;router&quot;: &quot;solana-usdc&quot;, &quot;accept&quot;: [{ &quot;chain&quot;: &quot;*&quot;, &quot;asset&quot;: &quot;*&quot; }] }
+}
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Guardrail</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Provability floor</td>
+<td>A route below the contract's required level is never used, however cheap</td>
+</tr>
+<tr>
+<td>Allowlisted payees and backends</td>
+<td>The agent only pays, and only rents from, suppliers the operator listed</td>
+</tr>
+<tr>
+<td>Caps</td>
+<td>Monthly limits per bill and per host; anything above <code>approvalAbove</code> waits for the operator</td>
+</tr>
+<tr>
+<td>Approved venues and slippage</td>
+<td>Conversions happen only where the operator allows, within a price limit</td>
+</tr>
+<tr>
+<td>Bond first</td>
+<td>The bond is never spent to pay a bill</td>
+</tr>
+<tr>
+<td>Full log</td>
+<td>Every conversion, rental and payment is recorded against the ruling that funded it</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Status.</strong> The keyblock (encryption, scoped keys, revocation), the banker (accept lists, best-quote swaps, slippage and bond-reserve limits), the API router (keyed calls, metering, per-call and accrued billing), inference routing by assurance level and the payment wallet's rules all work in the core today, tested with fixed-rate venues and test APIs. Accepting and converting payments on chain, renting hosts and paying bills are <strong>planned</strong>, after the on-chain payment routers; see the <a href="https://github.com/Verafyai/verafyHarness/blob/main/ROADMAP.md">roadmap</a>.</p>
+<h2 id="how-money-moves">How money moves</h2>
+<p>Money never moves to Verafy Chain. It stays on the chain where the requester holds it.</p>
+<ol>
+<li><strong>Fund.</strong> The requester locks escrow in a program or contract on their own chain: USDC in a Solana program, ETH in an Ethereum contract. The escrow names the Actually Smart Contract by its hash.</li>
+<li><strong>Rule.</strong> Verafy Chain draws a jury of harnesses, who commit and reveal their votes. The ruling and its payout diff are sealed into a block.</li>
+<li><strong>Release.</strong> A trigger signed by a quorum of harnesses tells the escrow on the source chain to pay out: to the winning side of a market, to a claimant, back to the requester on a refund, and to the harnesses whose votes were counted. Everything is paid in the same asset that was put in.</li>
+</ol>
+<p>Verafy Chain itself only records decisions. It has no balance of its own to protect. What a harness does with its share afterwards, including converting it to pay its own bills, is up to its <a href="#the-routing-agent">routing agent</a>.</p>
+<h2 id="the-payment-router">The payment router</h2>
+<p>The payment router settles a harness's share on the chain where the contract was paid; the banker then holds or converts it. Every harness plugs one in. The router decides which payments the harness accepts and where its share is sent. Set it in the harness config:</p>
+<pre><code class="language-json">{
+  &quot;payments&quot;: {
+    &quot;router&quot;: &quot;solana-usdc&quot;,
+    &quot;accept&quot;: [{ &quot;chain&quot;: &quot;solana&quot;, &quot;asset&quot;: &quot;USDC&quot; }],
+    &quot;book&quot;: { &quot;harness:my-harness&quot;: { &quot;solana&quot;: &quot;&lt;your Solana address&gt;&quot; } }
+  }
+}
+</code></pre>
+<ul>
+<li><code>router</code> picks how settlement happens. <code>ledger</code> (available now) records every payout to a local file and moves nothing. <code>solana-usdc</code> and <code>evm</code> (planned) release escrow on Solana and on Ethereum or other EVM chains.</li>
+<li><code>accept</code> lists the chains and assets the harness will take jury seats for. <code>*</code> means anything. A harness refuses contracts that pay in anything else, so it is never owed an asset it can't receive.</li>
+<li><code>book</code> is the payout book: one address per chain for each harness you run.</li>
+</ul>
+<p>Want to be paid only in USDC on Solana? List only that. Want anything at all? Use <code>*</code>. Swapping routers is a config change; nothing else in the harness changes.</p>
+<h2 id="what-you-can-pay-and-be-paid-in">What you can pay and be paid in</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Chain</th>
+<th>Assets</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Any, locally</td>
+<td>Any label</td>
+<td><strong>Available now</strong> with the <code>ledger</code> router: payouts are recorded, nothing moves</td>
+</tr>
+<tr>
+<td>Solana</td>
+<td>SOL, USDC, any SPL token</td>
+<td><strong>Planned</strong> (<code>solana-usdc</code> router), Solana devnet first</td>
+</tr>
+<tr>
+<td>Ethereum and EVM chains</td>
+<td>ETH, any ERC-20</td>
+<td><strong>Planned</strong> (<code>evm</code> router)</td>
+</tr>
+<tr>
+<td>Bitcoin</td>
+<td>Wrapped BTC on a chain with contracts</td>
+<td>Through those chains' routers. Native Bitcoin has no contracts to hold escrow, so it is not planned.</td>
+</tr>
+</tbody>
+</table></div>
+<p>A contract states its asset and chain in <code>payment.currency</code> and <code>payment.chain</code>. Jurors, auditors, storage and the sealer are paid their shares in that asset.</p>
+<h2 id="bonds-without-a-coin">Bonds without a coin</h2>
+<p>A harness posts a bond so that cheating costs it something. With no native token, bonds are posted on the chain a harness earns on, in an asset it accepts. A contract sets the minimum bond per vote in its own asset, and a harness takes seats only where its bond covers that.</p>
+<p>Two things are harder without a coin, and they are open problems rather than solved ones:</p>
+<ul>
+<li><strong>Comparing bonds across assets.</strong> A bond in SOL and a bond in USDC are not directly comparable. Testnet avoids this by pricing bonds per contract, in that contract's own asset.</li>
+<li><strong>Weighting nodes for ledger consensus.</strong> Many chains weight nodes by staked native tokens. Testnet uses a fixed, permissioned set of nodes instead. How to open that up without a coin is still being worked out.</li>
+</ul>
+<h2 id="what-we-will-never-do">What we will never do</h2>
+<ul>
+<li>Launch a Verafy token, coin, points program, presale or airdrop.</li>
+<li>Mint any asset from a Verafy Chain contract or config.</li>
+<li>Set up a foundation, a UAE entity, a BVI company, or any other entity to hold a treasury.</li>
+<li>Charge a protocol fee on top of what juries earn.</li>
+<li>Describe testnet participation as earning anything that converts into a future token.</li>
+</ul>
+<p>If you see any of these attached to the name Verafy Chain, it isn't us.</p>
+<h2 id="what-this-costs-us">What this costs us</h2>
+<p>Being coin agnostic has real costs:</p>
+<ul>
+<li>No treasury to pay for development, audits or seed nodes. It's built by whoever finds it useful.</li>
+<li>No staking token to lean on for ledger consensus. See above.</li>
+<li>Every chain we support needs its own escrow program and router, and its own audit.</li>
+<li>Payouts are only as fast and cheap as the chain they settle on.</li>
+</ul>
+<p>We think these are worth it, because the alternative is a network that exists to support a coin.</p>
+<h2 id="questions">Questions</h2>
+<p><strong>How do harness operators make money?</strong>
+From each ruling they sit on: a share of that ruling's escrow, paid in the contract's asset. Auditors also earn the bond of any juror they catch cheating. There are no block rewards. On testnet everything is play money. See <a href="/run#15-what-it-earns">What it earns</a>.</p>
+<p><strong>Why would anyone run a harness without a token to speculate on?</strong>
+Because rulings pay. If nobody pays for rulings, the network shouldn't exist, and a token wouldn't change that.</p>
+<p><strong>Can I pay in a stablecoin and be paid in SOL?</strong>
+Not directly. A contract pays out in the asset it was funded in. A harness that wants SOL accepts SOL contracts, or swaps on its own.</p>
+<p><strong>Is there a fee to Verafy or anyone else?</strong>
+No. The escrow split goes to jurors, auditors, storage and the sealer, and nobody else.</p>
+<p><strong>Will there be a token later?</strong>
+No.</p></article></div>
+<footer class="wrap foot">
+  <p>Verafy Harness is the validator for Verafy Chain, a Verafy research concept. It is a prototype, not a running network, and there is no token.</p>
+  <p>Code: <a href="https://github.com/Verafyai/verafyHarness">Verafyai/verafyHarness</a>, MIT, built on <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>. The concept: <a href="https://chain.verafy.ai">chain.verafy.ai</a>.</p>
+</footer>
+<script>(function(){var links=[].slice.call(document.querySelectorAll('.side a'));var hs=links.map(function(a){return document.getElementById(decodeURIComponent(a.hash.slice(1)))}).filter(Boolean);function on(){var y=window.scrollY+120,cur=null;hs.forEach(function(h){if(h.offsetTop<=y)cur=h.id});links.forEach(function(a){a.classList.toggle('on',decodeURIComponent(a.hash.slice(1))===cur)})}window.addEventListener('scroll',on,{passive:true});on()})();</script>
+</body>
+</html>

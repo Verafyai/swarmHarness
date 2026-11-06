@@ -1,0 +1,131 @@
+<section class="hero" aria-labelledby="h1">
+  <p class="lbl">The validator for Verafy Chain</p>
+  <h1 id="h1">An AI validator anyone can run.</h1>
+  <p class="lead hero-lead">Verafy Harness wraps one AI model in everything a validator needs: intake, pinned context, sandboxed tools, guardrails, a signer, a bond, a contract runtime, and a routing agent that holds the keys and pays the bills. It rules on Actually Smart Contracts, contracts written in words, together with harnesses running other labs' models.</p>
+  <div class="cta">
+    <a class="btn" href="/run">Run a harness</a>
+    <a class="btn ghost" href="https://github.com/Verafyai/verafyHarness">Read the code</a>
+    <a class="btn ghost" href="https://chain.verafy.ai">See Verafy Chain</a>
+  </div>
+  <div class="facts">
+    <div class="fact"><span class="big num">40</span><p>core tests pass with no dependencies on Node 22</p><span class="tag m">measured, Nov 6, 2026</span></div>
+    <div class="fact"><span class="big num">5 labs</span><p>ruled inside DeepSeek Harness and sealed a block from their reveals</p><span class="tag m">measured, Nov 6, 2026</span></div>
+    <div class="fact"><span class="big num">$0.0163</span><p>for five live rulings by five labs' models, 5.9 to 30.1 s each</p><span class="tag m">measured, Nov 6, 2026</span></div>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="s1">
+  <div class="gut"><span class="docket">§ 1</span><span class="lbl">The validator</span></div>
+  <div class="body">
+    <h2 id="s1">One model, wrapped in everything a validator does</h2>
+    <p class="lead">On today's chains a validator re-runs code and votes on blocks. A Verafy Harness reads a contract written in words, checks every piece of pinned context against its hash, asks its model for an answer and a confidence, and commits a hidden vote before anyone reveals. The model brings judgment. The harness does the rest.</p>
+@@FIGURE@@
+    <p class="lead mut">A harness commits to one model. Swapping the AI means changing the provider and model id, nothing else. The network does not care which lab a harness uses; it requires that every jury spans several labs.</p>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="s2">
+  <div class="gut"><span class="docket">§ 2</span><span class="lbl">The blocks</span></div>
+  <div class="body">
+    <h2 id="s2">What each block does, and where it lives in the code</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>A validator today</th><th>What the harness does</th><th>In the repo</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Receives transactions</td><td>Intake validates each contract, refuses one that asks more of a vote than its bond covers, and refuses payment in assets it doesn't accept.</td><td class="v">Harness.intake</td></tr>
+        <tr><td class="k">Re-executes bytecode</td><td>The model reads the instructions and pinned context and returns an answer with a confidence.</td><td class="v">juror.deliberate</td></tr>
+        <tr><td class="k">Checks state</td><td>The context loader verifies every pin before the model reads a word.</td><td class="v">juror.loadContext</td></tr>
+        <tr><td class="k">Votes on blocks</td><td>The signer commits a hidden vote, reveals it, and signs an attestation of which model produced it.</td><td class="v">signer.commit</td></tr>
+        <tr><td class="k">Stakes</td><td>The bond sizes how much value a vote can decide and is lost for a proven fault.</td><td class="v">Harness.bond</td></tr>
+        <tr><td class="k">Runs the state machine</td><td>The contract runtime picks the exit, builds the exact diff, splits the escrow, and checks that totals are conserved. A ruling below the bar never pays jurors.</td><td class="v">runtime.js</td></tr>
+        <tr><td class="k">Serves RPC</td><td>The outbox posts votes and emits triggers, such as a call to a Solana program. Triggers need a quorum signature.</td><td class="v">ruling.triggers</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="s3">
+  <div class="gut"><span class="docket">§ 3</span><span class="lbl">Routing agent</span></div>
+  <div class="body">
+    <h2 id="s3">The routing agent holds the keys and pays for the AI</h2>
+    <p class="lead">A harness gets paid in whatever token a contract offers, and it has bills in other tokens: model APIs, GPU hosts, provers. The routing agent closes that gap on its own, within limits the operator sets.</p>
+    <div class="grid4">
+      <div class="col"><h3>Keyblock</h3><p>Holds every API key and wallet key encrypted, and issues short-lived scoped keys. Nothing outside the keyblock holds a raw secret.</p><span class="tag m">built</span></div>
+      <div class="col"><h3>Banker</h3><p>Accepts any token, swaps between tokens at the best approved quote, and funds each payment in the payee's token.</p><span class="tag">built, test venues</span></div>
+      <div class="col"><h3>API router</h3><p>Plugs into AI APIs, API routers, provers and cloud hosts, meters each call, and sends each contract only to AI that meets its provability level.</p><span class="tag">built, test APIs</span></div>
+      <div class="col"><h3>Payment wallet</h3><p>Where earnings land and bills are paid from, inside an allowlist and spending caps. It never touches the bond.</p><span class="tag m">built</span></div>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Provability</th><th>What it requires</th><th>What the router may use</th></tr></thead>
+      <tbody>
+        <tr><td class="v">L0, L1</td><td>Any model; the jury supplies lab diversity and commit and reveal</td><td>Hosted APIs such as Claude, GPT and Gemini, direct or through a router</td></tr>
+        <tr><td class="v">L1+</td><td>Re-executable by auditors: open weights at temperature 0 on a pinned runtime, or a hardware attestation</td><td>An open model on a GPU the agent rents, pinned by weights hash and container digest</td></tr>
+        <tr><td class="v">L2</td><td>A zero-knowledge proof of inference per vote, checked by auditors</td><td>A proving-capable GPU host running an open model. Never a hosted API.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="lead mut">Real exchange venues and on-chain signing are next. The whole policy, including what Verafy will never do, is on <a href="/coin-agnostic">Coin Agnostic</a>.</p>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="s4">
+  <div class="gut"><span class="docket">§ 4</span><span class="lbl">Status</span></div>
+  <div class="body">
+    <h2 id="s4">What runs today</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>What</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks</td><td><span class="tag m">works</span> 40 tests, <code>npm run demo</code></td></tr>
+        <tr><td>Live rulings by five labs' models through OpenRouter</td><td><span class="tag m">measured</span> Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total</td></tr>
+        <tr><td>Juror mode inside DeepSeek Harness: five processes on five labs' models, block sealed from their reveals</td><td><span class="tag m">measured</span> Nov 6, 2026: all five voted NO, 100% against an 80% bar; every tool other than the two juror tools denied</td></tr>
+        <tr><td>Routing agent: keyblock, banker, API router, payment wallet</td><td><span class="tag">works with test venues</span> real venues and on-chain signing planned</td></tr>
+        <tr><td>Auditors, challenges and escalation of below-bar rulings to a wider jury</td><td><span class="tag">works with scripted models</span> not yet run live</td></tr>
+        <tr><td>Retry and back-off for rate-limited models</td><td><span class="tag">works with fake providers</span> not yet measured live</td></tr>
+        <tr><td>A network of harnesses, bonds and slashing, a public testnet</td><td><span class="tag mo">planned</span> <a href="/testnet">Testnet plan</a></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="s5">
+  <div class="gut"><span class="docket">§ 5</span><span class="lbl">Quick start</span></div>
+  <div class="body">
+    <h2 id="s5">Seal a block on your own machine</h2>
+    <p class="lead">Needs Node 22 or later. The core has no dependencies. The demo uses scripted answers, so it needs no key.</p>
+<pre><code>git clone https://github.com/Verafyai/verafyHarness.git
+cd verafyHarness
+npm test          # 40 tests
+npm run demo      # five contracts, five rulings, five blocks</code></pre>
+    <p class="lead">With real models through any OpenAI-compatible endpoint (OpenRouter by default), keep the key in your environment and never commit it:</p>
+<pre><code>export SWARM_API_KEY=...
+node bin/swarm.js doctor --live
+node bin/swarm.js run examples/market-resolution.json --live</code></pre>
+    <p class="lead mut">Machine specs, acceptable models, costs, earnings and the full setup are in <a href="/run">Run a harness</a>.</p>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="s6">
+  <div class="gut"><span class="docket">§ 6</span><span class="lbl">Built on</span></div>
+  <div class="body">
+    <h2 id="s6">Runs inside DeepSeek Harness</h2>
+    <p class="lead"><a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a> is an MIT-licensed agent harness where everything is a plugin. Verafy Harness pins it as a submodule, leaves the upstream tree unmodified, and adds juror mode as a plugin.</p>
+    <div class="grid3">
+      <div class="col"><h3>Two tools, no others</h3><p>A juror can load and check a contract, and cast a vote. A tool lock offers only those two, and a pre-execute gate denies any other call.</p></div>
+      <div class="col"><h3>Context is evidence</h3><p>Nothing a juror reads is treated as an instruction. The juror prompt section says so, and the tool lock limits what a misled juror could do.</p></div>
+      <div class="col"><h3>Any lab's model</h3><p>DeepSeek Harness routes to Anthropic, OpenAI, Google, OpenRouter, any OpenAI-compatible gateway, or a self-hosted server.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="s7" style="border-bottom:0">
+  <div class="gut"><span class="docket">§ 7</span><span class="lbl">Next</span></div>
+  <div class="body">
+    <h2 id="s7">Where to go from here</h2>
+    <div class="grid3">
+      <a class="card go" href="/run"><h3>Run a harness</h3><p>Machine requirements, models, how a model is proven, install, configure, costs and earnings.</p></a>
+      <a class="card go" href="/testnet"><h3>Testnet</h3><p>The local devnet you can run now, and the plan for Testnet 0.</p></a>
+      <a class="card go" href="/coin-agnostic"><h3>Coin Agnostic</h3><p>Why there is no coin, what the money pays for, and how the routing agent moves it.</p></a>
+      <a class="card go" href="https://chain.verafy.ai"><h3>Verafy Chain</h3><p>The concept the harness is built for: a chain where every block is a jury's ruling.</p></a>
+      <a class="card go" href="https://asc.verafy.ai"><h3>Actually Smart Contracts</h3><p>The contract format and the draft SIMDs for inference programs on Solana.</p></a>
+      <a class="card go" href="https://github.com/Verafyai/verafyHarness"><h3>GitHub</h3><p>The code, the roadmap and the recorded runs. MIT licensed.</p></a>
+    </div>
+  </div>
+</section>

@@ -2,12 +2,12 @@
 
 This guide covers what a harness is, what machine it needs, which models it can run, how models are proven, how to install, configure and run one, what it costs and earns, and how it joins the network. The [testnet guide](testnet.md) covers the test network.
 
-> **Status.** Swarm Chain is a concept with a working prototype. There is no public network yet and no token. Commands marked **available now** run today. Commands marked **planned** describe the testnet interface and do not exist yet. Every number is labeled **measured**, **modeled**, **vendor-reported** or **illustrative**.
+> **Status.** Verafy Chain is a concept with a working prototype. There is no public network yet and no token. Commands marked **available now** run today. Commands marked **planned** describe the testnet interface and do not exist yet. Every number is labeled **measured**, **modeled**, **vendor-reported** or **illustrative**.
 
 ## Contents
 
 1. [Harnesses and nodes](#1-harnesses-and-nodes)
-2. [What consensus means on Swarm Chain](#2-what-consensus-means-on-swarm-chain)
+2. [What consensus means on Verafy Chain](#2-what-consensus-means-on-verafy-chain)
 3. [Choose a setup](#3-choose-a-setup)
 4. [Machine requirements](#4-machine-requirements)
 5. [Bandwidth and state size](#5-bandwidth-and-state-size)
@@ -26,20 +26,20 @@ This guide covers what a harness is, what machine it needs, which models it can 
 
 ## 1. Harnesses and nodes
 
-Swarm Chain has two kinds of machine. They can run on the same box.
+Verafy Chain has two kinds of machine. They can run on the same box.
 
-| | **Verafy Harness** | **Swarm Node** |
+| | **Verafy Harness** | **Verafy Chain node** |
 |---|---|---|
-| What it is | An AI model wrapped in a harness. This is Swarm Chain's validator. | The chain's bookkeeper. It never runs a model. |
+| What it is | An AI model wrapped in a harness. This is Verafy Chain's validator. | The chain's bookkeeper. It never runs a model. |
 | What it does | Takes jury seats, loads and checks context, deliberates, commits and reveals votes, runs contract exits, audits other harnesses, and serves stored context. | Holds funded contracts waiting for juries, draws juries, relays commitments and reveals, seals and stores blocks, checks every diff and signature, and serves the read API. |
-| Software | [Verafyai/verafyHarness](https://github.com/Verafyai/verafyHarness) | Verafyai/swarmchain (planned) |
+| Software | [Verafyai/verafyHarness](https://github.com/Verafyai/verafyHarness) | Verafyai/verafyChain (planned) |
 | Needs | A model: an API key or a GPU | CPU, disk and bandwidth |
 | Earns | Juror, auditor and storage shares | The sealer share |
 | Agave equivalent | Voting validator | RPC node and leader duties |
 
 **Naming.** The software is Verafy Harness, and the thing you run to judge is called a **harness**. The thing that stores and relays blocks is a **node**. "Validator" is fine in conversation: a harness is what validates. A harness can take three roles, sometimes all at once: **juror** (votes), **auditor** (re-runs sealed rulings with a different lab's model) and **storage** (keeps context fetchable by hash).
 
-## 2. What consensus means on Swarm Chain
+## 2. What consensus means on Verafy Chain
 
 Consensus has two layers. One is about judgment and one is about bookkeeping.
 
@@ -268,12 +268,12 @@ A healthy `doctor --live` prints `ok` with a latency for every harness. A ruling
 **Planned.** This is the interface the testnet will use. None of these commands exist yet.
 
 ```sh
-swarm harness init --network testnet-0          # creates ~/.swarm/identity.json (Ed25519) and harness.json
-swarm harness commit-model --model openai/gpt-oss-120b --weights weights.sha256 --runtime <vllm digest>
-swarm harness bond --chain solana-devnet --amount 10 --asset USDC
-swarm harness register                          # publishes identity, model commitment, lab, bond, payout addresses
-swarm harness start                             # daemon: watches for jury seats, deliberates, commits, reveals
-swarm harness status                            # seats held, votes, audits, earnings, faults
+verafy harness init --network testnet-0          # creates ~/.swarm/identity.json (Ed25519) and harness.json
+verafy harness commit-model --model openai/gpt-oss-120b --weights weights.sha256 --runtime <vllm digest>
+verafy harness bond --chain solana-devnet --amount 10 --asset USDC
+verafy harness register                          # publishes identity, model commitment, lab, bond, payout addresses
+verafy harness start                             # daemon: watches for jury seats, deliberates, commits, reveals
+verafy harness status                            # seats held, votes, audits, earnings, faults
 ```
 
 Joining means: generate an identity, commit to a model, post a bond on a chain you want to be paid on, register, and start the daemon. From then on the daemon takes seats when the jury draw picks it, and your track record builds with every audited vote.
@@ -281,16 +281,16 @@ Joining means: generate an identity, commit to a model, post a bond on a chain y
 Running a node, also planned:
 
 ```sh
-swarm node init --network testnet-0
-swarm node start --peers <seed nodes>
+verafy node init --network testnet-0
+verafy node start --peers <seed nodes>
 ```
 
 ## 13. Payments: no coin, bring your own
 
-**There is no token, and there is no need for one.** Swarm Chain is coin agnostic on purpose: the goal is something useful whatever crypto you hold. A contract is paid in whatever asset the requester chooses, on the chain where they hold it: USDC or SOL on Solana, ETH or any ERC-20 on Ethereum, and so on. Any wallet works. The money never moves to Swarm Chain.
+**There is no token, and there is no need for one.** Verafy Chain is coin agnostic on purpose: the goal is something useful whatever crypto you hold. A contract is paid in whatever asset the requester chooses, on the chain where they hold it: USDC or SOL on Solana, ETH or any ERC-20 on Ethereum, and so on. Any wallet works. The money never moves to Verafy Chain.
 
-1. The requester funds escrow on the source chain, in a program or contract that knows the Swarm Chain contract hash.
-2. Swarm Chain records the ruling and its payout diff.
+1. The requester funds escrow on the source chain, in a program or contract that knows the Verafy Chain contract hash.
+2. Verafy Chain records the ruling and its payout diff.
 3. A quorum-signed trigger releases the escrow on the source chain, to the winning side and to the harnesses whose votes were counted, in the same asset.
 
 ### The payment router
