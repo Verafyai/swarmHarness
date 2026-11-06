@@ -69,13 +69,14 @@ Verafy Harness does two things.
 
 | | Status | Evidence |
 |---|---|---|
-| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (62 tests), `npm run demo` |
+| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (102 tests), `npm run demo` |
 | Live rulings by five labs' models through OpenRouter | **Measured** Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total | [results/live-2026-11-06.md](results/live-2026-11-06.md) |
 | Juror mode inside DeepSeek Harness: five DSH processes on five labs' models, block sealed from their reveals | **Measured** Nov 6, 2026: all five voted NO, 100% against an 80% bar; 24 of 24 other tools denied | [docs/dsh-juror.md](docs/dsh-juror.md) |
 | Payment router: accept lists, a local payout ledger | Works; on-chain routers planned | `verafy.config.json`, `.verafy/payouts.jsonl` |
 | Routing agent: keyblock, banker, API router, payment wallet | Works with test venues and test APIs; real venues and on-chain signing planned | `npm test`, `packages/core/test/core.test.js` |
 | Auditors, challenges and escalation in core: an auditor from another lab re-checks a sealed ruling; a challenge appends affirm, overturn or supersede and never edits the ruling; a below-bar ruling's escrow funds a wider jury from other labs | Works with scripted models; not yet run live or on a network | `packages/core/src/challenge.js`, `packages/core/test/m3.test.js` |
 | Retry for rate-limited models: each harness backs off on 429, 5xx and network errors, then is dropped if it still fails | Works with fake providers; not yet measured live | `packages/core/src/providers.js` |
+| Light client: reads the source chain across 3 RPC endpoints from 2 or more operators at `finalized`; disagreement is unknown and pauses the contract; intake checks escrow, the outbox confirms triggers landed | Works with mocked RPCs; **measured** read-only on Solana devnet Nov 6, 2026 (3 endpoints, 3 operators). Ethereum sync-committee verification (Helios) is an optional adapter, not yet run | `packages/lightclient`, `config/lightclient.devnet.json` |
 | Proof packing: an atomizer that drafts atom plans with a model, exact composition rules, dedupe across contracts, first-fit packing into 1,024-token requests, strict reply reading | Works with mock models; prove-once and the fidelity panel on devnet are planned | `packages/pack`, `packages/pack/test/pack.test.js` |
 | Economics of proven blocks and proof packing: cost per proof, per block and per decision, batch size, who earns what | Modeled, with every source labeled; packing itself is designed, not built | `packages/economics`, [harness.verafy.ai/economics](https://harness.verafy.ai/economics) |
 | A network of harnesses, bonds and slashing, testnet | Planned | [ROADMAP.md](ROADMAP.md), [docs/testnet.md](docs/testnet.md) |
@@ -87,7 +88,7 @@ Needs Node 22 or later. The core has no dependencies.
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 62 tests
+npm test          # 102 tests
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
 ```
 
@@ -367,6 +368,7 @@ Security is economic: lying has to cost an operator more than it pays.
 | Prompt injection in evidence | Evidence is wrapped and labeled; the juror prompt forbids following it; juror mode locks tools | Moderate |
 | Poisoned or forged evidence | Pinned sources, challenges, safe defaults, caps per ruling | Weak; in Verafy's testing poisoned evidence fooled every model tried |
 | A compromised harness fires a trigger | Triggers need a quorum signature | Strong |
+| One RPC provider lies about escrow or a trigger | The light client asks 3 endpoints from 2 or more operators and accepts only agreement; a split or a stale slot is unknown, and the contract pauses | Moderate: it trusts that the operators do not collude. A Solana light-client protocol or Helios on Ethereum would make it strong |
 
 ## Open problems
 
@@ -403,7 +405,7 @@ Most of the work lives here. Verafy Chain imports this repo's core for every has
 ## Repository layout
 
 ```
-bin/verafy.js                     CLI: run, seal, doctor, validate, pin, chain
+bin/verafy.js                     CLI: run, seal, doctor, validate, pin, chain, read, confirm
 bin/swarm.js                      the pre-rename alias for bin/verafy.js
 bin/verafy-mcp.js                 the MCP server from a clone
 packages/economics/         modeled economics: proven blocks, proof packing, roles (zero dependencies)
@@ -420,17 +422,23 @@ packages/core/              zero-dependency core
   src/env.js                      new names and their pre-rename fallbacks: config, state folder, env
   src/banker.js                   exchange: accept any token, best-quote swaps, fund payments
   src/apirouter.js                plugs into and pays outside APIs: AI, routers, provers, hosts
-  src/harness.js                  the harnessed validator
+  src/harness.js                  the harnessed validator; admit() is intake plus the funding check
+  src/sourcechain.js              funding check at intake, the outbox, the pause log (no reader inside)
   src/network.js                  jury draw, ruling from recorded messages, ruling verifier, sealing, Proof of Judgment
   src/trigger.js                  quorum-signed triggers (verafy.trigger/1; swarm.trigger/0 still verifies)
   src/challenge.js                auditors, challenges and reviews, escalated contracts
   src/providers.js                mock and OpenAI-compatible model providers, retry with backoff
   test/                           node:test suite
+packages/lightclient/             read the source chain without trusting one RPC, zero dependencies
+  solana/                         multi-RPC reader for Solana
+  evm/                            multi-RPC reader for EVM chains; optional Helios adapter for Ethereum
+  shared/                         agreement, staleness and policy; JSON-RPC through the API router
 packages/dsh-verafy-juror/        juror mode as a DeepSeek Harness plugin
 packages/mcp/                     zero-dependency MCP server: eight tools, resources, prompts
 integrations/                     one plugin or config folder per agent; _shared/ holds the skill and launch command
 .claude-plugin/marketplace.json   Claude Code marketplace listing integrations/claude-code
 config/cordis.verafy.yml          DSH profile overlay: one model route per lab, juror mode
+config/lightclient.devnet.json    three public Solana devnet endpoints for the light client
 scripts/                          setup-ubuntu.sh, run-vllm.sh, dsh-juror.mjs, dsh-link.mjs, scripted-llm.mjs,
                                   sync-integrations.mjs, mcp-smoke.mjs
 examples/                         five Actually Smart Contracts and scripted answers

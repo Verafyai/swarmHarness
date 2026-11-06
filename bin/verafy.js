@@ -9,6 +9,17 @@
  *                                             harness processes wrote (DSH jurors)
  *   verafy chain                              print the local chain
  *   verafy doctor [--live]                    check Node, the pool, and each model endpoint
+ *   verafy read solana <slot|genesis|account <pubkey>> [--config file]
+ *                                             read the source chain across the light
+ *                                             client's endpoints (read only, no keys)
+ *   verafy confirm solana <signature> [--config file]
+ *                                             confirm a transaction landed, through the outbox
+ *
+ * The light client is off unless the config has a `lightclient` block (see
+ * config/lightclient.devnet.json and packages/lightclient). When it is on,
+ * `run` checks the contract's escrow (payment.source) before the jury is drawn,
+ * and a disagreement between sources pauses the contract and records why in
+ * .verafy/pauses.jsonl.
  *
  * Mock mode (default) uses examples/mock-answers.json. --live calls real models
  * through the OpenAI-compatible endpoint in verafy.config.json (or, on a setup
@@ -17,12 +28,13 @@
  * while .verafy/ is empty, an existing .swarm/chain.json is read as the parent.
  * `swarm` is kept as an alias for this command.
  */
-import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, readdir, appendFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   Harness, drawJuryFor, rule, ruleFromReveals, seal, validate, pin, ascHash, short,
   mockProvider, openaiProvider, createRouter, configPath, chainPaths, envValue,
+  fundingCheck, Outbox, PauseLog,
 } from '../packages/core/src/index.js'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -83,8 +95,45 @@ async function doctor() {
   }
 }
 
+/** The light client from config, loaded only when the config has a `lightclient` block. */
+async function lightclientFor(config) {
+  if (!config.lightclient) return null
+  const { fromConfig } = await import('../packages/lightclient/index.js')
+  return fromConfig(config.lightclient)
+}
+
+function printRead(r) {
+  console.log(`${r.status === 'agreed' ? 'agreed ' : 'UNKNOWN'} ${r.chain} ${r.method} at ${r.commitment}, policy ${r.policy}, ${r.attempts} attempt(s): ${r.reason}`)
+  for (const s of r.sources) console.log(`  ${s.verdict.padEnd(7)} ${s.id.padEnd(20)} ${s.operator.padEnd(12)} ${s.origin.padEnd(40)} slot ${s.slot ?? '-'}${s.error ? `  ${s.error}` : ''}`)
+  if (r.status === 'agreed') console.log(`  value ${JSON.stringify(r.value)}${r.slot != null ? `  (agreed slot ${r.slot})` : ''}`)
+}
+
+async function readCommand(confirm) {
+  const lc = await lightclientFor(await loadConfig())
+  if (!lc?.solana || file !== 'solana') {
+    console.log('usage: verafy read solana <slot|genesis|account <pubkey>> --config <file with a lightclient block> | verafy confirm solana <signature> --config <file>')
+    process.exitCode = 2
+    return
+  }
+  if (confirm) {
+    const out = new Outbox({ sourceChain: lc.checker })
+    const c = await out.confirm(out.record({ asc: 'cli', ruling: 'cli', trigger: { type: 'call', chain: 'solana' }, landed: { chain: 'solana', signature: rest[0] } }))
+    printRead(c.read)
+    console.log(`outbox: ${c.status}`)
+    process.exitCode = c.status === 'confirmed' ? 0 : 1
+    return
+  }
+  const [what, arg] = rest
+  const r = what === 'slot' ? await lc.solana.slot() : what === 'genesis' ? await lc.solana.genesisHash() : what === 'account' && arg ? await lc.solana.account(arg) : null
+  if (!r) { console.log('read what? slot, genesis, or account <pubkey>'); process.exitCode = 2; return }
+  printRead(r)
+  process.exitCode = r.status === 'agreed' ? 0 : 1
+}
+
 async function main() {
   if (cmd === 'doctor') return doctor()
+  if (cmd === 'read') return readCommand(false)
+  if (cmd === 'confirm') return readCommand(true)
   if (cmd === 'validate') {
     const problems = validate(await readJson(file))
     console.log(problems.length ? problems.map(p => `- ${p}`).join('\n') : 'valid')
@@ -103,13 +152,29 @@ async function main() {
   }
   if (cmd === 'seal' && file && rest.length) return sealFromJurors(await readJson(file), rest)
   if (cmd !== 'run' || !file) {
-    console.log('usage: verafy run <asc.json> [--live] [--json] [--config file] | verafy seal <asc.json> <juror-dir...> | verafy doctor [--live] [--config file] | verafy validate <asc.json> | verafy pin <asc.json> | verafy chain')
+    console.log('usage: verafy run <asc.json> [--live] [--json] [--config file] | verafy seal <asc.json> <juror-dir...> | verafy doctor [--live] [--config file] | verafy validate <asc.json> | verafy pin <asc.json> | verafy chain | verafy read solana <slot|genesis|account <pubkey>> --config file | verafy confirm solana <signature> --config file')
     process.exitCode = 2
     return
   }
 
   const asc = await readJson(file)
   const config = await loadConfig()
+  const lc = await lightclientFor(config)
+  if (lc) {
+    const pauses = new PauseLog()
+    const funding = await fundingCheck(asc, { sourceChain: lc.checker, pauses })
+    if (funding.read?.method) printRead(funding.read)
+    if (pauses.entries.length) {
+      await mkdir(CHAIN.dir, { recursive: true })
+      await appendFile(join(CHAIN.dir, 'pauses.jsonl'), pauses.entries.map(e => JSON.stringify(e)).join('\n') + '\n')
+    }
+    if (!funding.ok) {
+      console.log(`${funding.paused ? 'PAUSED' : 'REFUSED'} ${asc.id}: ${funding.problems.join('; ')}`)
+      process.exitCode = 3
+      return
+    }
+    if (!flag('--json')) console.log(c.d(`light client: ${funding.checked ? 'escrow funded' : funding.reason}`))
+  }
   const script = flag('--live') ? null : await readJson(join(ROOT, 'examples', 'mock-answers.json'))
   const pool = config.pool.map(h => new Harness({ ...h, provider: flag('--live') ? providerFor(config, h) : mockProvider(script, asc.id, h.lab) }))
   const chain = await loadChain()
