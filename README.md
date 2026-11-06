@@ -76,6 +76,8 @@ Verafy Harness does two things.
 | Auditors, challenges and escalation in core: an auditor from another lab re-checks a sealed ruling; a challenge appends affirm, overturn or supersede and never edits the ruling; a below-bar ruling's escrow funds a wider jury from other labs | Works with scripted models; not yet run live or on a network | `packages/core/src/challenge.js`, `packages/core/test/m3.test.js` |
 | Retry for rate-limited models: each harness backs off on 429, 5xx and network errors, then is dropped if it still fails | Works with fake providers; not yet measured live | `packages/core/src/providers.js` |
 | Light client: reads the source chain across 3 RPC endpoints from 2 or more operators at `finalized`; disagreement is unknown and pauses the contract; intake checks escrow, the outbox confirms triggers landed | Works with mocked RPCs; **measured** read-only on Solana devnet Nov 6, 2026 (3 endpoints, 3 operators). Ethereum sync-committee verification (Helios) is an optional adapter, not yet run | `packages/lightclient`, `config/lightclient.devnet.json` |
+| Proof packing: an atomizer that drafts atom plans with a model, exact composition rules, dedupe across contracts, first-fit packing into 1,024-token requests, strict reply reading | Works with mock models; prove-once and the fidelity panel on devnet are planned | `packages/pack`, `packages/pack/test/pack.test.js` |
+| Economics of proven blocks and proof packing: cost per proof, per block and per decision, batch size, who earns what | Modeled, with every source labeled; packing itself is designed, not built | `packages/economics`, [harness.verafy.ai/economics](https://harness.verafy.ai/economics) |
 | A network of harnesses, bonds and slashing, testnet | Planned | [ROADMAP.md](ROADMAP.md), [docs/testnet.md](docs/testnet.md) |
 
 ## Quick start
@@ -387,6 +389,8 @@ Most of the work lives here. Verafy Chain imports this repo's core for every has
 ```
 bin/verafy.js                     CLI: run, seal, doctor, validate, pin, chain, read, confirm
 bin/swarm.js                      the pre-rename alias for bin/verafy.js
+packages/economics/         modeled economics: proven blocks, proof packing, roles (zero dependencies)
+packages/pack/              proof packing: atomize contracts, dedupe and pack atoms into proven requests, compose outcomes exactly
 packages/core/              zero-dependency core
   src/asc.js                      Actually Smart Contract format and validation
   src/juror.js                    context loader, juror prompt, vote parsing

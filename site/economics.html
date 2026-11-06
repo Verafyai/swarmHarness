@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Economics and proof packing</title>
+<meta name="description" content="What it costs to prove AI rulings, how proof packing cuts it, and what proving operators and verifiers earn. Modeled, with every source named.">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="canonical" href="https://harness.verafy.ai/economics">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Verafy Harness">
+<meta property="og:title" content="Economics and proof packing">
+<meta property="og:description" content="What it costs to prove AI rulings, how proof packing cuts it, and what proving operators and verifiers earn. Modeled, with every source named.">
+<meta property="og:url" content="https://harness.verafy.ai/economics">
+<meta property="og:image" content="https://harness.verafy.ai/banner.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://harness.verafy.ai/banner.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--paper:#EDF0F3;--sheet:#FFFFFF;--ink:#16212C;--mute:#566473;--rule:#CDD5DD;--accent:#3640C9;--accent-soft:#DADDF7;--allow:#1C7A4E;--hold:#A0561A;--code:#F4F6F8;
+--display:"Archivo","Helvetica Neue",Arial,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#0F151B;--sheet:#161E26;--ink:#E4EAF0;--mute:#93A1AF;--rule:#2A3541;--accent:#8A92FF;--accent-soft:#252A55;--allow:#5CC995;--hold:#E0A060;--code:#1B242E;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0F151B;--sheet:#161E26;--ink:#E4EAF0;--mute:#93A1AF;--rule:#2A3541;--accent:#8A92FF;--accent-soft:#252A55;--allow:#5CC995;--hold:#E0A060;--code:#1B242E;color-scheme:dark}
+*{box-sizing:border-box}body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17.5px;line-height:1.6;margin:0}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+img{max-width:100%;height:auto}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.coinfree{background:var(--sheet);border-top:3px solid var(--accent);border-bottom:1px solid var(--rule)}
+.coinfree .wrap{padding-block:18px 20px;display:flex;flex-direction:column;gap:6px}
+.coinfree h2{font-family:var(--display);font-weight:750;font-size:clamp(22px,2.4vw,28px);margin:0}
+.coinfree p{max-width:46em;margin:0;overflow-wrap:break-word}
+.top{display:flex;align-items:center;gap:16px;padding-block:20px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;font-stretch:110%;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:10px}
+.brand .mark{color:var(--ink);flex:none}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-right:auto;margin-left:12px}
+.tabs a{font-family:var(--display);font-weight:600;font-size:15px;color:var(--mute);text-decoration:none;padding:6px 10px;border-radius:2px;border:1px solid transparent}
+.tabs a:hover{color:var(--ink);border-color:var(--rule)}.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--ink)}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--hold);border:1px solid currentColor;padding:4px 10px;border-radius:2px}
+.tabs{order:3;width:100%;margin:0 0 0 -10px}
+.top .status{margin-left:auto}
+@media (max-width:560px){.top .status{margin-left:0}}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:48px;padding-block:40px 80px}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.side{position:static!important;max-height:none!important}}
+.side{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;font-size:15px}
+.side .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:8px}
+.side ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.side ul ul{padding-left:14px;margin:2px 0 6px}
+.side a{color:var(--mute);text-decoration:none;display:block;padding:3px 8px;border-left:2px solid transparent}
+.side a:hover{color:var(--ink)}.side a.on{color:var(--ink);border-left-color:var(--accent)}
+article{min-width:0;max-width:52rem}
+article h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,4.6vw,52px);line-height:1.05;letter-spacing:-.015em;margin:0 0 18px}
+article h2{font-family:var(--display);font-weight:750;font-size:28px;line-height:1.15;margin:48px 0 14px;padding-top:18px;border-top:1px solid var(--rule)}
+article h3{font-family:var(--display);font-weight:700;font-size:20px;margin:28px 0 10px}
+article p,article li{max-width:44em}
+article img{display:block;border:1px solid var(--rule);border-radius:3px;background:#fff}
+article blockquote{margin:18px 0;padding:14px 18px;background:var(--sheet);border:1px solid var(--hold);border-radius:2px;color:var(--ink)}
+article blockquote p{margin:0}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);padding:1px 5px;border-radius:2px}
+pre{background:var(--code);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;overflow-x:auto;font-size:14px;line-height:1.5}
+pre code{background:none;padding:0;font-size:inherit}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--sheet);margin:16px 0}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:400}
+tr:last-child td{border-bottom:0}
+.foot{padding-block:24px 48px;border-top:1px solid var(--rule);font-size:15px;color:var(--mute);display:flex;flex-direction:column;gap:6px}
+.foot p{margin:0}
+
+article.wide{max-width:none}
+.lede{font-size:19px;max-width:44em}
+.note{font-size:15px;color:var(--mute);max-width:52em}
+.facts3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:18px 0 10px}
+@media (max-width:760px){.facts3{grid-template-columns:minmax(0,1fr)}}
+.fact{border-top:2px solid var(--ink);padding-top:10px}
+.fact .big{font-family:var(--display);font-weight:800;font-stretch:80%;font-size:40px;line-height:1;color:var(--accent);display:block}
+.fact p{font-size:15.5px;color:var(--mute);margin:8px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.presets button{font-family:var(--display);font-weight:600;font-size:14.5px;padding:8px 12px;border:1px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:2px;cursor:pointer}
+.presets button:hover{border-color:var(--accent);color:var(--accent)}
+#share{border-style:dashed}
+.calc{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;margin-top:14px;align-items:start}
+@media (max-width:1100px){.calc{grid-template-columns:minmax(0,1fr)}}
+.inputs fieldset{border:1px solid var(--rule);border-radius:3px;background:var(--sheet);margin:0 0 14px;padding:10px 14px 12px}
+.inputs legend{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:0 6px}
+.in{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--rule);font-size:15px}
+.in:last-child{border-bottom:0}
+.in .nm{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.in input[type=number]{width:120px;font-family:var(--mono);font-size:14px;padding:5px 8px;border:1px solid var(--rule);border-radius:2px;background:var(--paper);color:var(--ink)}
+.in input[type=checkbox]{width:20px;height:20px;justify-self:end;accent-color:var(--accent)}
+.tag{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border:1px solid var(--rule);border-radius:2px;color:var(--mute);white-space:nowrap}
+.tag.vr{color:var(--hold);border-color:currentColor}.tag.m{color:var(--allow);border-color:currentColor}.tag.mo{color:var(--accent);border-color:currentColor}
+.outputs{background:var(--sheet);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:3px;padding:14px 18px 18px;position:sticky;top:12px}
+@media (max-width:1100px){.outputs{position:static}}
+.ohead{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 4px}
+.ohead .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.pill{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid currentColor;padding:2px 8px;border-radius:2px}
+.kv{display:grid;grid-template-columns:minmax(9em,1fr) minmax(0,1.4fr);gap:7px 14px;margin:6px 0 14px;font-size:15px}
+.kv dt{color:var(--mute)}.kv dd{margin:0;font-family:var(--mono);font-size:14.5px;text-align:right;font-variant-numeric:tabular-nums}
+.bar{display:flex;height:16px;border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:4px 0 8px}
+.bar span{display:block;height:100%}
+.legend{list-style:none;padding:0;margin:0 0 12px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13.5px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:1px}
+.warn{color:var(--hold);border:1px solid currentColor;padding:8px 10px;border-radius:2px;font-size:14.5px}
+.steps{display:flex;flex-direction:column;gap:10px}
+.callout{background:var(--sheet);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:2px;padding:12px 16px;margin:16px 0;max-width:52em}
+td.v{font-family:var(--mono);font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.k{color:var(--mute)}
+td.neg{color:var(--deny,#B3263A)}td.pos{color:var(--allow)}
+.chart{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:8px;overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:560px;height:auto}
+.figure{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;overflow-x:auto;margin:16px 0}
+.figure svg{display:block;width:100%;min-width:640px;height:auto}
+article section{scroll-margin-top:16px}
+
+</style>
+</head>
+<body>
+<section class="coinfree" aria-labelledby="coinfreeH">
+  <div class="wrap">
+    <h2 id="coinfreeH">Coin-free guarantee.</h2>
+    <p>There is no coin, and Verafy Harness will never need one. A harness is paid in whatever token a contract offers and pays its own AI and hosting bills from that. No presale, no airdrop, no points, no treasury. <a href="/coin-agnostic">How payment works</a></p>
+  </div>
+</section>
+<header class="wrap top">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 64 64" width="28" height="28" aria-hidden="true"><path d="M6 20V6h14M44 6h14v14M58 44v14H44M20 58H6V44" stroke="currentColor" stroke-width="5" stroke-linecap="square" fill="none"/><path d="M32 13v7M32 44v7M13 32h7M44 32h7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="32" r="11" fill="var(--accent)"/><circle cx="32" cy="32" r="4" fill="var(--paper)"/></svg>Verafy Harness</a>
+  <nav class="tabs" aria-label="Verafy Chain and Verafy Harness">
+    <a href="https://chain.verafy.ai">Verafy Chain</a>
+    <a href="https://chain.verafy.ai/constitution">Constitution</a>
+    <a href="/">Verafy Harness</a>
+    <a href="/run">Run a harness</a>
+    <a href="/testnet">Testnet</a>
+    <a href="/coin-agnostic">Coin Agnostic</a>
+    <a href="/economics" aria-current="page">Economics</a>
+    <a href="https://asc.verafy.ai">Actually Smart Contracts</a>
+    <a href="https://github.com/Verafyai/verafyHarness">GitHub</a>
+    <a href="https://chain.verafy.ai/#roadmap">Roadmap</a>
+  </nav>
+  <span class="status">Prototype. Not a running network.</span>
+</header>
+<div class="wrap layout"><aside class="side" aria-label="On this page"><span class="lbl">Economics</span><ul><li><a href="#overview">The short version</a></li><li><a href="#calculator">Calculator</a></li><li><a href="#packing">Proof packing</a></li><li><a href="#machine">The proving machine</a></li><li><a href="#earnings">Who earns what</a></li><li><a href="#sources">Assumptions and sources</a></li></ul></aside><article class="wide"><h1 id="economics">Economics of a proven block</h1>
+<p class="lede">What it costs to prove the AI's rulings, how big a block has to be before proving is worth it, and what the proving operator and the verifier earn. Every number on this page is <b>modeled</b> from the inputs shown. Vendor-reported figures name their source; illustrative ones are placeholders to set yourself.</p>
+
+<section id="overview">
+<h2>The short version</h2>
+<div class="facts3">
+  <div class="fact"><span class="big" data-out="proveUsd">$0.0103</span><p>GPU cost of one proof, about 750 words of question, evidence and answer.</p></div>
+  <div class="fact"><span class="big" data-out="warmShare">67%</span><p>of a small unpacked block's cost is warm-up: loading the model before proving starts. Fixed cost, not proofs, is what makes small blocks expensive.</p></div>
+  <div class="fact"><span class="big" data-out="packGain">18x</span><p>cheaper per decision with proof packing: contracts atomized into small yes or no questions, about 16 per proven request, each request proven once. 120 proofs become 3.</p></div>
+</div>
+<p class="note">Figures in this box use the defaults (an H100 at $4.00 an hour, FlashProve's vendor-reported speed, 24 contracts of about 600 words) and update with the calculator.</p>
+</section>
+
+<section id="calculator">
+<h2>Calculator</h2>
+<div class="presets" role="group" aria-label="Presets">
+  <button type="button" data-preset="unpacked">L2, FlashProve, unpacked</button>
+  <button type="button" data-preset="packed">Briefs, 4 per request</button>
+  <button type="button" data-preset="atomized">Atomized and packed</button>
+  <button type="button" data-preset="jev">Atomized, with a Jev screen</button>
+  <button type="button" data-preset="deepprove">L2 prototype, DeepProve on CPU</button>
+  <button type="button" id="share">Copy link to this scenario</button>
+</div>
+<p class="note" id="presetNote"></p>
+<div class="calc">
+  <form class="inputs" id="inputs" aria-label="Inputs"></form>
+  <div class="outputs" aria-live="polite">
+    <div class="ohead"><span class="lbl">Per block</span><span class="pill" id="mode">unpacked</span></div>
+    <dl class="kv">
+      <dt>Block cost</dt><dd data-out="blockCostUsd"></dd>
+      <dt>Per contract</dt><dd data-out="perContractUsd"></dd>
+      <dt>Per contract with margin</dt><dd data-out="priceWithMarginUsd"></dd>
+      <dt>Per decision, before warm-up</dt><dd data-out="perDecisionUsd"></dd>
+      <dt>Proven requests</dt><dd data-out="requestsInBlock"></dd>
+      <dt>Provers and proofs</dt><dd data-out="proofsLine"></dd>
+      <dt>Time to seal</dt><dd data-out="sealLine"></dd>
+      <dt>Proof data</dt><dd data-out="proofGB"></dd>
+    </dl>
+    <div class="bar" id="bar" aria-label="Where the block cost goes"></div>
+    <ul class="legend" id="legend"></ul>
+    <div class="ohead"><span class="lbl">Per machine</span></div>
+    <dl class="kv">
+      <dt>Proofs one GPU makes per hour</dt><dd data-out="capacityPerHour"></dd>
+      <dt>Break-even fee per proof</dt><dd data-out="breakEvenFeePerProof"></dd>
+      <dt>Smallest batch for warm-up under 10%</dt><dd data-out="minWarmLine"></dd>
+    </dl>
+    <p class="warn" id="fitWarn" hidden></p>
+  </div>
+</div>
+</section>
+
+<section id="packing">
+<h2>Proof packing</h2>
+<p>A proof covers one request of up to 1,024 tokens, about 750 words. That limit comes from today's prover, not the model: it has to keep and check every intermediate value for every token. Proof packing fills those requests as tightly as possible and stops paying for the same proof twice. It has four parts, and the first three run today in <a href="https://github.com/Verafyai/verafyHarness/tree/main/packages/pack">packages/pack</a>.</p>
+<ol class="steps">
+  <li><b>Atomize.</b> Each contract is broken into atoms: small questions that ask one thing (yes or no, a choice, or a bounded integer) and carry only the facts that decide it, each citing a pinned source. An exact composition rule turns the atoms' answers back into the contract's outcome. That rule is code, integer math only, and any UNKNOWN atom sends the contract to its declared fallback instead of a guess. Plain dense English, never invented shorthand: models read English tokens best.</li>
+  <li><b>Dedupe.</b> The same atomic question over the same pinned facts has the same hash. Thirty markets that all hinge on "did the Fed cut rates on December 10?" share one slot and one proof.</li>
+  <li><b>Pack.</b> Atoms are packed first-fit by size into 1,024-token requests, about 16 to 18 per request in our tests, each in a numbered slot with its own answer line. The slot order is shuffled by the block hash, so nobody chooses their neighbors. A reply that misses or mangles any slot is rejected whole. Contracts that must stand alone opt out.</li>
+  <li><b>Prove once, verify many.</b> Today only one model can be proven, and with integer weights and greedy decoding, every juror running it on the same input gets the same answer. So each packed request is proven once, by a prover drawn from the block hash, and the other jurors become verifiers. Lab diversity returns as soon as a second model is provable: one proof per distinct model.</li>
+</ol>
+<div class="callout"><b>The safeguard.</b> A proof shows the model answered the atoms correctly, not that the atoms and the rule capture the original question. So every atom plan is either agreed by the contract's parties before funding, or checked by a cheap unproven panel from several labs (the fidelity check), and auditors spot-check its citations. A plan that drops the deciding fact or reaches a different outcome fails the check, and that contract runs unpacked.</div>
+<div class="callout"><b>What the numbers show.</b> Once contracts are packed, proving stops being the big cost. At 1,000 contracts, the proving GPU costs about $1.29 and the fidelity checks about $3.26 (modeled). The next savings come from cheaper checks, not cheaper proofs.</div>
+
+<h3>Unpacked and packed, on your inputs</h3>
+<div class="tbl"><table>
+  <thead><tr><th></th><th>Unpacked</th><th>Briefs, 4 per request</th><th>Atomized</th><th>Atomized, Jev screen</th></tr></thead>
+  <tbody id="compare"></tbody>
+</table></div>
+
+<h3>Cost per contract as blocks grow</h3>
+<div class="chart" id="chart" role="img" aria-label="Cost per contract falls as the block grows, for unpacked and packed blocks"></div>
+<p class="note">Both lines use your current inputs. The marker is your block size. The curve falls because warm-up is a fixed cost shared by every contract in the block.</p>
+
+<h3>Where a fast screen fits (Jev)</h3>
+<p>A System 1 model such as <a href="https://thenewstack.io/typesafe-jev-system-one/">TypeSafe's Jev</a> returns a typed answer with a calibrated probability in 70 to 500 ms for about $0.0004 a decision (vendor-reported, not reproduced). Atoms are exactly the shape it reads. It fits in three places:</p>
+<ul>
+  <li><b>Screening the fidelity checks,</b> the biggest cost after packing. Clear plans pass on the screen; unclear ones go to the multi-lab panel.</li>
+  <li><b>Settling low-stakes atoms,</b> only where a contract allows it. Those atoms are fast and cheap, but not proven.</li>
+  <li><b>Triage and sizing:</b> its probability decides which atoms need a proof at all, and how big the jury should be.</li>
+</ul>
+<p>It can't be the court. It's one hosted, closed model, so it adds no lab diversity and can't carry a proof of inference, and on its vendor's own benchmark it scored 67.8% against 73 to 74% for frontier models. Calibrated isn't the same as correct.</p>
+
+<h3>What packing does not change</h3>
+<ul>
+  <li>Warm-up is paid per proving session, not per block. A proving service that stays warm across blocks pays for idle hours instead, which the utilization input models.</li>
+  <li>A long document still has to be briefed; a proven juror never reads more than 1,024 tokens at once. Long-document judgment is better run unproven (L1) with a diverse jury and auditors, or by proving only the deciding excerpts.</li>
+  <li>Prove once trades jury diversity for proof while one model is provable. Say so on any contract that uses it.</li>
+</ul>
+</section>
+
+<section id="machine">
+<h2>The proving machine</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Part</th><th>Spec</th><th>Label</th></tr></thead>
+  <tbody>
+    <tr><td>GPU</td><td>1 x H100 80 GB</td><td><span class="tag vr">vendor-reported</span> FlashProve</td></tr>
+    <tr><td>CPU</td><td>24 cores or more</td><td><span class="tag vr">vendor-reported</span></td></tr>
+    <tr><td>Host RAM</td><td>about 290 GB or more</td><td><span class="tag vr">vendor-reported</span></td></tr>
+    <tr><td>Disk</td><td>NVMe for the 4-bit Llama 4 Maverick weights and commitment artifacts; 1 TB is a safe start</td><td><span class="tag mo">modeled</span> confirm</td></tr>
+    <tr><td>Network</td><td>1 Gbps. A busy prover uploads about 7 GB of proofs an hour.</td><td><span class="tag mo">modeled</span></td></tr>
+    <tr><td>Verifier</td><td>Any 24-thread CPU box, no GPU. About 17 s per proof.</td><td><span class="tag vr">vendor-reported</span></td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>Renting note.</b> Many single-H100 cloud instances come with well under 290 GB of host RAM; one 2026 listing shows 116 GB. Meeting the requirement can mean renting a larger node or bare metal, which raises the cost per proving GPU-hour unless every GPU on the node is proving. Set the GPU price input to what you actually pay.</div>
+<div class="figure" aria-label="Machine layout">
+<svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, ui-monospace, monospace" font-size="13">
+  <rect x="10" y="10" width="560" height="280" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+  <text x="26" y="36" fill="var(--accent)" font-weight="600" letter-spacing="1">PROVING HARNESS, ONE MACHINE</text>
+  <rect x="26" y="52" width="260" height="96" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="40" y="76" fill="var(--ink)" font-weight="600">Harness daemon (CPU)</text>
+  <text x="40" y="98" fill="var(--mute)" font-size="12">intake, signer, bond, outbox</text>
+  <text x="40" y="116" fill="var(--mute)" font-size="12">routing agent: keyblock, banker,</text>
+  <text x="40" y="134" fill="var(--mute)" font-size="12">API router, payment wallet</text>
+  <rect x="300" y="52" width="254" height="96" rx="2" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="314" y="76" fill="var(--ink)" font-weight="600">Prover (GPU)</text>
+  <text x="314" y="98" fill="var(--mute)" font-size="12">FlashProve; the model runs</text>
+  <text x="314" y="116" fill="var(--mute)" font-size="12">inside the prover; packed</text>
+  <text x="314" y="134" fill="var(--mute)" font-size="12">requests, batches of 24</text>
+  <rect x="26" y="164" width="170" height="70" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="40" y="188" fill="var(--ink)" font-weight="600">Packer</text>
+  <text x="40" y="208" fill="var(--mute)" font-size="12">briefs into slots</text>
+  <rect x="210" y="164" width="170" height="70" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="224" y="188" fill="var(--ink)" font-weight="600">TinySVM</text>
+  <text x="224" y="208" fill="var(--mute)" font-size="12">exact settlement</text>
+  <rect x="394" y="164" width="160" height="70" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="408" y="188" fill="var(--ink)" font-weight="600">Light client</text>
+  <text x="408" y="208" fill="var(--mute)" font-size="12">reads escrow</text>
+  <text x="26" y="266" fill="var(--mute)" font-size="12">Proof uploader: proofs to the availability layer, hashes to the vote</text>
+  <rect x="610" y="52" width="240" height="96" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="624" y="76" fill="var(--ink)" font-weight="600">Verifiers (CPU only)</text>
+  <text x="624" y="98" fill="var(--mute)" font-size="12">auditors and nodes, drawn</text>
+  <text x="624" y="116" fill="var(--mute)" font-size="12">per proof from the block hash</text>
+  <rect x="610" y="164" width="240" height="70" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="624" y="188" fill="var(--ink)" font-weight="600">Availability layer</text>
+  <text x="624" y="208" fill="var(--mute)" font-size="12">proofs and briefs, by hash</text>
+  <path d="M554 100 H604" stroke="var(--rule)" stroke-width="1.5"/><path d="M554 199 H604" stroke="var(--rule)" stroke-width="1.5"/>
+</svg>
+</div>
+<p>Planned parts in the diagram: the packer, TinySVM and the light client are specified, not built. A harness can also buy proofs from a proving service through its API router and verify them before counting the answer, so it never trusts the service.</p>
+</section>
+
+<section id="earnings">
+<h2>Who earns what</h2>
+<p>Roles priced at cost plus your margin on the work they do. A proving operator only profits if the GPU is busy enough: the break-even utilization is where revenue meets the hourly rent.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Role</th><th>Fee</th><th>Revenue per hour</th><th>Cost per hour</th><th>Net per hour</th><th>From this block</th></tr></thead>
+  <tbody id="roles"></tbody>
+</table></div>
+<p class="note">Jurors are paid per counted vote from the contract's escrow, dissent included; the contract's author sets the escrow. Under prove once, the drawn prover also holds a jury seat.</p>
+</section>
+
+<section id="sources">
+<h2>Assumptions and sources</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Input</th><th>Default</th><th>Label</th><th>Source</th></tr></thead>
+  <tbody id="srcs"></tbody>
+</table></div>
+<p class="note">The math lives in <a href="https://github.com/Verafyai/verafyHarness/tree/main/packages/economics">packages/economics</a>, with tests that pin every vector on this page. Nothing here is measured on a running network; there isn't one.</p>
+</section>
+</article></div>
+<footer class="wrap foot">
+  <p>Verafy Harness is the validator for Verafy Chain, a Verafy research concept. It is a prototype, not a running network, and there is no token.</p>
+  <p>Code: <a href="https://github.com/Verafyai/verafyHarness">Verafyai/verafyHarness</a>, MIT, built on <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>. The concept: <a href="https://chain.verafy.ai">chain.verafy.ai</a>.</p>
+</footer>
+<script>(function(){var links=[].slice.call(document.querySelectorAll('.side a'));var hs=links.map(function(a){return document.getElementById(decodeURIComponent(a.hash.slice(1)))}).filter(Boolean);function on(){var y=window.scrollY+120,cur=null;hs.forEach(function(h){if(h.offsetTop<=y)cur=h.id});links.forEach(function(a){a.classList.toggle('on',decodeURIComponent(a.hash.slice(1))===cur)})}window.addEventListener('scroll',on,{passive:true});on()})();</script>
+<script>
+/**
+ * Verafy Harness economics: what a proven block costs, how proof packing
+ * changes it, and what each role earns. Pure functions, no I/O, no
+ * dependencies. Every output is MODELED from the inputs; each default carries
+ * its own label and source.
+ *
+ * The site (harness.verafy.ai/economics) inlines this file at build time, so
+ * the page and the tests run the same math.
+ */
+
+/** Defaults, each with its label and source. */
+const DEFAULTS = {
+  gpuHourUsd: { value: 4.0, label: 'modeled', source: 'Typical on-demand H100 80 GB, about $3.19 to $4.50 per GPU-hour (Spheron, Lambda, Crusoe, Hyperbolic, Nebius, Jul to Nov 2026). Low about $2.87, hyperscaler high about $12.29.', url: 'https://www.spheron.network/blog/h100-price-per-hour-2026/', date: '2026-11-06' },
+  proverBatch: { value: 24, label: 'vendor-reported', source: 'FlashProve, one H100', url: 'https://anthropic.com/research/provable-inference', date: '2026-11' },
+  proverBatchSeconds: { value: 223, label: 'vendor-reported', source: 'FlashProve online phase for a batch of 24, one H100', url: 'https://anthropic.com/research/provable-inference', date: '2026-11' },
+  setupMinutes: { value: 39, label: 'vendor-reported', source: 'FlashProve one-time setup per model', url: 'https://anthropic.com/research/provable-inference', date: '2026-11' },
+  requestsPerCommitment: { value: 16e6, label: 'vendor-reported', source: 'FlashProve: one commitment covers about 16 million requests', url: 'https://anthropic.com/research/provable-inference', date: '2026-11' },
+  contextTokens: { value: 1024, label: 'vendor-reported', source: 'FlashProve context limit per proven request', url: 'https://anthropic.com/research/provable-inference', date: '2026-11' },
+  proofMB: { value: 18.78, label: 'vendor-reported', source: 'FlashProve proof size', url: 'https://anthropic.com/research/provable-inference', date: '2026-11' },
+  verifySeconds: { value: 17, label: 'vendor-reported', source: 'FlashProve verification on 24 CPU threads, including offline-phase checks (conservative)', url: 'https://anthropic.com/research/provable-inference', date: '2026-11' },
+  cpuHourUsd: { value: 1.0, label: 'illustrative', source: 'A 24-thread verifier box. Set your own.' },
+  jurors: { value: 5, label: 'prototype default', source: 'Verafy Harness juries' },
+  verifiersPerProof: { value: 2, label: 'illustrative', source: 'Verifiers drawn per proof' },
+  storageUsdPerGBMonth: { value: 0.02, label: 'illustrative', source: 'Availability-layer storage. Set your own.' },
+  retentionMonths: { value: 3, label: 'illustrative', source: 'Proofs kept through the challenge window and archive' },
+  warmupMinutes: { value: 15, label: 'illustrative', source: 'Loading weights and artifacts per proving session. Measure it.' },
+  contracts: { value: 24, label: 'input', source: 'Contracts in the block' },
+  tokensPerContract: { value: 800, label: 'input', source: 'Instructions, context and answer for one contract' },
+  marginPct: { value: 30, label: 'input', source: 'Operator margin over cost' },
+  utilizationPct: { value: 50, label: 'input', source: 'Share of rented GPU hours spent proving' },
+  packing: { value: false, label: 'design', source: 'Proof packing: briefs, several decisions per proven request' },
+  proveOnce: { value: false, label: 'design', source: 'Prove each request once while only one model is provable' },
+  decisionsPerRequest: { value: 4, label: 'illustrative', source: 'Packed decisions per 1,024-token request' },
+  briefMaxTokens: { value: 200, label: 'illustrative', source: 'Token budget for one decision brief' },
+  answerTokensPerDecision: { value: 40, label: 'illustrative', source: 'Tokens reserved for each packed answer line' },
+  headerTokens: { value: 64, label: 'illustrative', source: 'Fixed juror rules and answer format at the top of a packed request' },
+  atomize: { value: false, label: 'design', source: 'Atomize: split each contract into small yes or no questions, dedupe them across contracts, pack as many as fit' },
+  atomsPerContract: { value: 2, label: 'illustrative', source: 'Atoms one contract breaks into' },
+  atomTokens: { value: 50, label: 'measured', source: 'Tokens per packed atom slot, question plus one cited fact, counted by packages/pack (about four characters per token)', url: 'https://github.com/Verafyai/verafyHarness/tree/main/packages/pack', date: '2026-11-06' },
+  atomAnswerTokens: { value: 6, label: 'illustrative', source: 'Tokens reserved per atom answer line, such as "S12: YES"' },
+  atomHeaderTokens: { value: 94, label: 'measured', source: 'Tokens in the packed-request header used by packages/pack', url: 'https://github.com/Verafyai/verafyHarness/tree/main/packages/pack', date: '2026-11-06' },
+  dedupePct: { value: 0, label: 'input', source: 'Share of atoms already asked by another contract in the same block' },
+  screen: { value: false, label: 'design', source: 'A fast System 1 screen (for example TypeSafe Jev) answers atoms first' },
+  screenPct: { value: 0, label: 'illustrative', source: 'Share of atoms the screen settles, only where the contract allows a screen to settle them' },
+  screenFidelityPct: { value: 0, label: 'illustrative', source: 'Share of brief and plan fidelity checks the screen settles; the rest go to the unproven multi-lab panel' },
+  screenUsd: { value: 0.0004, label: 'vendor-reported', source: 'TypeSafe Jev, about $0.0004 a decision in 70 to 500 ms; not reproduced', url: 'https://thenewstack.io/typesafe-jev-system-one/', date: '2026-11' },
+  fidelityCheckUsd: { value: 0.0163 / 5, label: 'measured', source: 'One unproven multi-lab check per brief, from the measured live run: $0.0163 for five contracts', url: 'https://github.com/Verafyai/verafyHarness/blob/main/results/live-2026-11-06.md', date: '2026-11-06' },
+}
+
+/** Presets: overrides on DEFAULTS. */
+const PRESETS = {
+  unpacked: { name: 'L2, FlashProve, unpacked', values: {} },
+  packed: { name: 'L2, FlashProve, proof packing', values: { packing: true, proveOnce: true } },
+  atomized: { name: 'L2, FlashProve, atomized', values: { atomize: true, proveOnce: true } },
+  jev: { name: 'L2, atomized, with a Jev screen', note: 'The screen settles half the atoms and 70% of the fidelity checks here (illustrative), only where a contract allows it. Screened atoms are not proven: a hosted, closed model cannot carry a proof of inference.', values: { atomize: true, proveOnce: true, screen: true, screenPct: 50, screenFidelityPct: 70 } },
+  deepprove: {
+    name: 'L2 prototype, DeepProve on CPU (Gemma 3)',
+    note: 'Gemma 3: 19 min to prove, 4.3 s to verify, 27 MiB per proof, 512-token sequences, on a 24-core 504 GB CPU server (vendor-reported, Lagrange DeepProve). For testing the pipeline, not for real juries.',
+    values: { gpuHourUsd: 3.0, proverBatch: 1, proverBatchSeconds: 19 * 60, contextTokens: 512, proofMB: 27 * 1.048576, verifySeconds: 4.3, warmupMinutes: 5 },
+  },
+}
+
+/** Plain values from DEFAULTS, with optional overrides. */
+function inputs(overrides = {}) {
+  const out = {}
+  for (const [k, d] of Object.entries(DEFAULTS)) out[k] = d.value
+  return { ...out, ...overrides }
+}
+
+/**
+ * Estimate the cost of one proven block and the earnings of each role.
+ * @param {object} raw - inputs; anything missing falls back to DEFAULTS.
+ * @returns {object} modeled outputs, all in US dollars, seconds, or GB.
+ */
+function estimate(raw = {}) {
+  const i = inputs(raw)
+  const ceil = Math.ceil
+  const secondsPerProof = i.proverBatchSeconds / i.proverBatch
+  const proveUsd = secondsPerProof / 3600 * i.gpuHourUsd
+  const setupUsd = (i.setupMinutes / 60 * i.gpuHourUsd) / i.requestsPerCommitment
+  const verifyUsd = i.verifySeconds / 3600 * i.cpuHourUsd
+  const storeUsd = i.proofMB / 1024 * i.storageUsdPerGBMonth * i.retentionMonths
+  const provers = i.proveOnce ? 1 : i.jurors
+  const perProofAllIn = proveUsd + setupUsd + i.verifiersPerProof * verifyUsd + storeUsd
+  const perRequestUsd = provers * perProofAllIn
+
+  // Packing: each contract becomes a brief; several briefs share one request.
+  // Unpacked: a long contract splits into ceil(tokens / context) requests.
+  // Atomize: contracts split into atoms; atoms dedupe across the block; an
+  // optional screen settles some; the rest pack as many per request as fit.
+  const atomsPerRequest = Math.max(1, Math.floor((i.contextTokens - i.atomHeaderTokens) / (i.atomTokens + i.atomAnswerTokens)))
+  const atomsTotal = i.contracts * i.atomsPerContract
+  const uniqueAtoms = ceil(atomsTotal * (1 - i.dedupePct / 100))
+  const screenedAtoms = i.screen ? Math.floor(uniqueAtoms * i.screenPct / 100) : 0
+  const provenAtoms = uniqueAtoms - screenedAtoms
+  const screenUsdTotal = i.atomize && i.screen ? uniqueAtoms * i.screenUsd : 0
+
+  let requestsPerContract, requestsInBlock, fidelityUsd, perDecisionUsd
+  if (i.atomize) {
+    requestsInBlock = ceil(provenAtoms / atomsPerRequest)
+    requestsPerContract = requestsInBlock / i.contracts
+    const sf = i.screen ? i.screenFidelityPct / 100 : 0
+    fidelityUsd = i.contracts * ((i.screen ? i.screenUsd : 0) + (1 - sf) * i.fidelityCheckUsd)
+    perDecisionUsd = (requestsInBlock * perRequestUsd + fidelityUsd + screenUsdTotal) / i.contracts
+  } else if (i.packing) {
+    requestsPerContract = 1 / i.decisionsPerRequest
+    requestsInBlock = ceil(i.contracts / i.decisionsPerRequest)
+    fidelityUsd = i.contracts * i.fidelityCheckUsd
+    perDecisionUsd = perRequestUsd / i.decisionsPerRequest + i.fidelityCheckUsd
+  } else {
+    requestsPerContract = ceil(i.tokensPerContract / i.contextTokens)
+    requestsInBlock = i.contracts * requestsPerContract
+    fidelityUsd = 0
+    perDecisionUsd = perRequestUsd * requestsPerContract
+  }
+
+  const proofs = provers * requestsInBlock
+  const verifications = proofs * i.verifiersPerProof
+  const warmupUsd = provers * i.warmupMinutes / 60 * i.gpuHourUsd
+  const parts = {
+    proving: proofs * (proveUsd + setupUsd),
+    verifying: verifications * verifyUsd,
+    storing: proofs * storeUsd,
+    warmup: warmupUsd,
+    fidelity: fidelityUsd,
+    screening: screenUsdTotal,
+  }
+  const blockCostUsd = Object.values(parts).reduce((a, b) => a + b, 0)
+  const perContractUsd = blockCostUsd / i.contracts
+  const m = 1 + i.marginPct / 100
+  const sealSeconds = ceil(requestsInBlock / i.proverBatch) * i.proverBatchSeconds
+  const proofGB = proofs * i.proofMB / 1024
+  const capacityPerHour = 3600 / secondsPerProof
+  const util = i.utilizationPct / 100
+  const breakEvenFeePerProof = i.gpuHourUsd / (capacityPerHour * util)
+  const marginalPerRequest = provers * (proveUsd + i.verifiersPerProof * verifyUsd + storeUsd)
+  const minRequestsForWarmup = ceil(9 * warmupUsd / marginalPerRequest)
+
+  // Roles, priced at cost plus margin on the marginal work.
+  const proverFee = (proveUsd + setupUsd) * m
+  const proverRevenueHour = capacityPerHour * util * proverFee
+  const verifierFee = verifyUsd * m
+  const verifierCapacityHour = 3600 / i.verifySeconds
+  const roles = {
+    prover: {
+      feePerProof: proverFee,
+      revenuePerHour: proverRevenueHour,
+      costPerHour: i.gpuHourUsd,
+      netPerHour: proverRevenueHour - i.gpuHourUsd,
+      breakEvenUtilizationPct: 100 * i.gpuHourUsd / (capacityPerHour * proverFee),
+      blockRevenue: proofs * proverFee + warmupUsd * m,
+    },
+    verifier: {
+      feePerVerification: verifierFee,
+      capacityPerHour: verifierCapacityHour,
+      revenuePerHour: verifierCapacityHour * util * verifierFee,
+      costPerHour: i.cpuHourUsd,
+      netPerHour: verifierCapacityHour * util * verifierFee - i.cpuHourUsd,
+      blockRevenue: verifications * verifierFee,
+    },
+    juror: {
+      note: 'Paid per counted vote from the contract escrow, dissent included. The contract author sets the escrow.',
+    },
+  }
+
+  const packedTokens = i.headerTokens + i.decisionsPerRequest * (i.briefMaxTokens + i.answerTokensPerDecision)
+  const packingFits = packedTokens <= i.contextTokens
+  const briefRatio = i.tokensPerContract / i.briefMaxTokens
+
+  return {
+    packedTokens, packingFits, briefRatio,
+    atomsPerRequest, atomsTotal, uniqueAtoms, screenedAtoms, provenAtoms,
+    secondsPerProof, proveUsd, setupUsd, verifyUsd, storeUsd, provers,
+    perProofAllIn, perRequestUsd, perDecisionUsd, requestsPerContract, requestsInBlock,
+    proofs, verifications, parts, blockCostUsd, perContractUsd,
+    priceWithMarginUsd: perContractUsd * m, sealSeconds, proofGB, capacityPerHour,
+    breakEvenFeePerProof, minRequestsForWarmup,
+    minDecisionsForWarmup: i.atomize ? Math.ceil(minRequestsForWarmup * atomsPerRequest / i.atomsPerContract) : i.packing ? minRequestsForWarmup * i.decisionsPerRequest : minRequestsForWarmup,
+    roles, inputs: i,
+  }
+}
+
+/** Cost per contract across block sizes, for the batch curve. */
+function curve(raw = {}, sizes = [1, 2, 4, 8, 12, 16, 24, 32, 48, 64, 96, 128, 160, 200]) {
+  return sizes.map(n => ({ contracts: n, perContractUsd: estimate({ ...raw, contracts: n }).perContractUsd }))
+}
+
+// Page logic for /economics. The economics functions are inlined above this by site/build.py.
+(function () {
+  var GROUPS = [
+    ['Machine', ['gpuHourUsd', 'cpuHourUsd', 'utilizationPct', 'warmupMinutes']],
+    ['Proof', ['proverBatch', 'proverBatchSeconds', 'contextTokens', 'proofMB', 'verifySeconds']],
+    ['Jury and block', ['jurors', 'verifiersPerProof', 'contracts', 'tokensPerContract']],
+    ['Proof packing', ['atomize', 'proveOnce', 'atomsPerContract', 'atomTokens', 'atomAnswerTokens', 'atomHeaderTokens', 'dedupePct', 'fidelityCheckUsd', 'packing', 'decisionsPerRequest', 'briefMaxTokens', 'answerTokensPerDecision', 'headerTokens']],
+    ['Fast screen (System 1)', ['screen', 'screenPct', 'screenFidelityPct', 'screenUsd']],
+    ['Storage and margin', ['storageUsdPerGBMonth', 'retentionMonths', 'marginPct']],
+  ]
+  var NAMES = {
+    gpuHourUsd: 'GPU, $ per hour', cpuHourUsd: 'Verifier CPU box, $ per hour', utilizationPct: 'GPU utilization, %', warmupMinutes: 'Warm-up per session, minutes',
+    proverBatch: 'Requests per prover batch', proverBatchSeconds: 'Seconds per batch', contextTokens: 'Tokens per proven request', proofMB: 'Proof size, MB', verifySeconds: 'Verify time, seconds',
+    jurors: 'Jurors per jury', verifiersPerProof: 'Verifiers per proof', contracts: 'Contracts in the block', tokensPerContract: 'Tokens per contract',
+    atomize: 'Atomize and pack', atomsPerContract: 'Atoms per contract', atomTokens: 'Tokens per atom slot', atomAnswerTokens: 'Answer tokens per atom', atomHeaderTokens: 'Packed header tokens', dedupePct: 'Atoms shared across contracts, %',
+    screen: 'Use a fast screen (Jev)', screenPct: 'Atoms the screen settles, %', screenFidelityPct: 'Fidelity checks the screen settles, %', screenUsd: 'Screen cost per decision, $',
+    packing: 'Briefs, fixed decisions per request', proveOnce: 'Prove once, verify many', decisionsPerRequest: 'Decisions per request', briefMaxTokens: 'Brief budget, tokens', answerTokensPerDecision: 'Answer tokens per decision', headerTokens: 'Header tokens', fidelityCheckUsd: 'Fidelity check per brief, $',
+    storageUsdPerGBMonth: 'Storage, $ per GB-month', retentionMonths: 'Retention, months', marginPct: 'Operator margin, %',
+  }
+  var TAGCLS = { 'vendor-reported': 'vr', measured: 'm', modeled: 'mo' }
+  var form = document.getElementById('inputs')
+  var state = inputs({})
+
+  function money(x) { return '$' + (Math.abs(x) >= 1 ? x.toFixed(2) : x.toFixed(4)) }
+  function num(x, d) { return Number(x).toLocaleString('en-US', { maximumFractionDigits: d === undefined ? 1 : d }) }
+  function dur(s) { return s >= 3600 ? num(s / 3600, 1) + ' h' : num(s / 60, 1) + ' min' }
+
+  function build() {
+    GROUPS.forEach(function (g) {
+      var fs = document.createElement('fieldset')
+      fs.innerHTML = '<legend>' + g[0] + '</legend>'
+      g[1].forEach(function (k) {
+        var d = DEFAULTS[k], row = document.createElement('label')
+        row.className = 'in'
+        var tag = '<span class="tag ' + (TAGCLS[d.label] || '') + '" title="' + d.source.replace(/"/g, '&quot;') + '">' + d.label + '</span>'
+        if (typeof d.value === 'boolean') {
+          row.innerHTML = '<span class="nm">' + NAMES[k] + ' ' + tag + '</span><input type="checkbox" name="' + k + '">'
+        } else {
+          row.innerHTML = '<span class="nm">' + NAMES[k] + ' ' + tag + '</span><input type="number" step="any" min="0" name="' + k + '">'
+        }
+        fs.appendChild(row)
+      })
+      form.appendChild(fs)
+    })
+    form.addEventListener('input', read)
+  }
+
+  function fill() {
+    Object.keys(NAMES).forEach(function (k) {
+      var el = form.elements[k]
+      if (!el) return
+      if (el.type === 'checkbox') el.checked = !!state[k]
+      else el.value = +Number(state[k]).toPrecision(6)
+    })
+  }
+
+  function read() {
+    Object.keys(NAMES).forEach(function (k) {
+      var el = form.elements[k]
+      if (!el) return
+      if (el.type === 'checkbox') state[k] = el.checked
+      else if (el.value !== '' && isFinite(+el.value) && +el.value > 0) state[k] = +el.value
+    })
+    render(); save()
+  }
+
+  function save() {
+    var diff = {}, base = inputs({})
+    Object.keys(NAMES).forEach(function (k) { if (state[k] !== base[k]) diff[k] = state[k] })
+    var q = Object.keys(diff).length ? '?s=' + encodeURIComponent(JSON.stringify(diff)) : ''
+    try { history.replaceState(null, '', location.pathname + q + location.hash) } catch (e) {}
+  }
+
+  function load() {
+    try {
+      var s = new URLSearchParams(location.search).get('s')
+      if (s) state = inputs(JSON.parse(s))
+    } catch (e) {}
+  }
+
+  function out(name, text) {
+    document.querySelectorAll('[data-out="' + name + '"]').forEach(function (n) { n.textContent = text })
+  }
+
+  function render() {
+    var e = estimate(state)
+    var u = estimate(Object.assign({}, state, { packing: false, atomize: false, proveOnce: false, screen: false }))
+    var p = estimate(Object.assign({}, state, { packing: false, atomize: true, proveOnce: true, screen: false }))
+    var bq = estimate(Object.assign({}, state, { packing: true, atomize: false, proveOnce: true, screen: false }))
+    var jq = estimate(Object.assign({}, state, { packing: false, atomize: true, proveOnce: true, screen: true, screenPct: state.screen ? state.screenPct : 50, screenFidelityPct: state.screen ? state.screenFidelityPct : 70 }))
+    document.getElementById('mode').textContent = (state.atomize ? 'atomized' : state.packing ? 'briefs' : 'unpacked') + (state.proveOnce ? ', proved once' : '') + (state.atomize && state.screen ? ', screened' : '')
+    out('blockCostUsd', money(e.blockCostUsd))
+    out('perContractUsd', money(e.perContractUsd))
+    out('priceWithMarginUsd', money(e.priceWithMarginUsd))
+    out('perDecisionUsd', money(e.perDecisionUsd))
+    out('requestsInBlock', num(e.requestsInBlock, 0))
+    out('proofsLine', e.provers + ' prover' + (e.provers > 1 ? 's' : '') + ', ' + num(e.proofs, 0) + ' proofs, ' + num(e.verifications, 0) + ' verifications')
+    out('sealLine', dur(e.sealSeconds) + ' (provers work in parallel)')
+    out('proofGB', num(e.proofGB, 2) + ' GB, in the availability layer, never on chain')
+    out('capacityPerHour', num(e.capacityPerHour, 0))
+    out('breakEvenFeePerProof', money(e.breakEvenFeePerProof) + ' at ' + num(state.utilizationPct, 0) + '% utilization')
+    out('minWarmLine', num(e.minRequestsForWarmup, 0) + ' requests per prover' + (state.packing || state.atomize ? ', about ' + num(e.minDecisionsForWarmup, 0) + ' contracts' : ''))
+    out('proveUsd', money(e.proveUsd))
+    out('warmShare', num(100 * u.parts.warmup / u.blockCostUsd, 0) + '%')
+    out('packGain', num(u.perDecisionUsd / p.perDecisionUsd, 0) + 'x')
+
+    var w = document.getElementById('fitWarn')
+    if (state.packing && !e.packingFits) { w.hidden = false; w.textContent = 'This packing does not fit: ' + num(e.packedTokens, 0) + ' tokens per request against a limit of ' + num(state.contextTokens, 0) + '. Lower the decisions per request or the brief budget.' }
+    else w.hidden = true
+
+    var COLORS = { proving: 'var(--accent)', verifying: 'var(--allow)', storing: 'var(--mute)', warmup: 'var(--hold)', fidelity: '#8A5CC7', screening: '#C79A2E' }
+    var LABELS = { proving: 'Proving', verifying: 'Verifying', storing: 'Storing proofs', warmup: 'Warm-up', fidelity: 'Fidelity checks', screening: 'Fast screen' }
+    var bar = '', leg = ''
+    Object.keys(e.parts).forEach(function (k) {
+      var v = e.parts[k]; if (v <= 0) return
+      var pct = 100 * v / e.blockCostUsd
+      bar += '<span style="width:' + pct + '%;background:' + COLORS[k] + '" title="' + LABELS[k] + '"></span>'
+      leg += '<li><i style="background:' + COLORS[k] + '"></i>' + LABELS[k] + ' ' + money(v) + ' (' + num(pct, 0) + '%)</li>'
+    })
+    document.getElementById('bar').innerHTML = bar
+    document.getElementById('legend').innerHTML = leg
+
+    var rows = [
+      ['Proven requests', u.requestsInBlock, bq.requestsInBlock, p.requestsInBlock, jq.requestsInBlock],
+      ['Provers', u.provers, bq.provers, p.provers, jq.provers],
+      ['Proofs', u.proofs, bq.proofs, p.proofs, jq.proofs],
+      ['Proof data', u.proofGB, bq.proofGB, p.proofGB, jq.proofGB],
+      ['Warm-up', u.parts.warmup, bq.parts.warmup, p.parts.warmup, jq.parts.warmup],
+      ['Proving', u.parts.proving, bq.parts.proving, p.parts.proving, jq.parts.proving],
+      ['Fidelity checks', u.parts.fidelity, bq.parts.fidelity, p.parts.fidelity, jq.parts.fidelity],
+      ['Fast screen', u.parts.screening, bq.parts.screening, p.parts.screening, jq.parts.screening],
+      ['Block cost', u.blockCostUsd, bq.blockCostUsd, p.blockCostUsd, jq.blockCostUsd],
+      ['Per contract', u.perContractUsd, bq.perContractUsd, p.perContractUsd, jq.perContractUsd],
+      ['Per decision, before warm-up', u.perDecisionUsd, bq.perDecisionUsd, p.perDecisionUsd, jq.perDecisionUsd],
+      ['Time to seal', u.sealSeconds, bq.sealSeconds, p.sealSeconds, jq.sealSeconds],
+    ]
+    var fmt = function (label, v) { return label === 'Proof data' ? num(v, 2) + ' GB' : label === 'Time to seal' ? dur(v) : /Proven|Provers|Proofs/.test(label) ? num(v, 0) : money(v) }
+    document.getElementById('compare').innerHTML = rows.map(function (r) { return '<tr><td class="k">' + r[0] + '</td>' + r.slice(1).map(function (v) { return '<td class="v">' + fmt(r[0], v) + '</td>' }).join('') + '</tr>' }).join('')
+
+    var R = e.roles
+    document.getElementById('roles').innerHTML =
+      '<tr><td>Proving operator</td><td class="v">' + money(R.prover.feePerProof) + ' per proof</td><td class="v">' + money(R.prover.revenuePerHour) + '</td><td class="v">' + money(R.prover.costPerHour) + '</td><td class="v ' + (R.prover.netPerHour < 0 ? 'neg' : 'pos') + '">' + money(R.prover.netPerHour) + '</td><td class="v">' + money(R.prover.blockRevenue) + '</td></tr>' +
+      '<tr><td>Verifier</td><td class="v">' + money(R.verifier.feePerVerification) + ' per check</td><td class="v">' + money(R.verifier.revenuePerHour) + '</td><td class="v">' + money(R.verifier.costPerHour) + '</td><td class="v ' + (R.verifier.netPerHour < 0 ? 'neg' : 'pos') + '">' + money(R.verifier.netPerHour) + '</td><td class="v">' + money(R.verifier.blockRevenue) + '</td></tr>' +
+      '<tr><td colspan="6" class="k">Break-even GPU utilization for the proving operator at this margin: ' + num(R.prover.breakEvenUtilizationPct, 0) + '%. Below it the GPU rent outruns the fees.</td></tr>'
+
+    chart(state)
+  }
+
+  function chart(s) {
+    var sizes = [1, 2, 4, 8, 12, 16, 24, 32, 48, 64, 96, 128, 160, 200]
+    var a = curve(Object.assign({}, s, { packing: false, atomize: false, proveOnce: false, screen: false }), sizes)
+    var b = curve(Object.assign({}, s, { packing: false, atomize: true, proveOnce: true, screen: false }), sizes)
+    var W = 760, H = 300, L = 70, B = 40, T = 16, Rr = 16
+    var ymax = Math.max.apply(null, a.concat(b).map(function (p) { return p.perContractUsd }))
+    var lg = function (n) { return Math.log(n) / Math.log(200) }
+    var X = function (n) { return L + lg(n) * (W - L - Rr) }
+    var Y = function (v) { return H - B - (v / ymax) * (H - B - T) }
+    var path = function (pts) { return pts.map(function (p, k) { return (k ? 'L' : 'M') + X(p.contracts).toFixed(1) + ' ' + Y(p.perContractUsd).toFixed(1) }).join(' ') }
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace" font-size="12">'
+    for (var g = 0; g <= 4; g++) { var v = ymax * g / 4, y = Y(v); svg += '<line x1="' + L + '" x2="' + (W - Rr) + '" y1="' + y + '" y2="' + y + '" stroke="var(--rule)"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end" fill="var(--mute)">' + money(v) + '</text>' }
+    ;[1, 4, 12, 24, 48, 96, 200].forEach(function (n) { svg += '<text x="' + X(n) + '" y="' + (H - B + 18) + '" text-anchor="middle" fill="var(--mute)">' + n + '</text>' })
+    svg += '<text x="' + ((W + L) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="var(--mute)">contracts in the block (log scale)</text>'
+    svg += '<path d="' + path(a) + '" fill="none" stroke="var(--hold)" stroke-width="2.5"/>'
+    svg += '<path d="' + path(b) + '" fill="none" stroke="var(--accent)" stroke-width="2.5"/>'
+    var n = Math.min(200, Math.max(1, s.contracts))
+    var cu = estimate(Object.assign({}, s, { packing: false, atomize: false, proveOnce: false, screen: false })).perContractUsd
+    var cp = estimate(Object.assign({}, s, { packing: false, atomize: true, proveOnce: true, screen: false })).perContractUsd
+    svg += '<line x1="' + X(n) + '" x2="' + X(n) + '" y1="' + T + '" y2="' + (H - B) + '" stroke="var(--ink)" stroke-dasharray="3 4"/>'
+    svg += '<circle cx="' + X(n) + '" cy="' + Y(cu) + '" r="5" fill="var(--hold)"/><circle cx="' + X(n) + '" cy="' + Y(cp) + '" r="5" fill="var(--accent)"/>'
+    svg += '<rect x="' + (W - 230) + '" y="' + T + '" width="214" height="48" fill="var(--sheet)" stroke="var(--rule)"/>'
+    svg += '<line x1="' + (W - 220) + '" x2="' + (W - 196) + '" y1="' + (T + 16) + '" y2="' + (T + 16) + '" stroke="var(--hold)" stroke-width="2.5"/><text x="' + (W - 188) + '" y="' + (T + 20) + '" fill="var(--ink)">unpacked</text>'
+    svg += '<line x1="' + (W - 220) + '" x2="' + (W - 196) + '" y1="' + (T + 34) + '" y2="' + (T + 34) + '" stroke="var(--accent)" stroke-width="2.5"/><text x="' + (W - 188) + '" y="' + (T + 38) + '" fill="var(--ink)">atomized and packed</text>'
+    document.getElementById('chart').innerHTML = svg + '</svg>'
+  }
+
+  function sources() {
+    document.getElementById('srcs').innerHTML = Object.keys(NAMES).map(function (k) {
+      var d = DEFAULTS[k]
+      var v = typeof d.value === 'boolean' ? (d.value ? 'on' : 'off') : +Number(d.value).toPrecision(6)
+      var src = d.url ? '<a href="' + d.url + '">' + d.source + '</a>' : d.source
+      return '<tr><td>' + NAMES[k] + '</td><td class="v">' + v + '</td><td><span class="tag ' + (TAGCLS[d.label] || '') + '">' + d.label + '</span></td><td>' + src + (d.date ? ' (' + d.date + ')' : '') + '</td></tr>'
+    }).join('')
+  }
+
+  document.querySelectorAll('[data-preset]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var pr = PRESETS[b.getAttribute('data-preset')]
+      state = inputs(pr.values)
+      document.getElementById('presetNote').textContent = pr.note || ''
+      fill(); render(); save()
+    })
+  })
+  document.getElementById('share').addEventListener('click', function () {
+    try { navigator.clipboard.writeText(location.href); this.textContent = 'Link copied' } catch (e) {}
+  })
+
+  load(); build(); fill(); sources(); render()
+})()
+
+</script>
+</body>
+</html>
