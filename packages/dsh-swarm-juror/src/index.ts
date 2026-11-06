@@ -13,7 +13,7 @@
  *
  * Status: mounts on DSH 0.2.2-rc.1 at the pinned commit, headless profile.
  * See ROADMAP.md, milestone 2, and docs/dsh-juror.md.
- * @module @swarmharness/dsh-swarm-juror
+ * @module @verafyharness/dsh-swarm-juror
  */
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -25,7 +25,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { PreToolDecision } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { ascHash, buildPrompt, commit, loadContext, parseVote, signMessage, validate } from '@swarmharness/core'
+import { ascHash, buildPrompt, commit, loadContext, parseVote, signMessage, validate } from '@verafyharness/core'
 
 export const name = 'swarm-juror'
 export const inject = ['tools', 'systemPrompt']

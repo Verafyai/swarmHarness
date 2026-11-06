@@ -3,7 +3,7 @@
  * Give packages/dsh-swarm-juror the packages it imports, without touching the
  * DeepSeek Harness tree: its peers (@deepseek-ai/cordis, schemastery, dsh-tools, dsh-agent, dsh-llm)
  * resolve to the built packages in upstream/deepseek-harness, and
- * @swarmharness/core resolves to packages/swarm-core. Run after building DSH.
+ * @verafyharness/core resolves to packages/core. Run after building DSH.
  *
  *   node scripts/dsh-link.mjs
  */
@@ -20,7 +20,7 @@ const links = {
   '@deepseek-ai/dsh-tools': join(DSH, 'packages', 'core', 'tools'),
   '@deepseek-ai/dsh-agent': join(DSH, 'packages', 'core', 'agent'),
   '@deepseek-ai/dsh-llm': join(DSH, 'packages', 'llm', 'llm'),
-  '@swarmharness/core': join(ROOT, 'packages', 'swarm-core'),
+  '@verafyharness/core': join(ROOT, 'packages', 'core'),
 }
 for (const [name, target] of Object.entries(links)) {
   if (!existsSync(join(target, 'package.json'))) throw new Error(`${name}: ${target} is missing; init the submodule and build DSH first`)

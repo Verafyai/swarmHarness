@@ -39,7 +39,7 @@ const route = opt('--route', 'scripted')
 const ascPath = resolve(opt('--asc', join(ROOT, 'examples', 'market-resolution.json')))
 const probe = argv.includes('--probe')
 const config = JSON.parse(readFileSync(join(ROOT, 'swarm.config.json'), 'utf8'))
-const { ascHash } = await import(join(ROOT, 'packages', 'swarm-core', 'src', 'index.js'))
+const { ascHash } = await import(join(ROOT, 'packages', 'core', 'src', 'index.js'))
 const H = ascHash(JSON.parse(readFileSync(ascPath, 'utf8')))
 
 // Each juror runs with its own empty directory as the workspace, so DSH finds
@@ -60,11 +60,11 @@ function setup() {
     const init = spawnSync(process.execPath, ['--import', 'tsx/esm', 'apps/cli/src/bin.ts', '--profile', 'headless', '--help'], { cwd: DSH, env: { ...process.env, DSH_HOME: HOME }, stdio: 'ignore' })
     if (init.status !== 0 || !existsSync(join(PROFILE, 'package.json'))) throw new Error('could not initialize the headless profile')
   }
-  const at = join(PROFILE, 'node_modules', '@swarmharness', 'dsh-swarm-juror')
+  const at = join(PROFILE, 'node_modules', '@verafyharness', 'dsh-swarm-juror')
   mkdirSync(dirname(at), { recursive: true })
   rmSync(at, { force: true, recursive: true })
   symlinkSync(join(ROOT, 'packages', 'dsh-swarm-juror'), at, 'dir')
-  console.log(`mounted @swarmharness/dsh-swarm-juror in ${at.replace(ROOT + '/', '')}`)
+  console.log(`mounted @verafyharness/dsh-swarm-juror in ${at.replace(ROOT + '/', '')}`)
 }
 
 /** The harness and route a lab's juror runs as. */

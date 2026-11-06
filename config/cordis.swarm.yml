@@ -99,7 +99,7 @@
 # swarm:juror section and the contract the tool returns are the brief.
 - id: system-prompt
   config:
-    personaPrefix: You are a Swarm Harness juror model powered by {{model}}.
+    personaPrefix: You are a Verafy Harness juror model powered by {{model}}.
     includeRuntimeContext: false
 
 - id: agent-instructions
@@ -122,7 +122,7 @@
 # packages/dsh-swarm-juror into the profile's node_modules so it resolves.
 - insert:
     - id: swarm-juror
-      name: '@swarmharness/dsh-swarm-juror'
+      name: '@verafyharness/dsh-swarm-juror'
       config:
         lockTools: true
         sectionOrder: 50

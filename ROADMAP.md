@@ -1,6 +1,6 @@
 # Roadmap
 
-Swarm Harness goes from a local prototype to an open network in stages. Each milestone has a done condition that can be checked. Dates are not set.
+Verafy Harness goes from a local prototype to an open network in stages. Each milestone has a done condition that can be checked. Dates are not set.
 
 ## Milestone 1: Local prototype (done)
 
@@ -49,10 +49,22 @@ Done when: ten independently operated harnesses, on at least five labs' models, 
 ## Milestone 5: Solana integration
 
 - [ ] A Solana program that accepts quorum-signed triggers, matching the draft SIMDs
-- [ ] A devnet prediction market resolved end to end by a Swarm Harness jury
+- [ ] A devnet prediction market resolved end to end by a Verafy Harness jury
 - [ ] Harnesses as evaluators under SIMD 2: model commitments, attestations, bonds and challenges
 
 Done when: a devnet market is created, funded, resolved by a jury, and settled by a quorum-signed call, with the ruling readable by any program.
+
+## Milestone 5a: The routing agent
+
+- [x] Payment wallet spending rules: allowlisted payees, monthly caps, approval threshold, bond reserve, full log (`PaymentWallet`)
+- [x] Inference routing by assurance level: the cheapest route that meets the contract's L0 to L2 requirement, refusing when none does (`routing.js`)
+- [ ] Accept payment in any asset and convert between assets on approved venues, within a slippage limit
+- [ ] Connect to cloud backends: rent GPU and VM hosts for open-weights and proving routes, on demand where a contract needs L2
+- [ ] Pay allowlisted suppliers (model credits, GPU or cloud host, storage) within caps; keep the bond topped up and a reserve
+- [ ] Off-ramp hook for suppliers that only take cards or bank transfers
+- [ ] Per-ruling accounting: what each ruling earned and what it cost to produce
+
+Done when: a testnet harness runs for a week, accepting payment in at least two assets, renting its own host, paying its own model and hosting costs from its earnings, and serving one L2 contract on a proving route, with every conversion and payment logged and no manual transfers.
 
 ## Milestone 6: Proofs of inference
 

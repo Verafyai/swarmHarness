@@ -2,7 +2,7 @@
  * A network of harnesses: draw a jury that spans enough labs, run commit and
  * reveal, measure agreement, run the contract, and seal the ruling into a block.
  * This is Proof of Judgment: a block exists only because a jury ruled.
- * @module swarm-core/network
+ * @module @verafyharness/core/network
  */
 import { ascHash } from './asc.js'
 import { checkReveal, verifyMessage } from './signer.js'

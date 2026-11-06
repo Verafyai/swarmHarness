@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url'
 import {
   Harness, drawJury, rule, ruleFromReveals, seal, validate, pin, ascHash, short,
   mockProvider, openaiProvider, createRouter,
-} from '../packages/swarm-core/src/index.js'
+} from '../packages/core/src/index.js'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CHAIN = join(ROOT, '.swarm', 'chain.json')

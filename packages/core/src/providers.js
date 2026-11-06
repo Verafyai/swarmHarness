@@ -7,7 +7,7 @@
  *
  * Inside DeepSeek Harness the same swap is a `@deepseek-ai/dsh-llm-pi-ai` route;
  * see config/cordis.swarm.yml.
- * @module swarm-core/providers
+ * @module @verafyharness/core/providers
  */
 
 /**
