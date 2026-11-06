@@ -1,8 +1,8 @@
 /**
- * Payment routers. Swarm Chain has no coin. A contract is paid in whatever asset
+ * Payment routers. Verafy Chain has no coin. A contract is paid in whatever asset
  * the requester chooses, on the chain where they hold it, and a harness plugs in
  * a payment router that decides which payments it accepts and where its share
- * is sent. Money never moves to Swarm Chain; the router settles on the source chain.
+ * is sent. Money never moves to Verafy Chain; the router settles on the source chain.
  *
  *   ledger        writes payouts to a local file. The default, for the prototype and devnet.
  *   solana-usdc   planned: releases escrow from a Solana program with a quorum-signed trigger.
@@ -73,7 +73,7 @@ function plannedRouter(name, plan) {
  */
 export function createRouter(payments = {}) {
   const name = payments.router ?? 'ledger'
-  if (name === 'ledger') return ledgerRouter({ file: payments.file ?? '.swarm/payouts.jsonl' })
+  if (name === 'ledger') return ledgerRouter({ file: payments.file ?? '.verafy/payouts.jsonl' })
   if (name === 'solana-usdc') return plannedRouter(name, 'release escrow held by a Solana program, in USDC or any SPL token, with a quorum-signed trigger')
   if (name === 'evm') return plannedRouter(name, 'release escrow held by an EVM contract, in ETH or any ERC-20, with a quorum-signed trigger')
   throw new Error(`unknown payment router "${name}"; use ledger, solana-usdc or evm`)

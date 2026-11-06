@@ -7,10 +7,10 @@
  *
  * The script is stateless and reads the conversation to decide the next step:
  *
- *   1. (with --probe) call every non-swarm tool the headless profile mounts, once
+ *   1. (with --probe) call every non-Verafy tool the headless profile mounts, once
  *      each, whether offered or not, to show the juror lock refuses them all
- *   2. call swarm_load_contract on the contract path
- *   3. call swarm_cast_vote with the lab's answer from examples/mock-answers.json
+ *   2. call verafy_load_contract on the contract path
+ *   3. call verafy_cast_vote with the lab's answer from examples/mock-answers.json
  *   4. reply with plain text
  *
  * The lab is read from the model id: `scripted-<lab>`. Requests without tools
@@ -53,21 +53,21 @@ function history(messages) {
 
 function next(body) {
   const tools = (body.tools ?? []).map(t => t.function?.name).filter(Boolean)
-  if (tools.length === 0) return { text: 'Swarm juror run' }
+  if (tools.length === 0) return { text: 'Verafy juror run' }
   const lab = String(body.model).replace(/^scripted-/, '')
   const done = history(body.messages ?? [])
   const called = name => done.some(c => c.name === name)
   if (probe) {
     // Every tool the headless profile mounts, offered or not: the lock hides them
     // from the juror, and the model calling one anyway must still fail.
-    const other = [...PROBE, ...tools].find(t => !t.startsWith('swarm_') && !called(t))
-    if (other) return { tool: other, args: {}, note: 'probe: a non-swarm tool, which the juror lock must refuse' }
+    const other = [...PROBE, ...tools].find(t => !t.startsWith('verafy_') && !called(t))
+    if (other) return { tool: other, args: {}, note: 'probe: a non-Verafy tool, which the juror lock must refuse' }
   }
-  if (!called('swarm_load_contract')) return { tool: 'swarm_load_contract', args: { path: ascPath } }
-  if (!called('swarm_cast_vote')) {
+  if (!called('verafy_load_contract')) return { tool: 'verafy_load_contract', args: { path: ascPath } }
+  if (!called('verafy_cast_vote')) {
     const vote = script[asc.id]?.[lab]
     if (!vote) return { text: `no scripted answer for ${asc.id} / ${lab}` }
-    return { tool: 'swarm_cast_vote', args: vote }
+    return { tool: 'verafy_cast_vote', args: vote }
   }
   return { text: 'Vote committed.' }
 }

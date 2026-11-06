@@ -4,7 +4,7 @@ Verafy Harness goes from a local prototype to an open network in stages. Each mi
 
 ## Milestone 1: Local prototype (done)
 
-- [x] Actually Smart Contract format `swarm.asc/0`: context, question, payment, exits, with a JSON Schema
+- [x] Actually Smart Contract format `swarm.asc/0` (now `verafy.asc/1`; the old kind still validates): context, question, payment, exits, with a JSON Schema
 - [x] Context pinning by SHA-256 and a loader that rejects mismatched content
 - [x] Harnessed validator: intake, bond check, juror prompt with evidence wrapping, vote parsing
 - [x] Ed25519 identities, commit-then-reveal, signed attestations
@@ -18,10 +18,10 @@ Done when: `npm test` passes and `npm run demo` seals five blocks. Met.
 
 ## Milestone 2: Juror mode inside DeepSeek Harness (done, 2026-11-06)
 
-- [x] Build DSH at the pinned commit and load `packages/dsh-swarm-juror` into it. Not through DSH's pnpm workspace, which would mean editing `upstream/`: DSH is built in place, and `scripts/dsh-juror.mjs setup` links the plugin into the headless profile and links its peers to the built DSH packages
-- [x] Run a headless DSH agent with `config/cordis.swarm.yml` that loads a contract and casts a committed vote
-- [x] Confirm the tool lock denies every non-swarm tool during a juror run: the agent is offered 2 tools; a scripted probe called all 24 other tools the headless profile mounts, and all 24 were denied (measured, every juror in a five-juror run)
-- [x] Record a keyless session snapshot of a juror run: `results/dsh-juror-session-2026-11-06.jsonl`
+- [x] Build DSH at the pinned commit and load the juror plugin (now `packages/dsh-verafy-juror`) into it. Not through DSH's pnpm workspace, which would mean editing `upstream/`: DSH is built in place, and `scripts/dsh-juror.mjs setup` links the plugin into the headless profile and links its peers to the built DSH packages
+- [x] Run a headless DSH agent with the juror overlay (now `config/cordis.verafy.yml`) that loads a contract and casts a committed vote
+- [x] Confirm the tool lock denies every non-juror tool during a juror run: the agent is offered 2 tools; a scripted probe called all 24 other tools the headless profile mounts, and all 24 were denied (measured, every juror in a five-juror run)
+- [x] Record a keyless session snapshot of a juror run: `results/dsh-juror-session-2026-11-06.jsonl`, and again after the tool rename: `results/dsh-juror-session-verafy-2026-11-06.jsonl`
 - [x] One harness per lab, each a DSH process with a different `dsh-llm-pi-ai` route
 
 Done when: five DSH processes on five model routes rule on `examples/market-resolution.json` and the CLI seals the block from their reveals. Met on 2026-11-06 with live models through OpenRouter: anthropic/claude-haiku-4.5, openai/gpt-5-mini, google/gemini-2.5-flash, meta-llama/llama-4-maverick, qwen/qwen3-235b-a22b-2507. All five voted NO, agreement 100% against a bar of 80%, block sealed. Details and the runs that failed first are in [docs/dsh-juror.md](docs/dsh-juror.md); what DSH does not expose is in [docs/dsh-gaps.md](docs/dsh-gaps.md).
@@ -44,7 +44,7 @@ Done when: 100 live rulings across the four market types, with audit results and
 
 ### Core changes the chain asked for (Nov 2026)
 
-From the swarmChain ROADMAP's "Needed in swarmHarness" list. Done in core:
+From the verafyChain ROADMAP's "Needed in verafyHarness" list. Done in core:
 
 - [x] `ruleFromRecords(asc, commits, reveals, {jury, sealer, seed})`: rules from recorded messages, pure and synchronous, no stand-in jurors. `rule()` now runs on top of it and accepts async reveals
 - [x] A committed juror that never reveals is not counted and is listed in `round.faults` as `no-reveal` (and `no-commit` for a seated juror with no valid commitment); nothing throws
@@ -54,10 +54,11 @@ From the swarmChain ROADMAP's "Needed in swarmHarness" list. Done in core:
 - [x] `drawJury` takes a bond floor; `drawJuryFor(asc, pool, seed)` and `eligibleJurors` apply `maxValuePerVote` and the new `excludeLabs` and `excludeHarnesses` jury rules
 - [x] `Harness` keeps an identity (`identity`) or loads one from a PEM file (`identityFile`, the same format as the DSH plugin's `identity.pem`)
 - [x] `mockProvider(script)` answers any contract and lab, read from each request
-- [x] `swarm.trigger/0` with `triggerMessage`, `signTrigger` and `verifyTrigger`
+- [x] `swarm.trigger/0` with `triggerMessage`, `signTrigger` and `verifyTrigger`; new triggers are now signed as `verafy.trigger/1`, and `swarm.trigger/0` still verifies
 - [x] Challenge (`swarm.challenge/0`) and escalated-contract (`swarm.escalation/0`) formats, in the schema and `validate`
 - [x] An optional `proofHash` on votes. Only the hash is recorded; a `proof` field anywhere in a ruling fails verification. A stored hash is not a proof by itself
 - [x] `seal(parent, rulings, sealer, {time})` for deterministic headers
+- [x] The rename to Verafy (Nov 6, 2026): CLI `verafy` with `swarm` as an alias, `verafy.asc/1`, `verafy.trigger/1`, `verafy.config.json`, `.verafy/`, `VERAFY_API_KEY`, `VERAFY_KEYBLOCK_PASSPHRASE`, juror tools `verafy_load_contract` and `verafy_cast_vote`. Every old name is still read, and old contracts keep their hashes (`packages/core/test/rename.test.js`)
 
 Still open from that list: the harness daemon (milestone 4).
 

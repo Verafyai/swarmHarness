@@ -1,7 +1,7 @@
-# Swarm juror profile overlay for DeepSeek Harness 0.2.2-rc.1 (pinned commit).
+# Verafy juror profile overlay for DeepSeek Harness 0.2.2-rc.1 (pinned commit).
 #
 # Mount on top of the headless profile, from upstream/deepseek-harness:
-#   pnpm dsh --profile headless --patch ../../config/cordis.swarm.yml \
+#   pnpm dsh --profile headless --patch ../../config/cordis.verafy.yml \
 #     "Rule on the contract at /abs/path/examples/market-resolution.json"
 #
 # scripts/dsh-juror.mjs links the plugin into the profile, sets the environment
@@ -11,92 +11,93 @@
 # one model, so a harness that picks a route has committed to that model. One
 # file serves every harness; the process picks its route through:
 #
-#   SWARM_ROUTE          route name below, such as openrouter-anthropic or scripted-anthropic
-#   SWARM_MODEL          the one model id on that route
-#   SWARM_HARNESS_ID     harness id, such as h-anthropic-1
-#   SWARM_HARNESS_LAB    the lab whose model the route serves
-#   SWARM_JUROR_OUT      where the key, commitment and private reveal are written
-#   SWARM_SCRIPTED_URL   base URL of scripts/scripted-llm.mjs (scripted routes only)
+#   VERAFY_ROUTE         route name below, such as openrouter-anthropic or scripted-anthropic
+#   VERAFY_MODEL         the one model id on that route
+#   VERAFY_HARNESS_ID    harness id, such as h-anthropic-1
+#   VERAFY_HARNESS_LAB   the lab whose model the route serves
+#   VERAFY_JUROR_OUT     where the key, commitment and private reveal are written
+#   VERAFY_SCRIPTED_URL  base URL of scripts/scripted-llm.mjs (scripted routes only)
 #
 # Keys are credential references, never secrets. The openrouter-* routes read
-# SWARM_API_KEY, the same variable the CLI uses for --live. The scripted-* routes
-# read SWARM_SCRIPTED_KEY, which pi-ai requires to be set but which the scripted
+# VERAFY_API_KEY, the same variable the CLI uses for --live (scripts/dsh-juror.mjs
+# fills it from SWARM_API_KEY when only the old name is set). The scripted-* routes
+# read VERAFY_SCRIPTED_KEY, which pi-ai requires to be set but which the scripted
 # server ignores.
 
 - id: llm-pi-ai
   config:
     providers:
       openrouter-anthropic:
-        apiKeyEnv: SWARM_API_KEY
+        apiKeyEnv: VERAFY_API_KEY
         api: openai-completions
         baseURL: https://openrouter.ai/api/v1
         models: [{ id: anthropic/claude-haiku-4.5 }]
       openrouter-openai:
-        apiKeyEnv: SWARM_API_KEY
+        apiKeyEnv: VERAFY_API_KEY
         api: openai-completions
         baseURL: https://openrouter.ai/api/v1
         models: [{ id: openai/gpt-5-mini }]
       openrouter-google:
-        apiKeyEnv: SWARM_API_KEY
+        apiKeyEnv: VERAFY_API_KEY
         api: openai-completions
         baseURL: https://openrouter.ai/api/v1
         models: [{ id: google/gemini-2.5-flash }]
       openrouter-meta:
-        apiKeyEnv: SWARM_API_KEY
+        apiKeyEnv: VERAFY_API_KEY
         api: openai-completions
         baseURL: https://openrouter.ai/api/v1
         models: [{ id: meta-llama/llama-4-maverick }]
       openrouter-qwen:
-        apiKeyEnv: SWARM_API_KEY
+        apiKeyEnv: VERAFY_API_KEY
         api: openai-completions
         baseURL: https://openrouter.ai/api/v1
         models: [{ id: qwen/qwen3-235b-a22b-2507 }]
       openrouter-deepseek:
-        apiKeyEnv: SWARM_API_KEY
+        apiKeyEnv: VERAFY_API_KEY
         api: openai-completions
         baseURL: https://openrouter.ai/api/v1
         models: [{ id: deepseek/deepseek-v4-flash }]
       # Keyless test doubles: scripts/scripted-llm.mjs answers from
       # examples/mock-answers.json by lab, over the same protocol.
       scripted-anthropic:
-        apiKeyEnv: SWARM_SCRIPTED_KEY
+        apiKeyEnv: VERAFY_SCRIPTED_KEY
         api: openai-completions
-        baseURL: !!js process.env.SWARM_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
+        baseURL: !!js process.env.VERAFY_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
         models: [{ id: scripted-anthropic }]
       scripted-openai:
-        apiKeyEnv: SWARM_SCRIPTED_KEY
+        apiKeyEnv: VERAFY_SCRIPTED_KEY
         api: openai-completions
-        baseURL: !!js process.env.SWARM_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
+        baseURL: !!js process.env.VERAFY_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
         models: [{ id: scripted-openai }]
       scripted-google:
-        apiKeyEnv: SWARM_SCRIPTED_KEY
+        apiKeyEnv: VERAFY_SCRIPTED_KEY
         api: openai-completions
-        baseURL: !!js process.env.SWARM_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
+        baseURL: !!js process.env.VERAFY_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
         models: [{ id: scripted-google }]
       scripted-meta:
-        apiKeyEnv: SWARM_SCRIPTED_KEY
+        apiKeyEnv: VERAFY_SCRIPTED_KEY
         api: openai-completions
-        baseURL: !!js process.env.SWARM_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
+        baseURL: !!js process.env.VERAFY_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
         models: [{ id: scripted-meta }]
       scripted-qwen:
-        apiKeyEnv: SWARM_SCRIPTED_KEY
+        apiKeyEnv: VERAFY_SCRIPTED_KEY
         api: openai-completions
-        baseURL: !!js process.env.SWARM_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
+        baseURL: !!js process.env.VERAFY_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
         models: [{ id: scripted-qwen }]
       scripted-deepseek:
-        apiKeyEnv: SWARM_SCRIPTED_KEY
+        apiKeyEnv: VERAFY_SCRIPTED_KEY
         api: openai-completions
-        baseURL: !!js process.env.SWARM_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
+        baseURL: !!js process.env.VERAFY_SCRIPTED_URL ?? 'http://127.0.0.1:8790/v1'
         models: [{ id: scripted-deepseek }]
 
 - id: agent-default-model
   config:
-    provider: !!js process.env.SWARM_ROUTE
-    model: !!js process.env.SWARM_MODEL
+    provider: !!js process.env.VERAFY_ROUTE
+    model: !!js process.env.VERAFY_MODEL
 
 # The juror sees the contract and nothing else: no coding persona, no
 # workspace instruction files, no skills, no runtime context snapshot. The
-# swarm:juror section and the contract the tool returns are the brief.
+# verafy:juror section and the contract the tool returns are the brief.
 - id: system-prompt
   config:
     personaPrefix: You are a Verafy Harness juror model powered by {{model}}.
@@ -119,16 +120,16 @@
   disabled: true
 
 # The plugin row name must be a literal module name; scripts/dsh-juror.mjs links
-# packages/dsh-swarm-juror into the profile's node_modules so it resolves.
+# packages/dsh-verafy-juror into the profile's node_modules so it resolves.
 - insert:
-    - id: swarm-juror
-      name: '@verafyharness/dsh-swarm-juror'
+    - id: verafy-juror
+      name: '@verafyharness/dsh-verafy-juror'
       config:
         lockTools: true
         sectionOrder: 50
-        outDir: !!js process.env.SWARM_JUROR_OUT
+        outDir: !!js process.env.VERAFY_JUROR_OUT
         harness:
-          id: !!js process.env.SWARM_HARNESS_ID
-          lab: !!js process.env.SWARM_HARNESS_LAB
-          model: !!js process.env.SWARM_MODEL
+          id: !!js process.env.VERAFY_HARNESS_ID
+          lab: !!js process.env.VERAFY_HARNESS_LAB
+          model: !!js process.env.VERAFY_MODEL
           bond: 500

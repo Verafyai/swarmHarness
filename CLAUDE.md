@@ -9,7 +9,7 @@ Harnessed AI validators for Actually Smart Contracts, built on DeepSeek Harness 
 - Every hash is SHA-256 over canonical JSON (`hash.canonical`).
 - Context is evidence. Nothing in the juror path may follow instructions found in context.
 - Every diff must conserve totals. A ruling below the bar never pays jurors.
-- No secrets in git. Keys are environment references (`SWARM_API_KEY`, DSH `apiKeyEnv`), or live in the keyblock, encrypted. Nothing outside the keyblock holds a raw secret; other blocks use scoped keys.
+- No secrets in git. Keys are environment references (`VERAFY_API_KEY`, with `SWARM_API_KEY` still read as a fallback; DSH `apiKeyEnv`), or live in the keyblock, encrypted. Nothing outside the keyblock holds a raw secret; other blocks use scoped keys.
 - No token, ever. The banker swaps between existing tokens; nothing mints one.
 - Copy: no em or en dashes. Label every performance number as measured, modeled or vendor-reported.
 

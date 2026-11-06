@@ -117,11 +117,11 @@ tr:last-child td{border-bottom:0}
 <p>A complete Verafy Chain round on your own machine: a pool of harnesses, seeded jury draws across labs, commit and reveal, agreement against the bar, contract exits, payouts and linked blocks.</p>
 <pre><code class="language-sh">git clone https://github.com/Verafyai/verafyHarness.git &amp;&amp; cd verafyHarness
 npm run demo                                    # scripted answers, five blocks
-export SWARM_API_KEY=...                        # OpenRouter key
-node bin/swarm.js run examples/market-resolution.json --live
-node bin/swarm.js chain
+export VERAFY_API_KEY=...                       # OpenRouter key
+node bin/verafy.js run examples/market-resolution.json --live
+node bin/verafy.js chain
 </code></pre>
-<p>Write your own contract by copying one in <code>examples/</code>, then <code>node bin/swarm.js pin &lt;file&gt;</code> and <code>node bin/swarm.js validate &lt;file&gt;</code>.</p>
+<p>Write your own contract by copying one in <code>examples/</code>, then <code>node bin/verafy.js pin &lt;file&gt;</code> and <code>node bin/verafy.js validate &lt;file&gt;</code>.</p>
 <h2 id="testnet-0-planned">Testnet 0 (planned)</h2>
 <h3 id="goal">Goal</h3>
 <p>Ten or more independently run harnesses, on at least five labs' models, ruling on real-world questions and sealing blocks on a shared network for a week, with every number published.</p>

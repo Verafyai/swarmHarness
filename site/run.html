@@ -576,9 +576,9 @@ npm test          # 14 tests, no dependencies to install
 npm run demo      # five contracts, five rulings, five blocks
 </code></pre>
 <h2 id="10-configure">10. Configure</h2>
-<p>A harness's setup lives in a JSON config. <code>swarm.config.json</code> is the default; pass another with <code>--config</code>.</p>
+<p>A harness's setup lives in a JSON config. <code>verafy.config.json</code> is the default (a setup from before the rename that has only <code>swarm.config.json</code> still works); pass another with <code>--config</code>.</p>
 <pre><code class="language-json">{
-  &quot;provider&quot;: { &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot;, &quot;apiKeyEnv&quot;: &quot;SWARM_API_KEY&quot; },
+  &quot;provider&quot;: { &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot;, &quot;apiKeyEnv&quot;: &quot;VERAFY_API_KEY&quot; },
   &quot;pool&quot;: [
     { &quot;id&quot;: &quot;h-local-gptoss&quot;, &quot;lab&quot;: &quot;openai&quot;, &quot;model&quot;: &quot;openai/gpt-oss-120b&quot;, &quot;bond&quot;: 500,
       &quot;baseURL&quot;: &quot;http://127.0.0.1:8000/v1&quot;, &quot;apiKeyEnv&quot;: &quot;VLLM_API_KEY&quot; },
@@ -624,25 +624,25 @@ npm run demo      # five contracts, five rulings, five blocks
 </tr>
 </tbody>
 </table></div>
-<p>In the prototype, the pool is every harness on your machine, so one config can stand up a whole local jury. On the network, each operator's config holds only their own harness. <code>swarm.config.local.json</code> is a ready example that puts a local <code>gpt-oss-120b</code> beside five hosted models.</p>
+<p>In the prototype, the pool is every harness on your machine, so one config can stand up a whole local jury. On the network, each operator's config holds only their own harness. <code>verafy.config.local.json</code> is a ready example that puts a local <code>gpt-oss-120b</code> beside five hosted models.</p>
 <h2 id="11-run-and-check">11. Run and check</h2>
 <p><strong>Available now.</strong></p>
-<pre><code class="language-sh">node bin/swarm.js doctor                       # Node version and pool
-export SWARM_API_KEY=...                       # OpenRouter key
-node bin/swarm.js doctor --live                # calls each model once and times it
-node bin/swarm.js run examples/market-resolution.json --live
-node bin/swarm.js chain
+<pre><code class="language-sh">node bin/verafy.js doctor                      # Node version and pool
+export VERAFY_API_KEY=...                      # OpenRouter key
+node bin/verafy.js doctor --live               # calls each model once and times it
+node bin/verafy.js run examples/market-resolution.json --live
+node bin/verafy.js chain
 </code></pre>
 <p>With a local model:</p>
 <pre><code class="language-sh">MODEL=openai/gpt-oss-120b bash scripts/run-vllm.sh     # in one terminal; prints VLLM_API_KEY
-export VLLM_API_KEY=... SWARM_API_KEY=...
-node bin/swarm.js doctor --live --config swarm.config.local.json
-node bin/swarm.js run examples/delay-cover.json --live --config swarm.config.local.json
+export VLLM_API_KEY=... VERAFY_API_KEY=...
+node bin/verafy.js doctor --live --config verafy.config.local.json
+node bin/verafy.js run examples/delay-cover.json --live --config verafy.config.local.json
 </code></pre>
 <p>A healthy <code>doctor --live</code> prints <code>ok</code> with a latency for every harness. A ruling prints PROPOSE, COMMIT, REVEAL, RULE, PAY and SEAL.</p>
 <h2 id="12-join-the-network">12. Join the network</h2>
 <p><strong>Planned.</strong> This is the interface the testnet will use. None of these commands exist yet.</p>
-<pre><code class="language-sh">verafy harness init --network testnet-0          # creates ~/.swarm/identity.json (Ed25519) and harness.json
+<pre><code class="language-sh">verafy harness init --network testnet-0          # creates ~/.verafy/identity.json (Ed25519) and harness.json
 verafy harness commit-model --model openai/gpt-oss-120b --weights weights.sha256 --runtime &lt;vllm digest&gt;
 verafy harness bond --chain solana-devnet --amount 10 --asset USDC
 verafy harness register                          # publishes identity, model commitment, lab, bond, payout addresses
@@ -681,7 +681,7 @@ verafy node start --peers &lt;seed nodes&gt;
 <tbody>
 <tr>
 <td><code>router</code></td>
-<td><code>ledger</code> (available now: records payouts to <code>.swarm/payouts.jsonl</code>, nothing moves), <code>solana-usdc</code> (planned: releases escrow from a Solana program, in USDC or any SPL token), <code>evm</code> (planned: the same for Ethereum and EVM chains)</td>
+<td><code>ledger</code> (available now: records payouts to <code>.verafy/payouts.jsonl</code>, nothing moves), <code>solana-usdc</code> (planned: releases escrow from a Solana program, in USDC or any SPL token), <code>evm</code> (planned: the same for Ethereum and EVM chains)</td>
 </tr>
 <tr>
 <td><code>accept</code></td>
@@ -778,7 +778,7 @@ profit = sum of shares  +  audit fees and caught bonds  -  model cost  -  machin
 <p>On testnet, everything is play money.</p>
 <h2 id="16-operating-a-harness">16. Operating a harness</h2>
 <ul>
-<li><strong>Keys.</strong> The identity key signs every commitment and reveal. Keep it on the harness machine, readable only by the harness user. API keys and wallet keys go in the <strong>keyblock</strong>, encrypted under a passphrase you supply through <code>SWARM_KEYBLOCK_PASSPHRASE</code>; the rest of the harness only ever holds short-lived scoped keys. See <a href="/coin-agnostic#the-routing-agent">The routing agent</a>.</li>
+<li><strong>Keys.</strong> The identity key signs every commitment and reveal. Keep it on the harness machine, readable only by the harness user. API keys and wallet keys go in the <strong>keyblock</strong>, encrypted under a passphrase you supply through <code>VERAFY_KEYBLOCK_PASSPHRASE</code> (the old name, <code>SWARM_KEYBLOCK_PASSPHRASE</code>, is still read); the rest of the harness only ever holds short-lived scoped keys. See <a href="/coin-agnostic#the-routing-agent">The routing agent</a>.</li>
 <li><strong>Pin your runtime.</strong> For an open-weights harness, pin the vLLM image by digest and the weights by hash. Changing either without re-registering will fail audits.</li>
 <li><strong>Temperature 0.</strong> Juror calls use temperature 0 so auditors can re-run them.</li>
 <li><strong>Uptime.</strong> A harness that commits and then fails to reveal is faulted. Take seats only while the model endpoint is healthy; <code>doctor --live</code> is the check.</li>

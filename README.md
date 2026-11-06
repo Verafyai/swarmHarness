@@ -5,14 +5,14 @@
 
 # Verafy Harness
 
-**Harnessed AI validators for Actually Smart Contracts.** The validator for [Swarm Chain](https://swarmchain.verafy.ai), built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). MIT licensed. No token.
+**Harnessed AI validators for Actually Smart Contracts.** The validator for [Verafy Chain](https://chain.verafy.ai), built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). MIT licensed. No token.
 
-[Concept site](https://swarmchain.verafy.ai) · [Run a harness](docs/run-a-harness.md) · [Testnet](docs/testnet.md) · [Coin Agnostic](docs/coin-agnostic.md) · [The essay](docs/blog/bringing-inference-programs-to-solana.md) · [The three draft SIMDs](docs/simds) · [SIMD discussion #724](https://github.com/solana-foundation/solana-improvement-documents/discussions/724) · [Roadmap](ROADMAP.md)
+**Project site: [harness.verafy.ai](https://harness.verafy.ai)** · [Concept site](https://chain.verafy.ai) · [Run a harness](docs/run-a-harness.md) · [Testnet](docs/testnet.md) · [Coin Agnostic](docs/coin-agnostic.md) · [The essay](docs/blog/bringing-inference-programs-to-solana.md) · [The three draft SIMDs](docs/simds) · [SIMD discussion #724](https://github.com/solana-foundation/solana-improvement-documents/discussions/724) · [Roadmap](ROADMAP.md)
 
 > **Status.** A working prototype, not a running network. Nothing here has been audited. What is real today: a full jury on one machine, live rulings by five labs' models, and juror mode inside DeepSeek Harness. See [what has been measured](#what-runs-today).
 
 <p align="center">
-  <img src="docs/assets/swarm-chain.gif" alt="Animation: intentions written in words go to five harnessed validators from different labs, who commit and reveal votes; agreement is measured against the contract's bar, and the ruling seals a new block." width="100%">
+  <img src="docs/assets/verafy-chain.gif" alt="Animation: intentions written in words go to five harnessed validators from different labs, who commit and reveal votes; agreement is measured against the contract's bar, and the ruling seals a new block." width="100%">
 </p>
 
 ## Why this exists
@@ -23,7 +23,7 @@ AI models can now read and weigh almost anything, and there is early research on
 
 Three choices shape the project:
 
-- **No token.** There is no Swarm coin and no need for one. Contracts are paid in whatever asset the requester holds, on whatever chain they hold it, and the harnesses are paid in the same asset. Coin agnostic is the point: it should be useful regardless of the crypto.
+- **No token.** There is no coin and no need for one. Contracts are paid in whatever asset the requester holds, on whatever chain they hold it, and the harnesses are paid in the same asset. Coin agnostic is the point: it should be useful regardless of the crypto.
 - **No venture capital.** This is being built without outside money so the idea has to stand on its own.
 - **Copy it.** Everything is MIT licensed. If it works, other people will copy it, and they are welcome to. The goal is a prototype that is useful.
 - **Just a project.** There is no UAE entity. There is no BVI company hidden somewhere. It's literally just a project. [Come test it](docs/testnet.md). We are having fun again.
@@ -36,7 +36,7 @@ Verafy Harness does two things.
 2. **It redefines what a validator is.** A validator is an AI model wrapped in a harness. The model brings judgment. The harness does everything else a validator does: intake, context loading and hash checks, sandboxed tools, guardrails, commit-then-reveal signing, a bond, a contract runtime, a payment router, and an outbox that posts votes and calls contracts on other chains. Anyone can run one. Together they form an oracle network built from harnesses.
 
 <p align="center">
-  <img src="docs/assets/site-top.png" alt="The Swarm Chain concept site: contracts written in words, validators with judgment" width="100%">
+  <img src="docs/assets/site-top.png" alt="The Verafy Chain concept site: contracts written in words, validators with judgment" width="100%">
 </p>
 
 ## Contents
@@ -59,7 +59,7 @@ Verafy Harness does two things.
 - [Performance and state size](#performance-and-state-size)
 - [Security](#security)
 - [Open problems](#open-problems)
-- [Verafy Harness and Swarm Chain](#verafy-harness-and-swarm-chain)
+- [Verafy Harness and Verafy Chain](#verafy-harness-and-verafy-chain)
 - [Read more](#read-more)
 - [Repository layout](#repository-layout)
 - [License and credits](#license-and-credits)
@@ -68,10 +68,10 @@ Verafy Harness does two things.
 
 | | Status | Evidence |
 |---|---|---|
-| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (40 tests), `npm run demo` |
+| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (51 tests), `npm run demo` |
 | Live rulings by five labs' models through OpenRouter | **Measured** Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total | [results/live-2026-11-06.md](results/live-2026-11-06.md) |
-| Juror mode inside DeepSeek Harness: five DSH processes on five labs' models, block sealed from their reveals | **Measured** Nov 6, 2026: all five voted NO, 100% against an 80% bar; 24 of 24 non-swarm tools denied | [docs/dsh-juror.md](docs/dsh-juror.md) |
-| Payment router: accept lists, a local payout ledger | Works; on-chain routers planned | `swarm.config.json`, `.swarm/payouts.jsonl` |
+| Juror mode inside DeepSeek Harness: five DSH processes on five labs' models, block sealed from their reveals | **Measured** Nov 6, 2026: all five voted NO, 100% against an 80% bar; 24 of 24 other tools denied | [docs/dsh-juror.md](docs/dsh-juror.md) |
+| Payment router: accept lists, a local payout ledger | Works; on-chain routers planned | `verafy.config.json`, `.verafy/payouts.jsonl` |
 | Routing agent: keyblock, banker, API router, payment wallet | Works with test venues and test APIs; real venues and on-chain signing planned | `npm test`, `packages/core/test/core.test.js` |
 | Auditors, challenges and escalation in core: an auditor from another lab re-checks a sealed ruling; a challenge appends affirm, overturn or supersede and never edits the ruling; a below-bar ruling's escrow funds a wider jury from other labs | Works with scripted models; not yet run live or on a network | `packages/core/src/challenge.js`, `packages/core/test/m3.test.js` |
 | Retry for rate-limited models: each harness backs off on 429, 5xx and network errors, then is dropped if it still fails | Works with fake providers; not yet measured live | `packages/core/src/providers.js` |
@@ -84,7 +84,7 @@ Needs Node 22 or later. The core has no dependencies.
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 40 tests
+npm test          # 51 tests
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
 ```
 
@@ -95,16 +95,18 @@ npm run demo      # five contracts, five rulings, five blocks, scripted answers
 With real models through any OpenAI-compatible endpoint (OpenRouter by default):
 
 ```sh
-export SWARM_API_KEY=...        # never commit it
-node bin/swarm.js doctor --live
-node bin/swarm.js run examples/market-resolution.json --live
+export VERAFY_API_KEY=...       # never commit it
+node bin/verafy.js doctor --live
+node bin/verafy.js run examples/market-resolution.json --live
 ```
 
-Other commands: `swarm doctor [--live]`, `swarm validate <file>`, `swarm pin <file>` (writes SHA-256 pins for every context entry), `swarm seal <file> <juror-dir...>` (seals a block from reveals that separate harness processes wrote, such as DSH jurors), `swarm chain`, and `--json` for machine output.
+Other commands: `verafy doctor [--live]`, `verafy validate <file>`, `verafy pin <file>` (writes SHA-256 pins for every context entry), `verafy seal <file> <juror-dir...>` (seals a block from reveals that separate harness processes wrote, such as DSH jurors), `verafy chain`, and `--json` for machine output. Installed as a package, the command is `verafy`.
+
+**Renamed from `swarm`.** The CLI was `swarm`; `swarm` still works as an alias and prints a one-line notice. Older setups keep working: `swarm.config.json` is read when `verafy.config.json` is missing, `.swarm/chain.json` is read while `.verafy/` is empty, `SWARM_API_KEY` and `SWARM_KEYBLOCK_PASSPHRASE` are read when the `VERAFY_` names are unset, contracts of kind `swarm.asc/0` still validate and keep their hashes, and triggers of kind `swarm.trigger/0` still verify. New contracts are `verafy.asc/1` and new triggers are signed as `verafy.trigger/1`.
 
 ## Run a harness
 
-The full guide is **[docs/run-a-harness.md](docs/run-a-harness.md)**, also on the site as [Run a harness](https://swarmchain.verafy.ai/run). It covers harnesses and nodes, consensus, machine requirements for API, open-weights and proving harnesses, bandwidth and state size, acceptable models, where to get them, how a model is proven, install, configure, run, joining the network, payments, costs and earnings. The testnet plan is in **[docs/testnet.md](docs/testnet.md)**.
+The full guide is **[docs/run-a-harness.md](docs/run-a-harness.md)**, also on the site as [Run a harness](https://harness.verafy.ai/run). It covers harnesses and nodes, consensus, machine requirements for API, open-weights and proving harnesses, bandwidth and state size, acceptable models, where to get them, how a model is proven, install, configure, run, joining the network, payments, costs and earnings. The testnet plan is in **[docs/testnet.md](docs/testnet.md)**.
 
 | Setup | Machine | Model |
 |---|---|---|
@@ -117,7 +119,7 @@ The full guide is **[docs/run-a-harness.md](docs/run-a-harness.md)**, also on th
 bash scripts/setup-ubuntu.sh            # Node 22, clone, test, demo
 bash scripts/setup-ubuntu.sh --gpu      # plus GPU checks
 MODEL=openai/gpt-oss-120b bash scripts/run-vllm.sh
-node bin/swarm.js doctor --live --config swarm.config.local.json
+node bin/verafy.js doctor --live --config verafy.config.local.json
 ```
 
 <p align="center">
@@ -141,7 +143,7 @@ Every Actually Smart Contract has four parts. The schema is [`schemas/asc.schema
 
 ```json
 {
-  "kind": "swarm.asc/0",
+  "kind": "verafy.asc/1",
   "id": "market-senate-bill-nov30",
   "instructions": "You resolve a prediction market. Use only the pinned roll-call snapshot...",
   "context": [{ "kind": "link", "url": "https://www.senate.gov/...", "snapshotAt": "2026-12-01T00:00:00Z", "sha256": "..." }],
@@ -159,7 +161,7 @@ The contract's identity is a hash over everything except snapshot content, so it
 ## The harnessed validator
 
 <p align="center">
-  <img src="docs/assets/harness-diagram.png" alt="Block diagram of a harnessed validator: requests, pinned context and live sources come in; intake, context loader, tools sandbox, guardrails, the pinned AI model, signer, contract runtime and outbox inside; bond wallet, track record and attestation along the bottom; votes and rulings go to Swarm Chain and contract calls to other chains" width="100%">
+  <img src="docs/assets/harness-diagram.png" alt="Block diagram of a harnessed validator: requests, pinned context and live sources come in; intake, context loader, tools sandbox, guardrails, the pinned AI model, signer, contract runtime and outbox inside; bond wallet, track record and attestation along the bottom; votes and rulings go to Verafy Chain and contract calls to other chains" width="100%">
 </p>
 
 | What a validator does today | What the harness does | In this repo |
@@ -185,7 +187,7 @@ The contract's identity is a hash over everything except snapshot content, so it
 
 ## Consensus
 
-Consensus has two layers. The full definition is in [the guide](docs/run-a-harness.md#2-what-consensus-means-on-swarm-chain).
+Consensus has two layers. The full definition is in [the guide](docs/run-a-harness.md#2-what-consensus-means-on-verafy-chain).
 
 - **Judgment consensus** decides whether a ruling is valid: the jury was drawn correctly across labs, at least a quorum revealed votes that match their commitments, every answer is in bounds, the bar was or was not cleared, and the diff matches the exit and conserves totals. Every node checks every rule.
 - **Ledger consensus** decides block order: a sealer rotation over the node set, with a block final at two thirds of node signatures (proposed for testnet). Rulings inside a final block can still be challenged during their window; a challenge appends a new ruling and never erases the old one.
@@ -219,7 +221,7 @@ A block exists only when a jury rules. Nothing mines or stakes its way into prod
   <img src="docs/assets/no-coin.png" alt="There is no token. There is no need for one. Money stays where it is, a payment router in every harness, paid in what was paid in." width="100%">
 </p>
 
-**There is no token, and there is no need for one.** A contract is paid in whatever asset the requester chooses, on the chain where they hold it: USDC or SOL on Solana, ETH or any ERC-20 on Ethereum. Any wallet works. The money never moves to Swarm Chain: escrow is held on the source chain, Swarm Chain records the ruling, and a quorum-signed trigger releases the escrow there, in the same asset.
+**There is no token, and there is no need for one.** A contract is paid in whatever asset the requester chooses, on the chain where they hold it: USDC or SOL on Solana, ETH or any ERC-20 on Ethereum. Any wallet works. The money never moves to Verafy Chain: escrow is held on the source chain, Verafy Chain records the ruling, and a quorum-signed trigger releases the escrow there, in the same asset.
 
 Each harness plugs in a **payment router** that decides which payments it accepts and where its share goes:
 
@@ -235,7 +237,7 @@ Each harness plugs in a **payment router** that decides which payments it accept
 
 | Router | Status | What it does |
 |---|---|---|
-| `ledger` | Available now, the default | Records every payout to `.swarm/payouts.jsonl`. Nothing moves on any chain. |
+| `ledger` | Available now, the default | Records every payout to `.verafy/payouts.jsonl`. Nothing moves on any chain. |
 | `solana-usdc` | Planned | Releases escrow held by a Solana program, in USDC or any SPL token, with a quorum-signed trigger |
 | `evm` | Planned | The same for Ethereum and EVM chains, in ETH or any ERC-20 |
 
@@ -264,8 +266,8 @@ A block stores the short request inline and every piece of context as a hash. Fu
 
 A harness commits to one model. Swapping the AI means changing the provider and model id, nothing else.
 
-- **This prototype:** edit `swarm.config.json`. Each pool entry names a lab and a model, routed through an OpenAI-compatible endpoint, which can be a local vLLM server (`swarm.config.local.json`).
-- **Inside DeepSeek Harness:** pick a route in [`config/cordis.swarm.yml`](config/cordis.swarm.yml). DSH's `@deepseek-ai/dsh-llm-pi-ai` adapter serves Anthropic, OpenAI, Google, OpenRouter, any OpenAI-compatible gateway, or a self-hosted server, with keys as credential references.
+- **This prototype:** edit `verafy.config.json`. Each pool entry names a lab and a model, routed through an OpenAI-compatible endpoint, which can be a local vLLM server (`verafy.config.local.json`).
+- **Inside DeepSeek Harness:** pick a route in [`config/cordis.verafy.yml`](config/cordis.verafy.yml). DSH's `@deepseek-ai/dsh-llm-pi-ai` adapter serves Anthropic, OpenAI, Google, OpenRouter, any OpenAI-compatible gateway, or a self-hosted server, with keys as credential references.
 
 The network does not care which lab a harness uses. It requires that each jury spans several labs.
 
@@ -273,13 +275,13 @@ The network does not care which lab a harness uses. It requires that each jury s
 
 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) is an MIT-licensed agent harness built on an everything-is-a-plugin architecture. Verafy Harness uses it as the harness runtime and adds juror mode as a plugin, leaving the upstream tree unmodified. See [UPSTREAM.md](UPSTREAM.md) for the pinned commit.
 
-[`packages/dsh-swarm-juror`](packages/dsh-swarm-juror/src/index.ts) registers:
+[`packages/dsh-verafy-juror`](packages/dsh-verafy-juror/src/index.ts) registers:
 
-- a `swarm:juror` system prompt section with the juror rules,
-- `swarm_load_contract`, which validates a contract and checks every context pin,
-- `swarm_cast_vote`, which validates the vote, signs a commitment and an attestation, keeps the vote and salt in a private reveal file, returns only the commitment, and concludes the turn,
-- a tool lock: each juror agent is offered only the two swarm tools (`tools.restrict`), and a `tools/pre-execute` gate denies any other call,
-- a stop-boundary reminder: a juror that answers in prose instead of calling `swarm_cast_vote` is told, at most twice, that only the tool call counts.
+- a `verafy:juror` system prompt section with the juror rules,
+- `verafy_load_contract`, which validates a contract and checks every context pin,
+- `verafy_cast_vote`, which validates the vote, signs a commitment and an attestation, keeps the vote and salt in a private reveal file, returns only the commitment, and concludes the turn,
+- a tool lock: each juror agent is offered only the two Verafy tools (`tools.restrict`), and a `tools/pre-execute` gate denies any other call,
+- a stop-boundary reminder: a juror that answers in prose instead of calling `verafy_cast_vote` is told, at most twice, that only the tool call counts.
 
 ```sh
 git submodule update --init --depth 1
@@ -289,16 +291,16 @@ CI=true npx -y pnpm@11.28.5 run build
 cd ../..
 node scripts/dsh-juror.mjs setup                        # link the plugin into the headless profile
 node scripts/dsh-juror.mjs vote --lab anthropic         # one DSH juror, scripted model, no key
-node scripts/dsh-juror.mjs jury                         # five DSH jurors, then swarm seal
-SWARM_API_KEY=... node scripts/dsh-juror.mjs jury --route openrouter   # five labs' live models
+node scripts/dsh-juror.mjs jury                         # five DSH jurors, then verafy seal
+VERAFY_API_KEY=... node scripts/dsh-juror.mjs jury --route openrouter  # five labs' live models
 ```
 
-Status: milestone 2 is met. Five DeepSeek Harness processes on five labs' models (one `dsh-llm-pi-ai` route each, through OpenRouter) ruled on `examples/market-resolution.json` and `swarm seal` sealed the block from their reveals. See [docs/dsh-juror.md](docs/dsh-juror.md) for the run, and [docs/dsh-gaps.md](docs/dsh-gaps.md) for what DSH does not expose.
+Status: milestone 2 is met. Five DeepSeek Harness processes on five labs' models (one `dsh-llm-pi-ai` route each, through OpenRouter) ruled on `examples/market-resolution.json` and `swarm seal` (now `verafy seal`) sealed the block from their reveals. See [docs/dsh-juror.md](docs/dsh-juror.md) for the run, and [docs/dsh-gaps.md](docs/dsh-gaps.md) for what DSH does not expose.
 
 ## Networks of harnesses
 
 <p align="center">
-  <img src="docs/assets/network.png" alt="A pool of eighteen independent harnesses; a request from a prediction market draws a jury of five from five labs; two auditors; the ruling seals into Swarm Chain and triggers market.settle on Solana" width="100%">
+  <img src="docs/assets/network.png" alt="A pool of eighteen independent harnesses; a request from a prediction market draws a jury of five from five labs; two auditors; the ruling seals into Verafy Chain and triggers market.settle on Solana" width="100%">
 </p>
 
 Many independent harnesses form a pool. Each request draws a random jury that meets the contract's rules: enough labs, enough bond, the right specialty, an accepted payment. The first networks:
@@ -356,15 +358,15 @@ Security is economic: lying has to cost an operator more than it pays.
 - **Who makes the models.** Anyone can run a harness, but a few labs make the strongest models.
 - **Setting the bar.** Too low and wrong rulings pass; too high and nothing settles. The live forecast fell below its bar.
 
-## Verafy Harness and Swarm Chain
+## Verafy Harness and Verafy Chain
 
-| | Verafy Harness (this repo) | Swarm Chain |
+| | Verafy Harness (this repo) | Verafy Chain |
 |---|---|---|
 | What | The validator: an AI model in a harness | The chain: nodes that hold contracts, coordinate juries, seal and store blocks |
 | Runs a model | Yes | Never |
-| Where | [Verafyai/verafyHarness](https://github.com/Verafyai/verafyHarness) | Verafyai/swarmchain (in progress) and the concept at [swarmchain.verafy.ai](https://swarmchain.verafy.ai) |
+| Where | [Verafyai/verafyHarness](https://github.com/Verafyai/verafyHarness) | [Verafyai/verafyChain](https://github.com/Verafyai/verafyChain) (in progress) and the concept at [chain.verafy.ai](https://chain.verafy.ai) |
 
-Most of the work lives here. Swarm Chain imports this repo's core for every hash, signature, agreement and diff check and never reimplements them.
+Most of the work lives here. Verafy Chain imports this repo's core for every hash, signature, agreement and diff check and never reimplements them.
 
 ## Read more
 
@@ -372,7 +374,8 @@ Most of the work lives here. Swarm Chain imports this repo's core for every hash
 - **The three draft SIMDs**: [Inference Programs](docs/simds/XXXX-inference-programs.md), [Inference Evaluators and Attestations](docs/simds/XXXX-inference-attestations.md), [Inference Rulings, Disputes and Challenges](docs/simds/XXXX-inference-rulings.md)
 - **[SIMD discussion #724](https://github.com/solana-foundation/solana-improvement-documents/discussions/724)**, in the Solana Improvement Documents repo
 - **[asc.verafy.ai](https://asc.verafy.ai)**: Actually Smart Contracts on Solana, with a sandbox
-- **[swarmchain.verafy.ai](https://swarmchain.verafy.ai)**: the Swarm Chain concept, with both animations
+- **[chain.verafy.ai](https://chain.verafy.ai)**: the Verafy Chain concept, with both animations
+- **[harness.verafy.ai](https://harness.verafy.ai)**: this project's site, with Run a harness, Testnet and Coin Agnostic
 - **[Run a harness](docs/run-a-harness.md)** and **[Testnet](docs/testnet.md)**
 - **[Juror mode inside DeepSeek Harness](docs/dsh-juror.md)** and **[what DSH does not expose](docs/dsh-gaps.md)**
 - **[Live results, Nov 6](results/live-2026-11-06.md)**
@@ -380,7 +383,8 @@ Most of the work lives here. Swarm Chain imports this repo's core for every hash
 ## Repository layout
 
 ```
-bin/swarm.js                      CLI: run, seal, doctor, validate, pin, chain
+bin/verafy.js                     CLI: run, seal, doctor, validate, pin, chain
+bin/swarm.js                      the pre-rename alias for bin/verafy.js
 packages/core/              zero-dependency core
   src/asc.js                      Actually Smart Contract format and validation
   src/juror.js                    context loader, juror prompt, vote parsing
@@ -390,21 +394,22 @@ packages/core/              zero-dependency core
   src/payments.js                 payment routers: accept lists, ledger, planned on-chain routers
   src/routing.js                  payment wallet; inference routes by assurance level up to ZK proofs
   src/keyblock.js                 encrypted key vault; issues scoped keys
+  src/env.js                      new names and their pre-rename fallbacks: config, state folder, env
   src/banker.js                   exchange: accept any token, best-quote swaps, fund payments
   src/apirouter.js                plugs into and pays outside APIs: AI, routers, provers, hosts
   src/harness.js                  the harnessed validator
   src/network.js                  jury draw, ruling from recorded messages, ruling verifier, sealing, Proof of Judgment
-  src/trigger.js                  quorum-signed triggers (swarm.trigger/0)
+  src/trigger.js                  quorum-signed triggers (verafy.trigger/1; swarm.trigger/0 still verifies)
   src/challenge.js                auditors, challenges and reviews, escalated contracts
   src/providers.js                mock and OpenAI-compatible model providers, retry with backoff
   test/                           node:test suite
-packages/dsh-swarm-juror/         juror mode as a DeepSeek Harness plugin
-config/cordis.swarm.yml           DSH profile overlay: one model route per lab, juror mode
+packages/dsh-verafy-juror/        juror mode as a DeepSeek Harness plugin
+config/cordis.verafy.yml          DSH profile overlay: one model route per lab, juror mode
 scripts/                          setup-ubuntu.sh, run-vllm.sh, dsh-juror.mjs, dsh-link.mjs, scripted-llm.mjs
 examples/                         five Actually Smart Contracts and scripted answers
-schemas/asc.schema.json           JSON Schema for swarm.asc/0
-swarm.config.json                 the local pool, provider and payment router
-swarm.config.local.json           a pool with a local vLLM model beside hosted ones
+schemas/asc.schema.json           JSON Schema for verafy.asc/1 (swarm.asc/0 still validates)
+verafy.config.json                the local pool, provider and payment router
+verafy.config.local.json          a pool with a local vLLM model beside hosted ones
 docs/run-a-harness.md             getting started: hardware, models, proving, install, run, payments, costs
 docs/testnet.md                   local devnet now, Testnet 0 plan
 docs/dsh-juror.md, dsh-gaps.md    juror mode inside DeepSeek Harness

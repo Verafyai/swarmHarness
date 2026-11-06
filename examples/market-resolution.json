@@ -1,5 +1,5 @@
 {
-  "kind": "swarm.asc/0",
+  "kind": "verafy.asc/1",
   "id": "market-senate-bill-nov30",
   "title": "Resolve: Will the bill pass the Senate by Nov 30?",
   "instructions": "You resolve a prediction market. Use only the pinned roll-call snapshot and the market rules. A bill has passed the Senate only if the snapshot records a passing roll-call vote dated on or before November 30. If the snapshot does not settle the question, answer UNCLEAR. You never see the market price.",

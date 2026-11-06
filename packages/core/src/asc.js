@@ -10,7 +10,11 @@
  */
 import { sha256 } from './hash.js'
 
-export const ASC_KIND = 'swarm.asc/0'
+export const ASC_KIND = 'verafy.asc/1'
+/** The pre-rename contract kind. It still validates, and a contract that carries it keeps its hash. */
+export const LEGACY_ASC_KIND = 'swarm.asc/0'
+/** Every contract kind the validator accepts. */
+export const ASC_KINDS = [ASC_KIND, LEGACY_ASC_KIND]
 export const ANSWER_TYPES = ['verdict', 'forecast', 'graded']
 export const CONTEXT_KINDS = ['link', 'text', 'policy', 'document', 'repo', 'ruling']
 /** A challenge contract (`asc.review`): a new contract that reviews a sealed ruling. */
@@ -34,11 +38,14 @@ export function contextHash(entry) {
 
 /**
  * Fill in `sha256` for every context entry that lacks one. Used when authoring.
+ * A contract that still says `swarm.asc/0` is written as `verafy.asc/1`, which
+ * gives it a new hash; a contract that is never re-pinned keeps its old one.
  * @param {object} asc - an Actually Smart Contract.
  * @returns {object} a copy with every context entry pinned.
  */
 export function pin(asc) {
-  return { ...asc, context: asc.context.map(c => ({ ...c, sha256: c.sha256 ?? contextHash(c) })) }
+  const kind = asc.kind === LEGACY_ASC_KIND ? { kind: ASC_KIND } : {}
+  return { ...asc, ...kind, context: asc.context.map(c => ({ ...c, sha256: c.sha256 ?? contextHash(c) })) }
 }
 
 /**
@@ -59,7 +66,7 @@ export function ascHash(asc) {
  */
 export function validate(asc) {
   const p = []
-  if (asc?.kind !== ASC_KIND) p.push(`kind must be "${ASC_KIND}"`)
+  if (!ASC_KINDS.includes(asc?.kind)) p.push(`kind must be "${ASC_KIND}" (or "${LEGACY_ASC_KIND}" for a contract written before the rename)`)
   if (!asc?.id) p.push('id is required')
   if (!Array.isArray(asc?.context) || asc.context.length === 0) p.push('context needs at least one entry')
   for (const [i, c] of (asc?.context ?? []).entries()) {

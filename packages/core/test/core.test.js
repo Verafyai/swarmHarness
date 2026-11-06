@@ -9,7 +9,7 @@ import {
 
 const ex = name => JSON.parse(readFileSync(new URL(`../../../examples/${name}.json`, import.meta.url), 'utf8'))
 const mock = ex('mock-answers')
-const config = JSON.parse(readFileSync(new URL('../../../swarm.config.json', import.meta.url), 'utf8'))
+const config = JSON.parse(readFileSync(new URL('../../../verafy.config.json', import.meta.url), 'utf8'))
 const poolFor = asc => config.pool.map(h => new Harness({ ...h, provider: mockProvider(mock, asc.id, h.lab) }))
 
 test('canonical JSON sorts keys at every level', () => {
@@ -162,7 +162,7 @@ test('payment routers: a harness refuses assets it does not accept, and the ledg
   assert.ok(h.intake(asc).some(p => p.includes('does not accept USDC on solana')))
   const { mkdtempSync, readFileSync: read } = await import('node:fs')
   const { tmpdir } = await import('node:os')
-  const file = `${mkdtempSync(`${tmpdir()}/swarm-`)}/payouts.jsonl`
+  const file = `${mkdtempSync(`${tmpdir()}/verafy-`)}/payouts.jsonl`
   const pool = poolFor(asc)
   const jury = drawJury(pool, asc.payment.jury, 'genesis')
   const r = await rule(asc, jury, pool.find(x => !jury.includes(x)))

@@ -101,9 +101,10 @@ def header(current):
 
 def check(name, text):
     low = text.lower()
-    for bad in ('swarm chain', 'swarmchain', 'swarm harness', 'swarmharness', 'swarm testnet'):
-        # Planned commands are written `verafy harness ...`; nothing should still say the old names.
-        assert bad not in low, f'{name}: still says "{bad}"'
+    # The names from before the rename, with or without a space. Planned commands
+    # are written `verafy harness ...`; nothing should still say the old names.
+    old = re.search(r'swarm\s?(chain|harness|testnet)', low)
+    assert not old, f'{name}: still says "{old.group(0) if old else ""}"'
     assert '—' not in text and '–' not in text, f'{name}: em or en dash'
 
 

@@ -1,5 +1,5 @@
 {
-  "kind": "swarm.asc/0",
+  "kind": "verafy.asc/1",
   "id": "forecast-march-rate-cut",
   "title": "Forecast: Will the Fed cut rates in March?",
   "instructions": "You forecast. Give the probability that the Federal Reserve lowers the target range for the federal funds rate at its March 2027 meeting, using only the pinned context. You will be scored against the outcome.",

@@ -1,7 +1,7 @@
 {
   "provider": {
     "baseURL": "https://openrouter.ai/api/v1",
-    "apiKeyEnv": "SWARM_API_KEY"
+    "apiKeyEnv": "VERAFY_API_KEY"
   },
   "pool": [
     {
@@ -55,7 +55,7 @@
   ],
   "payments": {
     "router": "ledger",
-    "file": ".swarm/payouts.jsonl",
+    "file": ".verafy/payouts.jsonl",
     "accept": [
       {
         "chain": "*",

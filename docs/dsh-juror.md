@@ -2,17 +2,17 @@
 
 Milestone 2 on the [roadmap](../ROADMAP.md). Prototype only: not a running network, no token, nothing audited.
 
-A Swarm juror here is an ordinary DeepSeek Harness (DSH) headless process with one extra plugin, [`@verafyharness/dsh-swarm-juror`](../packages/dsh-swarm-juror/src/index.ts), and one overlay, [`config/cordis.swarm.yml`](../config/cordis.swarm.yml). The upstream tree at `upstream/deepseek-harness` is built in place and never edited.
+A Verafy juror here is an ordinary DeepSeek Harness (DSH) headless process with one extra plugin, [`@verafyharness/dsh-verafy-juror`](../packages/dsh-verafy-juror/src/index.ts), and one overlay, [`config/cordis.verafy.yml`](../config/cordis.verafy.yml). The upstream tree at `upstream/deepseek-harness` is built in place and never edited.
 
 ## How it fits together
 
 | Piece | What it does |
 |---|---|
-| `config/cordis.swarm.yml` | One `dsh-llm-pi-ai` route per lab, each serving exactly one model: `openrouter-<lab>` (live, key `SWARM_API_KEY`) and `scripted-<lab>` (keyless test double). Sets the agent's default route from `SWARM_ROUTE`, mounts the plugin, and turns off the coding persona, workspace instruction files, skills and the session title model call. |
-| `packages/dsh-swarm-juror` | Juror section in the system prompt; `swarm_load_contract`; `swarm_cast_vote`; the tool lock; a reminder at the stop boundary when no vote was cast. Refuses to vote if the agent's route serves a different model than the harness committed to. |
-| `scripts/dsh-juror.mjs` | `setup` links the plugin and its peers; `vote` runs one juror; `jury` runs five jurors in parallel (one per lab, from `swarm.config.json`) and then runs `swarm seal`. Each juror gets its own empty working directory under `.dsh/jurors/<harness>`. |
-| `scripts/scripted-llm.mjs` | OpenAI-compatible chat completions server that answers from `examples/mock-answers.json` by lab. `--probe` makes it call every non-swarm tool first. A test double, not a model. |
-| `node bin/swarm.js seal` | Reads each juror's `<ascHash>.commit.json` and private `<ascHash>.reveal.json`, draws the jury from the submitted cards seeded by the parent block hash, checks every attestation signature, commitment and reveal, rules, and seals. |
+| `config/cordis.verafy.yml` | One `dsh-llm-pi-ai` route per lab, each serving exactly one model: `openrouter-<lab>` (live, key `VERAFY_API_KEY`; the launcher fills it from `SWARM_API_KEY` when only the old name is set) and `scripted-<lab>` (keyless test double). Sets the agent's default route from `VERAFY_ROUTE`, mounts the plugin, and turns off the coding persona, workspace instruction files, skills and the session title model call. |
+| `packages/dsh-verafy-juror` | Juror section (`verafy:juror`) in the system prompt; `verafy_load_contract`; `verafy_cast_vote`; the tool lock, which allows only those two; a reminder at the stop boundary when no vote was cast. Refuses to vote if the agent's route serves a different model than the harness committed to. |
+| `scripts/dsh-juror.mjs` | `setup` links the plugin and its peers; `vote` runs one juror; `jury` runs five jurors in parallel (one per lab, from `verafy.config.json`) and then runs `verafy seal`. Each juror gets its own empty working directory under `.dsh/jurors/<harness>`. |
+| `scripts/scripted-llm.mjs` | OpenAI-compatible chat completions server that answers from `examples/mock-answers.json` by lab. `--probe` makes it call every non-Verafy tool first. A test double, not a model. |
+| `node bin/verafy.js seal` | Reads each juror's `<ascHash>.commit.json` and private `<ascHash>.reveal.json`, draws the jury from the submitted cards seeded by the parent block hash, checks every attestation signature, commitment and reveal, rules, and seals. |
 
 What a juror writes, in `.dsh/jurors/<harness>/` (gitignored):
 
@@ -23,6 +23,8 @@ What a juror writes, in `.dsh/jurors/<harness>/` (gitignored):
 The juror's own DSH session log (`.dsh/home/sessions`) holds the vote arguments in the clear, because a tool call is part of the transcript. Treat it as private, like the reveal file.
 
 ## Runs on 2026-11-06
+
+These runs were recorded before the rename, so they show the names of the time: `swarm_load_contract`, `swarm_cast_vote`, `swarm seal`, `SWARM_API_KEY` and the denial text `Juror mode allows only swarm tools.` The re-run after the rename is in [Keyless run after the rename](#keyless-run-after-the-rename).
 
 All numbers below are measured on one laptop (Node 26.10.0, DSH 0.2.2-rc.1 at `fcc0ad4`).
 
@@ -64,12 +66,24 @@ Ruling: NO, agreement 100% against a bar of 80%, final, exit `market.settle(NO)`
 
 One run is one data point. Whether llama and qwen call the tool without a reminder varied between the two attempts.
 
+## Keyless run after the rename
+
+Measured 2026-11-06 on one laptop (Node 26.10.0, DSH 0.2.2-rc.1 at `fcc0ad4`), after the juror tools became `verafy_load_contract` and `verafy_cast_vote` and the overlay became `config/cordis.verafy.yml`.
+
+- Build: `CI=true npx -y pnpm@11.28.5 install --frozen-lockfile` then `CI=true npx -y pnpm@11.28.5 run build`: 10 gates passed, 0 failed, 1m56.9s wall.
+- `node scripts/dsh-juror.mjs setup`: linked the peers and mounted `@verafyharness/dsh-verafy-juror` in the headless profile.
+- `node scripts/dsh-juror.mjs jury --probe`: five DSH processes on `scripted-anthropic`, `scripted-openai`, `scripted-google`, `scripted-meta`, `scripted-qwen`, each exit 0 in 2.5 s; `verafy seal` ruled NO at 100% agreement against a bar of 80%, final, exit `market.settle(NO)`, and sealed block 1 (`5860c149`, sealed by h-deepseek-1), written to `.verafy/chain.json`. The contract hash is `595232d4`, not the earlier one, because the example is now kind `verafy.asc/1`.
+
+The new keyless session snapshot, from h-anthropic-1 in that run, is [`results/dsh-juror-session-verafy-2026-11-06.jsonl`](../results/dsh-juror-session-verafy-2026-11-06.jsonl) (home directory redacted to `~`). It records 2 tools offered to the agent (`verafy_load_contract`, `verafy_cast_vote`), 26 tool calls, and 24 of them denied by the lock with `Juror mode allows only Verafy tools.` The earlier snapshot stays as it was recorded.
+
+To re-record it: run the keyless jury with `--probe`, take the h-anthropic-1 session from `.dsh/home/sessions/` (DSH stores it as `session.v4.jsonl.zstd`; `zstd -dc` decompresses it), and replace the home directory with `~`.
+
 ## Reproduce
 
 ```sh
 git submodule update --init --depth 1
 (cd upstream/deepseek-harness && CI=true npx -y pnpm@11.28.5 install --frozen-lockfile && CI=true npx -y pnpm@11.28.5 run build)
 node scripts/dsh-juror.mjs setup
-node scripts/dsh-juror.mjs jury --probe                              # keyless
-SWARM_API_KEY=... node scripts/dsh-juror.mjs jury --route openrouter  # live
+node scripts/dsh-juror.mjs jury --probe                               # keyless
+VERAFY_API_KEY=... node scripts/dsh-juror.mjs jury --route openrouter  # live
 ```

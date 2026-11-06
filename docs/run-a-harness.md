@@ -215,11 +215,11 @@ npm run demo      # five contracts, five rulings, five blocks
 
 ## 10. Configure
 
-A harness's setup lives in a JSON config. `swarm.config.json` is the default; pass another with `--config`.
+A harness's setup lives in a JSON config. `verafy.config.json` is the default (a setup from before the rename that has only `swarm.config.json` still works); pass another with `--config`.
 
 ```json
 {
-  "provider": { "baseURL": "https://openrouter.ai/api/v1", "apiKeyEnv": "SWARM_API_KEY" },
+  "provider": { "baseURL": "https://openrouter.ai/api/v1", "apiKeyEnv": "VERAFY_API_KEY" },
   "pool": [
     { "id": "h-local-gptoss", "lab": "openai", "model": "openai/gpt-oss-120b", "bond": 500,
       "baseURL": "http://127.0.0.1:8000/v1", "apiKeyEnv": "VLLM_API_KEY" },
@@ -238,27 +238,27 @@ A harness's setup lives in a JSON config. `swarm.config.json` is the default; pa
 | `pool[].bond` | Bond size, which caps the value a vote can decide |
 | `pool[].baseURL`, `apiKeyEnv` | Per-harness overrides, for a local vLLM server |
 
-In the prototype, the pool is every harness on your machine, so one config can stand up a whole local jury. On the network, each operator's config holds only their own harness. `swarm.config.local.json` is a ready example that puts a local `gpt-oss-120b` beside five hosted models.
+In the prototype, the pool is every harness on your machine, so one config can stand up a whole local jury. On the network, each operator's config holds only their own harness. `verafy.config.local.json` is a ready example that puts a local `gpt-oss-120b` beside five hosted models.
 
 ## 11. Run and check
 
 **Available now.**
 
 ```sh
-node bin/swarm.js doctor                       # Node version and pool
-export SWARM_API_KEY=...                       # OpenRouter key
-node bin/swarm.js doctor --live                # calls each model once and times it
-node bin/swarm.js run examples/market-resolution.json --live
-node bin/swarm.js chain
+node bin/verafy.js doctor                      # Node version and pool
+export VERAFY_API_KEY=...                      # OpenRouter key
+node bin/verafy.js doctor --live               # calls each model once and times it
+node bin/verafy.js run examples/market-resolution.json --live
+node bin/verafy.js chain
 ```
 
 With a local model:
 
 ```sh
 MODEL=openai/gpt-oss-120b bash scripts/run-vllm.sh     # in one terminal; prints VLLM_API_KEY
-export VLLM_API_KEY=... SWARM_API_KEY=...
-node bin/swarm.js doctor --live --config swarm.config.local.json
-node bin/swarm.js run examples/delay-cover.json --live --config swarm.config.local.json
+export VLLM_API_KEY=... VERAFY_API_KEY=...
+node bin/verafy.js doctor --live --config verafy.config.local.json
+node bin/verafy.js run examples/delay-cover.json --live --config verafy.config.local.json
 ```
 
 A healthy `doctor --live` prints `ok` with a latency for every harness. A ruling prints PROPOSE, COMMIT, REVEAL, RULE, PAY and SEAL.
@@ -268,7 +268,7 @@ A healthy `doctor --live` prints `ok` with a latency for every harness. A ruling
 **Planned.** This is the interface the testnet will use. None of these commands exist yet.
 
 ```sh
-verafy harness init --network testnet-0          # creates ~/.swarm/identity.json (Ed25519) and harness.json
+verafy harness init --network testnet-0          # creates ~/.verafy/identity.json (Ed25519) and harness.json
 verafy harness commit-model --model openai/gpt-oss-120b --weights weights.sha256 --runtime <vllm digest>
 verafy harness bond --chain solana-devnet --amount 10 --asset USDC
 verafy harness register                          # publishes identity, model commitment, lab, bond, payout addresses
@@ -309,7 +309,7 @@ Each harness plugs in a **payment router**. The router decides which payments th
 
 | Field | Meaning |
 |---|---|
-| `router` | `ledger` (available now: records payouts to `.swarm/payouts.jsonl`, nothing moves), `solana-usdc` (planned: releases escrow from a Solana program, in USDC or any SPL token), `evm` (planned: the same for Ethereum and EVM chains) |
+| `router` | `ledger` (available now: records payouts to `.verafy/payouts.jsonl`, nothing moves), `solana-usdc` (planned: releases escrow from a Solana program, in USDC or any SPL token), `evm` (planned: the same for Ethereum and EVM chains) |
 | `accept` | The chains and assets this harness takes seats for. `*` matches anything. Intake refuses a contract paying in anything else. |
 | `book` | The payout book: an address per chain for each harness you run |
 
@@ -366,7 +366,7 @@ On testnet, everything is play money.
 
 ## 16. Operating a harness
 
-- **Keys.** The identity key signs every commitment and reveal. Keep it on the harness machine, readable only by the harness user. API keys and wallet keys go in the **keyblock**, encrypted under a passphrase you supply through `SWARM_KEYBLOCK_PASSPHRASE`; the rest of the harness only ever holds short-lived scoped keys. See [The routing agent](coin-agnostic.md#the-routing-agent).
+- **Keys.** The identity key signs every commitment and reveal. Keep it on the harness machine, readable only by the harness user. API keys and wallet keys go in the **keyblock**, encrypted under a passphrase you supply through `VERAFY_KEYBLOCK_PASSPHRASE` (the old name, `SWARM_KEYBLOCK_PASSPHRASE`, is still read); the rest of the harness only ever holds short-lived scoped keys. See [The routing agent](coin-agnostic.md#the-routing-agent).
 - **Pin your runtime.** For an open-weights harness, pin the vLLM image by digest and the weights by hash. Changing either without re-registering will fail audits.
 - **Temperature 0.** Juror calls use temperature 0 so auditors can re-run them.
 - **Uptime.** A harness that commits and then fails to reveal is faulted. Take seats only while the model endpoint is healthy; `doctor --live` is the check.
