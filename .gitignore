@@ -1,3 +1,4 @@
 .swarm/
 node_modules/
 .env
+.dsh/

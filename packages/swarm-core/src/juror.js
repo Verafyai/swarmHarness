@@ -56,7 +56,7 @@ export function parseVote(asc, text) {
     if (!(p >= 0 && p <= 1)) throw new Error(`forecast answer ${json.answer} is not a probability`)
     json.answer = p
   } else if (!a.options.includes(json.answer)) {
-    throw new Error(`answer ${JSON.stringify(json.answer)} is not one of the options`)
+    throw new Error(`answer ${JSON.stringify(json.answer)} is not one of the options: ${a.options.map(o => JSON.stringify(o)).join(', ')}`)
   }
   return { answer: json.answer, confidence: Number(json.confidence) || 0, reasoning: String(json.reasoning ?? ''), sources: json.sources ?? [] }
 }

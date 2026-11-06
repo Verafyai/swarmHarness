@@ -5,16 +5,18 @@
  *   swarm run <asc.json> [--live] [--json]   rule on a contract and seal a block
  *   swarm validate <asc.json>                check a contract
  *   swarm pin <asc.json>                     write SHA-256 pins for every context entry
+ *   swarm seal <asc.json> <juror-dir...>     seal a block from reveals that separate
+ *                                            harness processes wrote (DSH jurors)
  *   swarm chain                              print the local chain
  *
  * Mock mode (default) uses examples/mock-answers.json. --live calls real models
  * through the OpenAI-compatible endpoint in swarm.config.json.
  */
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  Harness, drawJury, rule, seal, validate, pin, ascHash, short,
+  Harness, drawJury, rule, ruleFromReveals, seal, validate, pin, ascHash, short,
   mockProvider, openaiProvider,
 } from '../packages/swarm-core/src/index.js'
 
@@ -22,7 +24,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CHAIN = join(ROOT, '.swarm', 'chain.json')
 const args = process.argv.slice(2)
 const flag = f => args.includes(f)
-const [cmd, file] = args.filter(a => !a.startsWith('--'))
+const [cmd, file, ...rest] = args.filter(a => !a.startsWith('--'))
 
 const c = process.stdout.isTTY && !flag('--json')
   ? { b: s => `\x1b[1m${s}\x1b[0m`, d: s => `\x1b[2m${s}\x1b[0m`, g: s => `\x1b[32m${s}\x1b[0m`, y: s => `\x1b[33m${s}\x1b[0m`, a: s => `\x1b[34m${s}\x1b[0m` }
@@ -51,8 +53,9 @@ async function main() {
     for (const b of await loadChain()) console.log(`block ${b.height}  ${short(b.hash)}  parent ${short(b.parent)}  ${b.rulings.map(r => `${r.asc}: ${r.passed ? r.exit : 'below bar'}`).join(', ')}`)
     return
   }
+  if (cmd === 'seal' && file && rest.length) return sealFromJurors(await readJson(file), rest)
   if (cmd !== 'run' || !file) {
-    console.log('usage: swarm run <asc.json> [--live] [--json] | swarm validate <asc.json> | swarm pin <asc.json> | swarm chain')
+    console.log('usage: swarm run <asc.json> [--live] [--json] | swarm seal <asc.json> <juror-dir...> | swarm validate <asc.json> | swarm pin <asc.json> | swarm chain')
     process.exitCode = 2
     return
   }
@@ -82,6 +85,40 @@ async function main() {
   console.log(c.d(`  rulings root ${short(block.rulingsRoot)} · written to .swarm/chain.json\n`))
 }
 
+/**
+ * Seal a block from commitments and reveals written by separate harness
+ * processes. Each juror directory holds `<ascHash>.commit.json` and
+ * `<ascHash>.reveal.json`. The sealer is a pool harness from swarm.config.json
+ * that did not sit on the jury.
+ */
+async function sealFromJurors(asc, dirs) {
+  const h = ascHash(asc)
+  const entries = []
+  for (const d of dirs) {
+    const files = await readdir(resolve(d))
+    if (!files.includes(`${h}.commit.json`)) { console.error(`${d}: no commitment for contract ${short(h)}`); continue }
+    const c = await readJson(join(d, `${h}.commit.json`))
+    const reveal = files.includes(`${h}.reveal.json`) ? await readJson(join(d, `${h}.reveal.json`)) : null
+    entries.push({ card: c.card, commit: c, reveal })
+  }
+  const config = await readJson(join(ROOT, 'swarm.config.json'))
+  const sealer = new Harness({ ...config.pool.find(p => !entries.some(e => e.card.id === p.id)) ?? config.pool[0], provider: null })
+  const chain = await loadChain()
+  const parent = chain.at(-1) ?? null
+  if (!flag('--json')) {
+    console.log(c.b(`\n${asc.title}`))
+    console.log(c.d(`mode reveals from ${entries.length} harness processes · escrow ${asc.payment.escrow} ${asc.payment.currency} · bar ${pct(asc.payment.bar)} · jury ${asc.payment.jury.size} across ${asc.payment.jury.minLabs}+ labs`))
+  }
+  const ruling = ruleFromReveals(asc, entries, sealer.id, parent?.hash ?? 'genesis', flag('--json') ? () => {} : event => print(event, asc))
+  const block = seal(parent, [ruling], sealer)
+  await mkdir(dirname(CHAIN), { recursive: true })
+  await writeFile(CHAIN, JSON.stringify([...chain, block], null, 2))
+  if (flag('--json')) { console.log(JSON.stringify(block, null, 2)); return }
+  console.log(c.b('\nSEAL'))
+  console.log(`  block ${block.height}  ${short(block.hash)}  parent ${short(block.parent)}  sealed by ${block.sealer}`)
+  console.log(c.d(`  rulings root ${short(block.rulingsRoot)} · written to .swarm/chain.json\n`))
+}
+
 function print(e, asc) {
   if (e.phase === 'propose') {
     console.log(c.b('\nPROPOSE'))
@@ -92,6 +129,7 @@ function print(e, asc) {
     console.log(c.b('\nCOMMIT'))
     for (const x of e.commitments) console.log(`  ${x.harness.padEnd(15)} ${c.d('commitment')} ${short(x.commitment)}`)
   }
+  if (e.phase === 'reveal-failed') console.log(c.y(`  ${e.harness} reveal rejected: it does not match the commitment or signature`))
   if (e.phase === 'commit-failed') console.log(c.y(`  ${e.harness} dropped: ${e.error}`))
   if (e.phase === 'reveal') {
     console.log(c.b('\nREVEAL'))

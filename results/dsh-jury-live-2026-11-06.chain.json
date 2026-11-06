@@ -1,0 +1,132 @@
+[
+  {
+    "height": 1,
+    "parent": "0000000000000000000000000000000000000000000000000000000000000000",
+    "rulingsRoot": "c4485875a55663b6a0c4a8bbfa08b2103bfbe105a568cf43305921cda53fe803",
+    "sealer": "h-deepseek-1",
+    "time": "2026-11-06T18:34:59.803Z",
+    "hash": "7dbb49c8c0ed61acafcc027c181ab1790896f317612fd307664e12fa2ec19ef2",
+    "signature": "eZaAZdP77Q25Rw0KbmgNABnjkMc7VxM06yBkwTW89H1V2fXkVcNpnSfFLC8KTWht7osmZuAsAkZAi5b0ezR2Dw==",
+    "rulings": [
+      {
+        "ascHash": "b5f49f8fd98b80a8d0ea20a18b7695c4b14c60ff2c657a1e347355d4ce0ae61c",
+        "asc": "market-senate-bill-nov30",
+        "request": "Did H.R. 4410 pass the Senate by November 30, 2026?",
+        "contextHashes": [
+          "536d4a107871205583293a8daa88d1e1bf28a3ecdf7eaaa49888d4dc60698de0",
+          "3a67ad1df6621067d6e6f9acfd0f8ca66b3fa3c29930f314546aa164b3755f7e",
+          "7678f674744d49bdc0622dd8281343270f51ba8cdfdedde8a888bf55839757ee"
+        ],
+        "answer": "NO",
+        "agreement": 1,
+        "bar": 0.8,
+        "passed": true,
+        "exit": "NO",
+        "effect": {
+          "type": "call",
+          "chain": "solana",
+          "target": "market.settle",
+          "args": [
+            "NO"
+          ]
+        },
+        "votes": [
+          {
+            "harness": "h-anthropic-1",
+            "lab": "anthropic",
+            "model": "anthropic/claude-haiku-4.5",
+            "answer": "NO",
+            "confidence": 0.98,
+            "reasoningHash": "3bd531e57fc36fdadf2f6e347534e6fc164ad344fb6b70ce2f5e3e577c3d4b5f",
+            "signature": "fV4j+ZOFCXrXtH3wPHriYthYZMvXYN4fOYr9E5hUfdmQHqq8B0RP//lb49/0YhO42yoZvR4FpzGSAsHPfZEWDA=="
+          },
+          {
+            "harness": "h-openai-1",
+            "lab": "openai",
+            "model": "openai/gpt-5-mini",
+            "answer": "NO",
+            "confidence": 0.98,
+            "reasoningHash": "82301c7f8eecf485cde41bcbe9423c30acfbce96cf7be2a801e300777e0a5d22",
+            "signature": "QJN2FY3RKDr1StDP59eYf2v8E2epE87fk7Qes8AR8xf5VrWTrGyCTVeUXiyauvy7ItB4bvgWESpwqIGg9kqHBA=="
+          },
+          {
+            "harness": "h-google-1",
+            "lab": "google",
+            "model": "google/gemini-2.5-flash",
+            "answer": "NO",
+            "confidence": 0.8,
+            "reasoningHash": "b017cd7d5e4226e76d9d42b4a2634d24040aab58afa99b9015c18480d0879b4a",
+            "signature": "WeNtiCcPB1ULbzH06Mlt7d0ZEbKAeKv1Fv3gTFpako2U8+AlFAhXMXF0x1EFHqIX/lGdYwfIFs3Bzp7Xwk1cCA=="
+          },
+          {
+            "harness": "h-meta-1",
+            "lab": "meta",
+            "model": "meta-llama/llama-4-maverick",
+            "answer": "NO",
+            "confidence": 1,
+            "reasoningHash": "1f5eadc68798aadebff2cdf9e69e9c26443490b7ad0f5f8956e553d04d1fc357",
+            "signature": "CEyCBf/HLPGNmrX6jTutInmKlmzrOcEkQkzxGeXa6EkVopT2pmd+Ye97pJ/c2Zky4TsFFXw4ZXumDhs6JssmDw=="
+          },
+          {
+            "harness": "h-qwen-1",
+            "lab": "qwen",
+            "model": "qwen/qwen3-235b-a22b-2507",
+            "answer": "NO",
+            "confidence": 0.95,
+            "reasoningHash": "4990b96211cf72ce31661d16bc73953467a6941416ade94cfb0dc653fac5502b",
+            "signature": "puEcrRRDLwTqsjU+acycB/w/jtY9hPZRgvL0SIOhZTI9Wyrjm9A2GaXoFhmXyNDY58Y+Q+NCTsI9Y/Y2SB5eCw=="
+          }
+        ],
+        "dissent": [],
+        "diff": [
+          {
+            "account": "harness:h-anthropic-1",
+            "delta": 0.192
+          },
+          {
+            "account": "harness:h-openai-1",
+            "delta": 0.192
+          },
+          {
+            "account": "harness:h-google-1",
+            "delta": 0.192
+          },
+          {
+            "account": "harness:h-meta-1",
+            "delta": 0.192
+          },
+          {
+            "account": "harness:h-qwen-1",
+            "delta": 0.192
+          },
+          {
+            "account": "pool:auditors",
+            "delta": 0.12
+          },
+          {
+            "account": "pool:storage",
+            "delta": 0.06
+          },
+          {
+            "account": "harness:h-deepseek-1",
+            "delta": 0.06
+          },
+          {
+            "account": "escrow:market-senate-bill-nov30",
+            "delta": -1.2
+          }
+        ],
+        "triggers": [
+          {
+            "type": "call",
+            "chain": "solana",
+            "target": "market.settle",
+            "args": [
+              "NO"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
