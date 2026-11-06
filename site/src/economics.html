@@ -1,0 +1,146 @@
+<h1 id="economics">Economics of a proven block</h1>
+<p class="lede">What it costs to prove the AI's rulings, how big a block has to be before proving is worth it, and what the proving operator and the verifier earn. Every number on this page is <b>modeled</b> from the inputs shown. Vendor-reported figures name their source; illustrative ones are placeholders to set yourself.</p>
+
+<section id="overview">
+<h2>The short version</h2>
+<div class="facts3">
+  <div class="fact"><span class="big" data-out="proveUsd">$0.0103</span><p>GPU cost of one proof, about 750 words of question, evidence and answer.</p></div>
+  <div class="fact"><span class="big" data-out="warmShare">67%</span><p>of a small unpacked block's cost is warm-up: loading the model before proving starts. Fixed cost, not proofs, is what makes small blocks expensive.</p></div>
+  <div class="fact"><span class="big" data-out="packGain">12x</span><p>cheaper per decision with proof packing: compact briefs, four decisions per proven request, each request proven once.</p></div>
+</div>
+<p class="note">Figures in this box use the defaults (an H100 at $4.00 an hour, FlashProve's vendor-reported speed, 24 contracts of about 600 words) and update with the calculator.</p>
+</section>
+
+<section id="calculator">
+<h2>Calculator</h2>
+<div class="presets" role="group" aria-label="Presets">
+  <button type="button" data-preset="unpacked">L2, FlashProve, unpacked</button>
+  <button type="button" data-preset="packed">L2, FlashProve, proof packing</button>
+  <button type="button" data-preset="deepprove">L2 prototype, DeepProve on CPU</button>
+  <button type="button" id="share">Copy link to this scenario</button>
+</div>
+<p class="note" id="presetNote"></p>
+<div class="calc">
+  <form class="inputs" id="inputs" aria-label="Inputs"></form>
+  <div class="outputs" aria-live="polite">
+    <div class="ohead"><span class="lbl">Per block</span><span class="pill" id="mode">unpacked</span></div>
+    <dl class="kv">
+      <dt>Block cost</dt><dd data-out="blockCostUsd"></dd>
+      <dt>Per contract</dt><dd data-out="perContractUsd"></dd>
+      <dt>Per contract with margin</dt><dd data-out="priceWithMarginUsd"></dd>
+      <dt>Per decision, before warm-up</dt><dd data-out="perDecisionUsd"></dd>
+      <dt>Proven requests</dt><dd data-out="requestsInBlock"></dd>
+      <dt>Provers and proofs</dt><dd data-out="proofsLine"></dd>
+      <dt>Time to seal</dt><dd data-out="sealLine"></dd>
+      <dt>Proof data</dt><dd data-out="proofGB"></dd>
+    </dl>
+    <div class="bar" id="bar" aria-label="Where the block cost goes"></div>
+    <ul class="legend" id="legend"></ul>
+    <div class="ohead"><span class="lbl">Per machine</span></div>
+    <dl class="kv">
+      <dt>Proofs one GPU makes per hour</dt><dd data-out="capacityPerHour"></dd>
+      <dt>Break-even fee per proof</dt><dd data-out="breakEvenFeePerProof"></dd>
+      <dt>Smallest batch for warm-up under 10%</dt><dd data-out="minWarmLine"></dd>
+    </dl>
+    <p class="warn" id="fitWarn" hidden></p>
+  </div>
+</div>
+</section>
+
+<section id="packing">
+<h2>Proof packing</h2>
+<p>A proof covers one request of up to 1,024 tokens, about 750 words. Proof packing fills those requests tightly and stops paying for the same proof twice. It has three parts.</p>
+<ol class="steps">
+  <li><b>Briefs.</b> Each contract is compiled into a short brief in plain, dense English: the question, the exits, and only the facts that decide it, each with a citation to a pinned source. Made-up shorthand is avoided on purpose: models read English tokens best, and invented codes cost more tokens per idea.</li>
+  <li><b>Packed requests.</b> Several briefs share one proven request, each in a numbered slot with its own answer line. The slot order is shuffled by the block hash, so nobody chooses their neighbors. Contracts that must stand alone opt out.</li>
+  <li><b>Prove once, verify many.</b> Today only one model can be proven, and with integer weights and greedy decoding, every juror running it on the same input gets the same answer. So each packed request is proven once, by a prover drawn from the block hash, and the other jurors become verifiers. Lab diversity returns as soon as a second model is provable: one proof per distinct model.</li>
+</ol>
+<div class="callout"><b>The safeguard.</b> A proof shows the model ruled correctly on the brief, not that the brief is faithful to the sources. So every brief is either agreed by the contract's parties before funding, or checked by a cheap unproven panel from several labs (counted in the cost as the fidelity check), and auditors spot-check its citations. A brief that drops the deciding fact fails the check, and that contract runs unpacked.</div>
+
+<h3>Unpacked and packed, on your inputs</h3>
+<div class="tbl"><table>
+  <thead><tr><th></th><th>Unpacked</th><th>Proof packing</th></tr></thead>
+  <tbody id="compare"></tbody>
+</table></div>
+
+<h3>Cost per contract as blocks grow</h3>
+<div class="chart" id="chart" role="img" aria-label="Cost per contract falls as the block grows, for unpacked and packed blocks"></div>
+<p class="note">Both lines use your current inputs. The marker is your block size. The curve falls because warm-up is a fixed cost shared by every contract in the block.</p>
+
+<h3>What packing does not change</h3>
+<ul>
+  <li>Warm-up is paid per proving session, not per block. A proving service that stays warm across blocks pays for idle hours instead, which the utilization input models.</li>
+  <li>A long document still has to be briefed; a proven juror never reads more than 1,024 tokens at once. Long-document judgment is better run unproven (L1) with a diverse jury and auditors, or by proving only the deciding excerpts.</li>
+  <li>Prove once trades jury diversity for proof while one model is provable. Say so on any contract that uses it.</li>
+</ul>
+</section>
+
+<section id="machine">
+<h2>The proving machine</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Part</th><th>Spec</th><th>Label</th></tr></thead>
+  <tbody>
+    <tr><td>GPU</td><td>1 x H100 80 GB</td><td><span class="tag vr">vendor-reported</span> FlashProve</td></tr>
+    <tr><td>CPU</td><td>24 cores or more</td><td><span class="tag vr">vendor-reported</span></td></tr>
+    <tr><td>Host RAM</td><td>about 290 GB or more</td><td><span class="tag vr">vendor-reported</span></td></tr>
+    <tr><td>Disk</td><td>NVMe for the 4-bit Llama 4 Maverick weights and commitment artifacts; 1 TB is a safe start</td><td><span class="tag mo">modeled</span> confirm</td></tr>
+    <tr><td>Network</td><td>1 Gbps. A busy prover uploads about 7 GB of proofs an hour.</td><td><span class="tag mo">modeled</span></td></tr>
+    <tr><td>Verifier</td><td>Any 24-thread CPU box, no GPU. About 17 s per proof.</td><td><span class="tag vr">vendor-reported</span></td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>Renting note.</b> Many single-H100 cloud instances come with well under 290 GB of host RAM; one 2026 listing shows 116 GB. Meeting the requirement can mean renting a larger node or bare metal, which raises the cost per proving GPU-hour unless every GPU on the node is proving. Set the GPU price input to what you actually pay.</div>
+<div class="figure" aria-label="Machine layout">
+<svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, ui-monospace, monospace" font-size="13">
+  <rect x="10" y="10" width="560" height="280" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+  <text x="26" y="36" fill="var(--accent)" font-weight="600" letter-spacing="1">PROVING HARNESS, ONE MACHINE</text>
+  <rect x="26" y="52" width="260" height="96" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="40" y="76" fill="var(--ink)" font-weight="600">Harness daemon (CPU)</text>
+  <text x="40" y="98" fill="var(--mute)" font-size="12">intake, signer, bond, outbox</text>
+  <text x="40" y="116" fill="var(--mute)" font-size="12">routing agent: keyblock, banker,</text>
+  <text x="40" y="134" fill="var(--mute)" font-size="12">API router, payment wallet</text>
+  <rect x="300" y="52" width="254" height="96" rx="2" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="314" y="76" fill="var(--ink)" font-weight="600">Prover (GPU)</text>
+  <text x="314" y="98" fill="var(--mute)" font-size="12">FlashProve; the model runs</text>
+  <text x="314" y="116" fill="var(--mute)" font-size="12">inside the prover; packed</text>
+  <text x="314" y="134" fill="var(--mute)" font-size="12">requests, batches of 24</text>
+  <rect x="26" y="164" width="170" height="70" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="40" y="188" fill="var(--ink)" font-weight="600">Packer</text>
+  <text x="40" y="208" fill="var(--mute)" font-size="12">briefs into slots</text>
+  <rect x="210" y="164" width="170" height="70" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="224" y="188" fill="var(--ink)" font-weight="600">TinySVM</text>
+  <text x="224" y="208" fill="var(--mute)" font-size="12">exact settlement</text>
+  <rect x="394" y="164" width="160" height="70" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="408" y="188" fill="var(--ink)" font-weight="600">Light client</text>
+  <text x="408" y="208" fill="var(--mute)" font-size="12">reads escrow</text>
+  <text x="26" y="266" fill="var(--mute)" font-size="12">Proof uploader: proofs to the availability layer, hashes to the vote</text>
+  <rect x="610" y="52" width="240" height="96" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="624" y="76" fill="var(--ink)" font-weight="600">Verifiers (CPU only)</text>
+  <text x="624" y="98" fill="var(--mute)" font-size="12">auditors and nodes, drawn</text>
+  <text x="624" y="116" fill="var(--mute)" font-size="12">per proof from the block hash</text>
+  <rect x="610" y="164" width="240" height="70" rx="2" fill="var(--paper)" stroke="var(--rule)"/>
+  <text x="624" y="188" fill="var(--ink)" font-weight="600">Availability layer</text>
+  <text x="624" y="208" fill="var(--mute)" font-size="12">proofs and briefs, by hash</text>
+  <path d="M554 100 H604" stroke="var(--rule)" stroke-width="1.5"/><path d="M554 199 H604" stroke="var(--rule)" stroke-width="1.5"/>
+</svg>
+</div>
+<p>Planned parts in the diagram: the packer, TinySVM and the light client are specified, not built. A harness can also buy proofs from a proving service through its API router and verify them before counting the answer, so it never trusts the service.</p>
+</section>
+
+<section id="earnings">
+<h2>Who earns what</h2>
+<p>Roles priced at cost plus your margin on the work they do. A proving operator only profits if the GPU is busy enough: the break-even utilization is where revenue meets the hourly rent.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Role</th><th>Fee</th><th>Revenue per hour</th><th>Cost per hour</th><th>Net per hour</th><th>From this block</th></tr></thead>
+  <tbody id="roles"></tbody>
+</table></div>
+<p class="note">Jurors are paid per counted vote from the contract's escrow, dissent included; the contract's author sets the escrow. Under prove once, the drawn prover also holds a jury seat.</p>
+</section>
+
+<section id="sources">
+<h2>Assumptions and sources</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Input</th><th>Default</th><th>Label</th><th>Source</th></tr></thead>
+  <tbody id="srcs"></tbody>
+</table></div>
+<p class="note">The math lives in <a href="https://github.com/Verafyai/verafyHarness/tree/main/packages/economics">packages/economics</a>, with tests that pin every vector on this page. Nothing here is measured on a running network; there isn't one.</p>
+</section>

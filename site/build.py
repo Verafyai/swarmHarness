@@ -31,6 +31,7 @@ TABS = [
     ('/run', 'Run a harness'),
     ('/testnet', 'Testnet'),
     ('/coin-agnostic', 'Coin Agnostic'),
+    ('/economics', 'Economics'),
     ('https://asc.verafy.ai', 'Actually Smart Contracts'),
     ('https://github.com/Verafyai/verafyHarness', 'GitHub'),
     ('https://chain.verafy.ai/#roadmap', 'Roadmap'),
@@ -213,8 +214,75 @@ def doc(src, out, path, tab, desc):
     (SITE / out).write_text(page)
 
 
+ECON_CSS = r"""
+article.wide{max-width:none}
+.lede{font-size:19px;max-width:44em}
+.note{font-size:15px;color:var(--mute);max-width:52em}
+.facts3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:18px 0 10px}
+@media (max-width:760px){.facts3{grid-template-columns:minmax(0,1fr)}}
+.fact{border-top:2px solid var(--ink);padding-top:10px}
+.fact .big{font-family:var(--display);font-weight:800;font-stretch:80%;font-size:40px;line-height:1;color:var(--accent);display:block}
+.fact p{font-size:15.5px;color:var(--mute);margin:8px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.presets button{font-family:var(--display);font-weight:600;font-size:14.5px;padding:8px 12px;border:1px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:2px;cursor:pointer}
+.presets button:hover{border-color:var(--accent);color:var(--accent)}
+#share{border-style:dashed}
+.calc{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;margin-top:14px;align-items:start}
+@media (max-width:1100px){.calc{grid-template-columns:minmax(0,1fr)}}
+.inputs fieldset{border:1px solid var(--rule);border-radius:3px;background:var(--sheet);margin:0 0 14px;padding:10px 14px 12px}
+.inputs legend{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:0 6px}
+.in{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--rule);font-size:15px}
+.in:last-child{border-bottom:0}
+.in .nm{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.in input[type=number]{width:120px;font-family:var(--mono);font-size:14px;padding:5px 8px;border:1px solid var(--rule);border-radius:2px;background:var(--paper);color:var(--ink)}
+.in input[type=checkbox]{width:20px;height:20px;justify-self:end;accent-color:var(--accent)}
+.tag{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border:1px solid var(--rule);border-radius:2px;color:var(--mute);white-space:nowrap}
+.tag.vr{color:var(--hold);border-color:currentColor}.tag.m{color:var(--allow);border-color:currentColor}.tag.mo{color:var(--accent);border-color:currentColor}
+.outputs{background:var(--sheet);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:3px;padding:14px 18px 18px;position:sticky;top:12px}
+@media (max-width:1100px){.outputs{position:static}}
+.ohead{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 4px}
+.ohead .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.pill{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid currentColor;padding:2px 8px;border-radius:2px}
+.kv{display:grid;grid-template-columns:minmax(9em,1fr) minmax(0,1.4fr);gap:7px 14px;margin:6px 0 14px;font-size:15px}
+.kv dt{color:var(--mute)}.kv dd{margin:0;font-family:var(--mono);font-size:14.5px;text-align:right;font-variant-numeric:tabular-nums}
+.bar{display:flex;height:16px;border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:4px 0 8px}
+.bar span{display:block;height:100%}
+.legend{list-style:none;padding:0;margin:0 0 12px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13.5px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:1px}
+.warn{color:var(--hold);border:1px solid currentColor;padding:8px 10px;border-radius:2px;font-size:14.5px}
+.steps{display:flex;flex-direction:column;gap:10px}
+.callout{background:var(--sheet);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:2px;padding:12px 16px;margin:16px 0;max-width:52em}
+td.v{font-family:var(--mono);font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.k{color:var(--mute)}
+td.neg{color:var(--deny,#B3263A)}td.pos{color:var(--allow)}
+.chart{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:8px;overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:560px;height:auto}
+.figure{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;overflow-x:auto;margin:16px 0}
+.figure svg{display:block;width:100%;min-width:640px;height:auto}
+article section{scroll-margin-top:16px}
+"""
+
+ECON_MENU = [('overview', 'The short version'), ('calculator', 'Calculator'), ('packing', 'Proof packing'),
+             ('machine', 'The proving machine'), ('earnings', 'Who earns what'), ('sources', 'Assumptions and sources')]
+
+
+def economics():
+    lib = (REPO / 'packages' / 'economics' / 'src' / 'index.js').read_text()
+    lib = re.sub(r'^export ', '', lib, flags=re.M)
+    js = lib + '\n' + (SRC / 'economics.js').read_text()
+    menu = '<ul>' + ''.join(f'<li><a href="#{a}">{t}</a></li>' for a, t in ECON_MENU) + '</ul>'
+    body = (SRC / 'economics.html').read_text()
+    page = (head('Economics and proof packing', 'What it costs to prove AI rulings, how proof packing cuts it, and what proving operators and verifiers earn. Modeled, with every source named.', '/economics', DOC_CSS + ECON_CSS)
+            + COINFREE + '\n' + header('Economics')
+            + f'<div class="wrap layout"><aside class="side" aria-label="On this page"><span class="lbl">Economics</span>{menu}</aside><article class="wide">{body}</article></div>\n'
+            + FOOT + '\n' + TOC_JS.replace("hs.forEach(function(h){if(h.offsetTop<=y)cur=h.id})", "hs.forEach(function(h){if(h.offsetTop<=y)cur=h.id})") + f'\n<script>\n{js}\n</script>\n</body>\n</html>\n')
+    check('economics.html', page)
+    (SITE / 'economics.html').write_text(page)
+
+
 if __name__ == '__main__':
     landing()
+    economics()
     doc('run-a-harness.md', 'run.html', '/run', 'Run a harness',
         'How to run a Verafy Harness: machine requirements, models, how a model is proven, install, configure, costs and earnings.')
     doc('testnet.md', 'testnet.html', '/testnet', 'Testnet',
