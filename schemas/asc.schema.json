@@ -139,6 +139,16 @@
           "type": "number",
           "description": "Minimum bond a juror must hold."
         },
+        "minBatch": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional. The contract never seals in a block with fewer contracts than this."
+        },
+        "maxWaitSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Optional. The contract seals no later than this many seconds after it is queued, paying a larger share of the block's fixed cost."
+        },
         "jury": {
           "type": "object",
           "required": [

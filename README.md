@@ -69,7 +69,7 @@ Verafy Harness does two things.
 
 | | Status | Evidence |
 |---|---|---|
-| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (124 tests), `npm run demo` |
+| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (130 tests), `npm run demo` |
 | Live rulings by five labs' models through OpenRouter | **Measured** Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total | [results/live-2026-11-06.md](results/live-2026-11-06.md) |
 | Juror mode inside DeepSeek Harness: five DSH processes on five labs' models, block sealed from their reveals | **Measured** Nov 6, 2026: all five voted NO, 100% against an 80% bar; 24 of 24 other tools denied | [docs/dsh-juror.md](docs/dsh-juror.md) |
 | Payment router: accept lists, a local payout ledger | Works; on-chain routers planned | `verafy.config.json`, `.verafy/payouts.jsonl` |
@@ -89,7 +89,7 @@ Needs Node 22 or later. The core has no dependencies.
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 124 tests
+npm test          # 130 tests
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
 ```
 
@@ -179,6 +179,8 @@ Every Actually Smart Contract has four parts. The schema is [`schemas/asc.schema
 ```
 
 The contract's identity is a hash over everything except snapshot content, so it is the same whether the content travels with the contract or is fetched later by hash.
+
+Payment may also say when the contract is willing to seal: `minBatch` (never in a block with fewer contracts) and `maxWaitSeconds` (no later than this after it is queued, paying a larger share of the block's fixed cost). Both are optional; a contract without them keeps its hash. Before its jury is drawn, a contract can wait in the chain's encrypted queue (`src/queue.js`), readable by nobody; see the [Verafy Chain batching doc](https://github.com/Verafyai/verafyChain/blob/main/docs/batching.md) for what that does and does not hide.
 
 ## The harnessed validator
 
@@ -431,6 +433,7 @@ packages/core/              zero-dependency core
   src/network.js                  jury draw, ruling from recorded messages, ruling verifier, sealing, Proof of Judgment
   src/trigger.js                  quorum-signed triggers (verafy.trigger/1; swarm.trigger/0 still verifies)
   src/challenge.js                auditors, challenges and reviews, escalated contracts
+  src/queue.js                    the encrypted queue: a contract sealed t of n to the node set (Shamir over an AES-256-GCM key)
   src/providers.js                mock and OpenAI-compatible model providers, retry with backoff
   test/                           node:test suite
 packages/lightclient/             read the source chain without trusting one RPC, zero dependencies

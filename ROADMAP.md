@@ -59,6 +59,9 @@ From the verafyChain ROADMAP's "Needed in verafyHarness" list. Done in core:
 - [x] An optional `proofHash` on votes. Only the hash is recorded; a `proof` field anywhere in a ruling fails verification. A stored hash is not a proof by itself
 - [x] `seal(parent, rulings, sealer, {time})` for deterministic headers
 - [x] The rename to Verafy (Nov 6, 2026): CLI `verafy` with `swarm` as an alias, `verafy.asc/1`, `verafy.trigger/1`, `verafy.config.json`, `.verafy/`, `VERAFY_API_KEY`, `VERAFY_KEYBLOCK_PASSPHRASE`, juror tools `verafy_load_contract` and `verafy_cast_vote`. Every old name is still read, and old contracts keep their hashes (`packages/core/test/rename.test.js`)
+- [x] Batching fields (Part C): optional `payment.minBatch` and `payment.maxWaitSeconds`, in the schema and `validate`. Contracts without them keep their hashes (`packages/core/test/queue.test.js`)
+- [x] The encrypted queue's crypto (Part C, prototype): `sealContract` encrypts a contract under a fresh AES-256-GCM key and splits the key t of n (Shamir over GF(2^521 - 1)) across the nodes' X25519 keys; `openShare`, `openContract`, `openWithKey`. Only the escrow reference and payment metadata are in the clear, bound as associated data. `node:crypto` only
+- [ ] Real distributed key generation for a standing node-set key, and verifiable secret sharing so a bad share is caught before it is combined (planned, not built; today the author deals the shares for its own contract)
 
 Still open from that list: the harness daemon (milestone 4).
 
