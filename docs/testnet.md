@@ -1,5 +1,7 @@
 # Swarm Testnet
 
+Come test it. There is no foundation, no offshore entity and no token behind this: it is just a project, and the fastest way to help is to run a jury and tell us what broke.
+
 > **Status.** There is no public testnet yet. What runs today is a **local devnet**: a full jury on one machine. **Testnet 0** is the plan below. Everything on testnet is play money, and there is no token on testnet or after it.
 
 ## Local devnet (available now)
