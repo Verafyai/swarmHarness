@@ -1,0 +1,45 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "verafy-harness",
+  "version": "0.1.0",
+  "description": "Draft, check, pin and run Actually Smart Contracts with Verafy Harness, and read the rulings it seals. Your agent is the client; the jurors stay inside the harness.",
+  "author": {
+    "name": "Verafy",
+    "url": "https://verafy.ai"
+  },
+  "homepage": "https://harness.verafy.ai",
+  "license": "MIT",
+  "repository": "https://github.com/Verafyai/verafyHarness",
+  "keywords": [
+    "mcp",
+    "actually-smart-contracts",
+    "verafy"
+  ],
+  "extensions": {
+    "com.nousresearch.hermes": {
+      "servers": {
+        "verafy": {
+          "trust": "untrusted"
+        }
+      },
+      "costs": {
+        "verafy_run": {
+          "credits": [
+            0,
+            1
+          ],
+          "note": "USD per run: 0 in mock mode; a live run spends at most the maxSpendUsd it is given, and only on a server started with --allow-live"
+        },
+        "verafy_doctor": {
+          "credits": [
+            0,
+            0.01
+          ],
+          "note": "USD: 0 unless live"
+        }
+      },
+      "spend_limit": 1,
+      "cost_unit": "USD"
+    }
+  }
+}

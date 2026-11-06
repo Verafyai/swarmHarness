@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "verafy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "-p",
+        "github:Verafyai/verafyHarness",
+        "verafy-mcp"
+      ],
+      "env": {
+        "VERAFY_API_KEY": "${VERAFY_API_KEY}"
+      }
+    }
+  }
+}
