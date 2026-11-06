@@ -366,7 +366,7 @@ On testnet, everything is play money.
 
 ## 16. Operating a harness
 
-- **Keys.** The identity key signs every commitment and reveal. Keep it on the harness machine, readable only by the harness user. Model API keys live in environment variables.
+- **Keys.** The identity key signs every commitment and reveal. Keep it on the harness machine, readable only by the harness user. API keys and wallet keys go in the **keyblock**, encrypted under a passphrase you supply through `SWARM_KEYBLOCK_PASSPHRASE`; the rest of the harness only ever holds short-lived scoped keys. See [The routing agent](coin-agnostic.md#the-routing-agent).
 - **Pin your runtime.** For an open-weights harness, pin the vLLM image by digest and the weights by hash. Changing either without re-registering will fail audits.
 - **Temperature 0.** Juror calls use temperature 0 so auditors can re-run them.
 - **Uptime.** A harness that commits and then fails to reveal is faulted. Take seats only while the model endpoint is healthy; `doctor --live` is the check.

@@ -1,6 +1,7 @@
-<p align="center">
-  <img src="docs/assets/banner.png" alt="Verafy Harness: contracts written in words, validators with judgment, no token" width="100%">
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.png">
+  <img src="docs/assets/banner.png" alt="verafyHarness: harnessed AI validators for Actually Smart Contracts. No token." width="100%">
+</picture>
 
 # Verafy Harness
 
@@ -67,10 +68,11 @@ Verafy Harness does two things.
 
 | | Status | Evidence |
 |---|---|---|
-| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (37 tests), `npm run demo` |
+| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (40 tests), `npm run demo` |
 | Live rulings by five labs' models through OpenRouter | **Measured** Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total | [results/live-2026-11-06.md](results/live-2026-11-06.md) |
 | Juror mode inside DeepSeek Harness: five DSH processes on five labs' models, block sealed from their reveals | **Measured** Nov 6, 2026: all five voted NO, 100% against an 80% bar; 24 of 24 non-swarm tools denied | [docs/dsh-juror.md](docs/dsh-juror.md) |
 | Payment router: accept lists, a local payout ledger | Works; on-chain routers planned | `swarm.config.json`, `.swarm/payouts.jsonl` |
+| Routing agent: keyblock, banker, API router, payment wallet | Works with test venues and test APIs; real venues and on-chain signing planned | `npm test`, `packages/core/test/core.test.js` |
 | Auditors, challenges and escalation in core: an auditor from another lab re-checks a sealed ruling; a challenge appends affirm, overturn or supersede and never edits the ruling; a below-bar ruling's escrow funds a wider jury from other labs | Works with scripted models; not yet run live or on a network | `packages/core/src/challenge.js`, `packages/core/test/m3.test.js` |
 | Retry for rate-limited models: each harness backs off on 429, 5xx and network errors, then is dropped if it still fails | Works with fake providers; not yet measured live | `packages/core/src/providers.js` |
 | A network of harnesses, bonds and slashing, testnet | Planned | [ROADMAP.md](ROADMAP.md), [docs/testnet.md](docs/testnet.md) |
@@ -82,7 +84,7 @@ Needs Node 22 or later. The core has no dependencies.
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 37 tests
+npm test          # 40 tests
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
 ```
 
@@ -168,7 +170,9 @@ The contract's identity is a hash over everything except snapshot content, so it
 | Votes on blocks | The signer commits a hidden vote, reveals it, and signs an attestation of which model produced it. | `signer.commit`, `Harness.reveal` |
 | Stakes | The bond sizes how much value a vote can decide and is lost for a proven fault. | `Harness.bond` |
 | Runs the state machine | The contract runtime picks the exit, builds the exact diff, splits the escrow, and checks that totals are conserved. | `runtime.js` |
-| Gets paid, pays its way | The routing agent accepts payment in any asset, converts it, pays for hosting and inference, and routes each contract to AI that meets its provability requirement. | `payments.js`, `routing.js` |
+| Holds the keys | The keyblock keeps every API key and wallet key encrypted and issues short-lived scoped keys, so no other part of the harness holds a raw secret. | `keyblock.js` |
+| Calls outside APIs | The API router plugs into AI APIs, external API routers, provers, cloud hosts and payment endpoints, attaches keys from the keyblock, meters each call, and sends each contract only to AI that meets its provability requirement. | `apirouter.js`, `routing.js` |
+| Gets paid, pays its way | The banker accepts any token, swaps between tokens at the best approved quote, and pays each API in the token it takes, from the payment wallet, within the operator's caps. | `banker.js`, `routing.js`, `payments.js` |
 | Serves RPC | The outbox posts votes and emits triggers, such as a call to a Solana program. Triggers need a quorum signature. | `ruling.triggers` |
 
 ## How a ruling works
@@ -237,7 +241,7 @@ Each harness plugs in a **payment router** that decides which payments it accept
 
 A harness only takes seats on contracts paying in an asset on its `accept` list. Bonds are posted the same way, in the asset of the chain the harness earns on.
 
-Earnings pay for the work: the inference each juror runs, the machine and bond behind it, audits, storage and bookkeeping. A harness's **routing agent** is an API router with its own payment wallet: earnings land in the wallet, and the router pays for every AI call, the hosting and everything else from it automatically. It accepts payment in any asset and converts between them, connects to AI APIs and cloud hosts, pays for its own inference and hosting within caps the operator sets, and routes each contract only to AI that meets the contract's provability requirement, up to a zero-knowledge proof of inference. Routing by assurance level and the wallet's spending rules (allowlisted payees, monthly caps, approval threshold, bond reserve) work today in `routing.js`; on-chain settlement, conversion and renting hosts are planned. The full policy, with a worked example, is in **[Coin Agnostic](docs/coin-agnostic.md)**.
+Earnings pay for the work: the inference each juror runs, the machine and bond behind it, audits, storage and bookkeeping. A harness's **routing agent** is four blocks: a **keyblock** that holds every API key and wallet key encrypted and issues scoped keys, a **banker** that accepts any token and swaps between tokens, an **API router** that plugs into and pays different APIs, and a **payment wallet** that earnings land in and bills are paid from, automatically. It accepts payment in any asset and converts between them, connects to AI APIs and cloud hosts, pays for its own inference and hosting within caps the operator sets, and routes each contract only to AI that meets the contract's provability requirement, up to a zero-knowledge proof of inference. All four run in the core today with test venues and test APIs: `keyblock.js`, `banker.js`, `apirouter.js`, `routing.js`. Real exchange venues, on-chain signing and renting hosts are planned. The full policy, with a worked example, is in **[Coin Agnostic](docs/coin-agnostic.md)**.
 
 ## Who pays, who earns
 
@@ -384,7 +388,10 @@ packages/core/              zero-dependency core
   src/agreement.js                verdict, forecast and graded agreement
   src/runtime.js                  exits, escrow split, conservation check, triggers
   src/payments.js                 payment routers: accept lists, ledger, planned on-chain routers
-  src/routing.js                  routing agent: payment wallet, inference routes by assurance level up to ZK proofs
+  src/routing.js                  payment wallet; inference routes by assurance level up to ZK proofs
+  src/keyblock.js                 encrypted key vault; issues scoped keys
+  src/banker.js                   exchange: accept any token, best-quote swaps, fund payments
+  src/apirouter.js                plugs into and pays outside APIs: AI, routers, provers, hosts
   src/harness.js                  the harnessed validator
   src/network.js                  jury draw, ruling from recorded messages, ruling verifier, sealing, Proof of Judgment
   src/trigger.js                  quorum-signed triggers (swarm.trigger/0)

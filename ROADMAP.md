@@ -82,6 +82,10 @@ Done when: a devnet market is created, funded, resolved by a jury, and settled b
 ## Milestone 5a: The routing agent
 
 - [x] Payment wallet spending rules: allowlisted payees, monthly caps, approval threshold, bond reserve, full log (`PaymentWallet`)
+- [x] Keyblock: API keys and wallet keys encrypted at rest; scoped keys with scopes, expiry, use limits, revocation and lock (`keyblock.js`)
+- [x] Banker: accept any allowed token, best-quote swaps across approved venues, slippage limit, never sells the bond reserve, funds payments in the payee's token (`banker.js`, fixed-rate test venue)
+- [x] API router: plug in AI APIs, external API routers, provers, hosts and payment endpoints; keys from the keyblock; metering; per-call and accrued billing through the banker (`apirouter.js`)
+- [ ] Banker venue adapters for real DEX aggregators on Solana and EVM chains, and cross-chain bridges
 - [x] Inference routing by assurance level: the cheapest route that meets the contract's L0 to L2 requirement, refusing when none does (`routing.js`)
 - [ ] Accept payment in any asset and convert between assets on approved venues, within a slippage limit
 - [ ] Connect to cloud backends: rent GPU and VM hosts for open-weights and proving routes, on demand where a contract needs L2
