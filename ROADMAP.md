@@ -62,9 +62,17 @@ From the verafyChain ROADMAP's "Needed in verafyHarness" list. Done in core:
 
 Still open from that list: the harness daemon (milestone 4).
 
+### Agent plugins (Nov 6, 2026)
+
+- [x] `packages/mcp`: a zero-dependency MCP server with eight tools (validate, pin, hash, run, chain, block, doctor, examples), resources and two prompts. No vote, key or funds tool; contract text under `evidence`; live calls only with `--allow-live`, `live: true` and a `maxSpendUsd`
+- [x] `integrations/`: Claude Code, Codex, Cursor, Gemini CLI, Goose, Hermes Agent, OpenClaw and any MCP client
+- [ ] Publish `@verafy/mcp` to npm, then launch with `npx -y @verafy/mcp`
+- [ ] Submit to the Claude Code, Hermes and OpenClaw catalogs, Cursor's directory and the Gemini CLI extension gallery
+
 ## Milestone 4: A network of harnesses
 
 - [ ] Harness daemon: a long-running process that watches for funded contracts and takes jury seats
+- [ ] MCP daemon tools, once the daemon exists: `verafy_harness_start`, `verafy_harness_status` and `verafy_harness_stop`. They run a real juror process with its own model and tool lock, so the agent that calls them still never votes. Not in `packages/mcp` yet.
 - [ ] Gossip between harnesses for commitments and reveals; a sealer rotation
 - [ ] Availability layer: storage harnesses that serve context by hash through the challenge window
 - [ ] Bonds and slashing on a test network; faults proven by audit or by a missing reveal

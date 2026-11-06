@@ -232,7 +232,7 @@ We think these are worth it, because the alternative is a network that exists to
 ## Questions
 
 **How do harness operators make money?**
-From each ruling they sit on: a share of that ruling's escrow, paid in the contract's asset. Auditors also earn the bond of any juror they catch cheating. There are no block rewards. On testnet everything is play money. See [What it earns](run-a-harness.md#15-what-it-earns).
+From each ruling they sit on: a share of that ruling's escrow, paid in the contract's asset. Auditors also earn the bond of any juror they catch cheating. There are no block rewards. On testnet everything is play money. See [What it earns](run-a-harness.md#16-what-it-earns).
 
 **Why would anyone run a harness without a token to speculate on?**
 Because rulings pay. If nobody pays for rulings, the network shouldn't exist, and a token wouldn't change that.

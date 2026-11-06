@@ -1,0 +1,13 @@
+{
+  "name": "@verafy/mcp",
+  "version": "0.1.0",
+  "description": "The Verafy Harness MCP server: draft, check, pin and run Actually Smart Contracts from any MCP client. Zero dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://harness.verafy.ai",
+  "repository": { "type": "git", "url": "https://github.com/Verafyai/verafyHarness.git", "directory": "packages/mcp" },
+  "bin": { "verafy-mcp": "src/cli.js" },
+  "exports": "./src/server.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test test/mcp.test.js" }
+}

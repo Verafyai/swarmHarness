@@ -1,0 +1,23 @@
+{
+  "name": "verafyHarness",
+  "owner": {
+    "name": "Verafy",
+    "url": "https://verafy.ai"
+  },
+  "metadata": {
+    "description": "Verafy Harness plugins."
+  },
+  "plugins": [
+    {
+      "name": "verafy-harness",
+      "source": "./integrations/claude-code",
+      "description": "Draft, check, pin and run Actually Smart Contracts with Verafy Harness, and read the rulings it seals. Your agent is the client; the jurors stay inside the harness.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Verafy",
+        "url": "https://verafy.ai"
+      },
+      "homepage": "https://harness.verafy.ai"
+    }
+  ]
+}

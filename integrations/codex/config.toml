@@ -1,0 +1,9 @@
+# Verafy Harness MCP server for Codex. Append to ~/.codex/config.toml.
+# Generated from integrations/_shared by scripts/sync-integrations.mjs. Edit the source, not this file.
+# env_vars forwards VERAFY_API_KEY from your environment; no value is written here.
+[mcp_servers.verafy]
+command = "npx"
+args = ["-y", "-p", "github:Verafyai/verafyHarness", "verafy-mcp"]
+env_vars = ["VERAFY_API_KEY"]
+# The npx form fetches the repo from GitHub on start; it took about 56 s on a warm cache.
+startup_timeout_sec = 180

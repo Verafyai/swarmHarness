@@ -6,6 +6,7 @@
     <a class="btn" href="/run">Run a harness</a>
     <a class="btn ghost" href="https://github.com/Verafyai/verafyHarness">Read the code</a>
     <a class="btn ghost" href="https://chain.verafy.ai">See Verafy Chain</a>
+    <a class="btn ghost" href="#plugins">Use it from your agent</a>
   </div>
   <div class="facts">
     <div class="fact"><span class="big num">40</span><p>core tests pass with no dependencies on Node 22</p><span class="tag m">measured, Nov 6, 2026</span></div>
@@ -73,7 +74,7 @@
     <div class="tbl"><table>
       <thead><tr><th>What</th><th>Status</th></tr></thead>
       <tbody>
-        <tr><td>A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks</td><td><span class="tag m">works</span> 75 tests, <code>npm run demo</code></td></tr>
+        <tr><td>A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks</td><td><span class="tag m">works</span> 102 tests, <code>npm run demo</code></td></tr>
         <tr><td>Live rulings by five labs' models through OpenRouter</td><td><span class="tag m">measured</span> Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total</td></tr>
         <tr><td>Juror mode inside DeepSeek Harness: five processes on five labs' models, block sealed from their reveals</td><td><span class="tag m">measured</span> Nov 6, 2026: all five voted NO, 100% against an 80% bar; every tool other than the two juror tools denied</td></tr>
         <tr><td>Routing agent: keyblock, banker, API router, payment wallet</td><td><span class="tag">works with test venues</span> real venues and on-chain signing planned</td></tr>
@@ -93,7 +94,7 @@
     <p class="lead">Needs Node 22 or later. The core has no dependencies. The demo uses scripted answers, so it needs no key.</p>
 <pre><code>git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 75 tests
+npm test          # 102 tests
 npm run demo      # five contracts, five rulings, five blocks</code></pre>
     <p class="lead">With real models through any OpenAI-compatible endpoint (OpenRouter by default), keep the key in your environment and never commit it:</p>
 <pre><code>export VERAFY_API_KEY=...
@@ -103,10 +104,29 @@ node bin/verafy.js run examples/market-resolution.json --live</code></pre>
   </div>
 </section>
 
-<section class="sec" aria-labelledby="s6">
-  <div class="gut"><span class="docket">§ 6</span><span class="lbl">Built on</span></div>
+<section class="sec" id="plugins" aria-labelledby="s6">
+  <div class="gut"><span class="docket">§ 6</span><span class="lbl">Plugins</span></div>
   <div class="body">
-    <h2 id="s6">Runs inside DeepSeek Harness</h2>
+    <h2 id="s6">Run it from your favorite agent</h2>
+    <p class="lead">Verafy Harness ships as an MCP server with a plugin for each major agent. Your agent can draft a contract in words, check it, pin its sources and run a jury, then read the ruling and the sealed block. Your agent is the client. The jurors stay inside the harness, where their tools are locked.</p>
+    <div class="grid4 plugs">
+      <a class="card go plug" href="https://github.com/Verafyai/verafyHarness/tree/main/integrations/claude-code"><h3>Claude Code</h3><code>/plugin install verafy-harness@verafyHarness</code><span class="tag m">verified</span></a>
+      <a class="card go plug" href="https://github.com/Verafyai/verafyHarness/tree/main/integrations/codex"><h3>Codex</h3><code>append config.toml to ~/.codex/config.toml</code><span class="tag">config written</span></a>
+      <a class="card go plug" href="https://github.com/Verafyai/verafyHarness/tree/main/integrations/cursor"><h3>Cursor</h3><code>copy mcp.json and rules/ into .cursor/</code><span class="tag">config written</span></a>
+      <a class="card go plug" href="https://github.com/Verafyai/verafyHarness/tree/main/integrations/gemini-cli"><h3>Gemini CLI</h3><code>gemini extensions install &lt;clone&gt;/integrations/gemini-cli</code><span class="tag">config written</span></a>
+      <a class="card go plug" href="https://github.com/Verafyai/verafyHarness/tree/main/integrations/goose"><h3>Goose</h3><code>goose configure, then add a command-line extension</code><span class="tag">config written</span></a>
+      <a class="card go plug" href="https://github.com/Verafyai/verafyHarness/tree/main/integrations/hermes"><h3>Hermes Agent</h3><code>hermes plugins install Verafyai/verafyHarness/integrations/hermes --no-enable</code><span class="tag">config written</span></a>
+      <a class="card go plug" href="https://github.com/Verafyai/verafyHarness/tree/main/integrations/openclaw"><h3>OpenClaw</h3><code>openclaw plugins install &lt;clone&gt;/integrations/openclaw</code><span class="tag">config written</span></a>
+      <a class="card go plug" href="https://github.com/Verafyai/verafyHarness/tree/main/integrations/mcp"><h3>Any MCP client</h3><code>npx -y -p github:Verafyai/verafyHarness verafy-mcp</code><span class="tag m">verified</span></a>
+    </div>
+    <p class="lead mut">Live calls are off until you turn them on and set a spend cap. Keys stay in your environment or the keyblock; no tool ever returns one.</p>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="s7">
+  <div class="gut"><span class="docket">§ 7</span><span class="lbl">Built on</span></div>
+  <div class="body">
+    <h2 id="s7">Runs inside DeepSeek Harness</h2>
     <p class="lead"><a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a> is an MIT-licensed agent harness where everything is a plugin. Verafy Harness pins it as a submodule, leaves the upstream tree unmodified, and adds juror mode as a plugin.</p>
     <div class="grid3">
       <div class="col"><h3>Two tools, no others</h3><p>A juror can load and check a contract, and cast a vote. A tool lock offers only those two, and a pre-execute gate denies any other call.</p></div>
@@ -116,10 +136,10 @@ node bin/verafy.js run examples/market-resolution.json --live</code></pre>
   </div>
 </section>
 
-<section class="sec" aria-labelledby="s7" style="border-bottom:0">
-  <div class="gut"><span class="docket">§ 7</span><span class="lbl">Next</span></div>
+<section class="sec" aria-labelledby="s8" style="border-bottom:0">
+  <div class="gut"><span class="docket">§ 8</span><span class="lbl">Next</span></div>
   <div class="body">
-    <h2 id="s7">Where to go from here</h2>
+    <h2 id="s8">Where to go from here</h2>
     <div class="grid3">
       <a class="card go" href="/run"><h3>Run a harness</h3><p>Machine requirements, models, how a model is proven, install, configure, costs and earnings.</p></a>
       <a class="card go" href="/testnet"><h3>Testnet</h3><p>The local devnet you can run now, and the plan for Testnet 0.</p></a>
