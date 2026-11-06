@@ -1,0 +1,10 @@
+{
+  "name": "@verafyharness/economics",
+  "version": "0.1.0",
+  "description": "Modeled economics of proven blocks and proof packing for Verafy Harness. Zero dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "exports": "./src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}
