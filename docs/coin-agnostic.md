@@ -1,6 +1,6 @@
 # Coin Agnostic
 
-**Swarm Chain has no token, and it doesn't need one.** It runs on whatever asset people want to put into it. You can pay for a ruling, and be paid for judging one, in USDC, SOL, ETH or any other asset on any chain with smart contracts, from any wallet.
+**Verafy Chain has no token, and it doesn't need one.** It runs on whatever asset people want to put into it. You can pay for a ruling, and be paid for judging one, in USDC, SOL, ETH or any other asset on any chain with smart contracts, from any wallet.
 
 That is deliberate. The goal is something useful regardless of which crypto you hold, and a new coin would only get in the way of that.
 
@@ -21,9 +21,9 @@ That is deliberate. The goal is something useful regardless of which crypto you 
 
 ## Why there is no coin
 
-A blockchain usually needs a token for three jobs: paying for work, securing the network through staking, and rewarding early participants. Swarm Chain does each without one.
+A blockchain usually needs a token for three jobs: paying for work, securing the network through staking, and rewarding early participants. Verafy Chain does each without one.
 
-| Job | Usual answer | Swarm Chain |
+| Job | Usual answer | Verafy Chain |
 |---|---|---|
 | Paying for work | Gas in the native token | The requester pays in their own asset, in escrow on their own chain |
 | Rewarding validators | Block rewards in newly minted tokens | A share of each ruling's escrow, in the asset the contract was paid in |
@@ -160,13 +160,13 @@ The operator stays in charge through limits in the harness config. The keyblock,
 
 ## How money moves
 
-Money never moves to Swarm Chain. It stays on the chain where the requester holds it.
+Money never moves to Verafy Chain. It stays on the chain where the requester holds it.
 
 1. **Fund.** The requester locks escrow in a program or contract on their own chain: USDC in a Solana program, ETH in an Ethereum contract. The escrow names the Actually Smart Contract by its hash.
-2. **Rule.** Swarm Chain draws a jury of harnesses, who commit and reveal their votes. The ruling and its payout diff are sealed into a block.
+2. **Rule.** Verafy Chain draws a jury of harnesses, who commit and reveal their votes. The ruling and its payout diff are sealed into a block.
 3. **Release.** A trigger signed by a quorum of harnesses tells the escrow on the source chain to pay out: to the winning side of a market, to a claimant, back to the requester on a refund, and to the harnesses whose votes were counted. Everything is paid in the same asset that was put in.
 
-Swarm Chain itself only records decisions. It has no balance of its own to protect. What a harness does with its share afterwards, including converting it to pay its own bills, is up to its [routing agent](#the-routing-agent).
+Verafy Chain itself only records decisions. It has no balance of its own to protect. What a harness does with its share afterwards, including converting it to pay its own bills, is up to its [routing agent](#the-routing-agent).
 
 ## The payment router
 
@@ -210,13 +210,13 @@ Two things are harder without a coin, and they are open problems rather than sol
 
 ## What we will never do
 
-- Launch a Swarm token, coin, points program, presale or airdrop.
-- Mint any asset from a Swarm contract or config.
+- Launch a Verafy token, coin, points program, presale or airdrop.
+- Mint any asset from a Verafy Chain contract or config.
 - Set up a foundation, a UAE entity, a BVI company, or any other entity to hold a treasury.
 - Charge a protocol fee on top of what juries earn.
 - Describe testnet participation as earning anything that converts into a future token.
 
-If you see any of these attached to the name Swarm Chain, it isn't us.
+If you see any of these attached to the name Verafy Chain, it isn't us.
 
 ## What this costs us
 

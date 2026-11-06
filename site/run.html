@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Run a Verafy Harness</title>
+<meta name="description" content="How to run a Verafy Harness: machine requirements, models, how a model is proven, install, configure, costs and earnings.">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="canonical" href="https://harness.verafy.ai/run">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Verafy Harness">
+<meta property="og:title" content="Run a Verafy Harness">
+<meta property="og:description" content="How to run a Verafy Harness: machine requirements, models, how a model is proven, install, configure, costs and earnings.">
+<meta property="og:url" content="https://harness.verafy.ai/run">
+<meta property="og:image" content="https://harness.verafy.ai/banner.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://harness.verafy.ai/banner.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--paper:#EDF0F3;--sheet:#FFFFFF;--ink:#16212C;--mute:#566473;--rule:#CDD5DD;--accent:#3640C9;--accent-soft:#DADDF7;--allow:#1C7A4E;--hold:#A0561A;--code:#F4F6F8;
+--display:"Archivo","Helvetica Neue",Arial,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#0F151B;--sheet:#161E26;--ink:#E4EAF0;--mute:#93A1AF;--rule:#2A3541;--accent:#8A92FF;--accent-soft:#252A55;--allow:#5CC995;--hold:#E0A060;--code:#1B242E;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0F151B;--sheet:#161E26;--ink:#E4EAF0;--mute:#93A1AF;--rule:#2A3541;--accent:#8A92FF;--accent-soft:#252A55;--allow:#5CC995;--hold:#E0A060;--code:#1B242E;color-scheme:dark}
+*{box-sizing:border-box}body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17.5px;line-height:1.6;margin:0}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+img{max-width:100%;height:auto}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.coinfree{background:var(--sheet);border-top:3px solid var(--accent);border-bottom:1px solid var(--rule)}
+.coinfree .wrap{padding-block:18px 20px;display:flex;flex-direction:column;gap:6px}
+.coinfree h2{font-family:var(--display);font-weight:750;font-size:clamp(22px,2.4vw,28px);margin:0}
+.coinfree p{max-width:46em;margin:0;overflow-wrap:break-word}
+.top{display:flex;align-items:center;gap:16px;padding-block:20px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;font-stretch:110%;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:10px}
+.brand .mark{color:var(--ink);flex:none}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-right:auto;margin-left:12px}
+.tabs a{font-family:var(--display);font-weight:600;font-size:15px;color:var(--mute);text-decoration:none;padding:6px 10px;border-radius:2px;border:1px solid transparent}
+.tabs a:hover{color:var(--ink);border-color:var(--rule)}.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--ink)}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--hold);border:1px solid currentColor;padding:4px 10px;border-radius:2px}
+.tabs{order:3;width:100%;margin:0 0 0 -10px}
+.top .status{margin-left:auto}
+@media (max-width:560px){.top .status{margin-left:0}}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:48px;padding-block:40px 80px}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.side{position:static!important;max-height:none!important}}
+.side{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;font-size:15px}
+.side .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:8px}
+.side ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.side ul ul{padding-left:14px;margin:2px 0 6px}
+.side a{color:var(--mute);text-decoration:none;display:block;padding:3px 8px;border-left:2px solid transparent}
+.side a:hover{color:var(--ink)}.side a.on{color:var(--ink);border-left-color:var(--accent)}
+article{min-width:0;max-width:52rem}
+article h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,4.6vw,52px);line-height:1.05;letter-spacing:-.015em;margin:0 0 18px}
+article h2{font-family:var(--display);font-weight:750;font-size:28px;line-height:1.15;margin:48px 0 14px;padding-top:18px;border-top:1px solid var(--rule)}
+article h3{font-family:var(--display);font-weight:700;font-size:20px;margin:28px 0 10px}
+article p,article li{max-width:44em}
+article img{display:block;border:1px solid var(--rule);border-radius:3px;background:#fff}
+article blockquote{margin:18px 0;padding:14px 18px;background:var(--sheet);border:1px solid var(--hold);border-radius:2px;color:var(--ink)}
+article blockquote p{margin:0}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);padding:1px 5px;border-radius:2px}
+pre{background:var(--code);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;overflow-x:auto;font-size:14px;line-height:1.5}
+pre code{background:none;padding:0;font-size:inherit}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--sheet);margin:16px 0}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:400}
+tr:last-child td{border-bottom:0}
+.foot{padding-block:24px 48px;border-top:1px solid var(--rule);font-size:15px;color:var(--mute);display:flex;flex-direction:column;gap:6px}
+.foot p{margin:0}
+
+</style>
+</head>
+<body>
+<section class="coinfree" aria-labelledby="coinfreeH">
+  <div class="wrap">
+    <h2 id="coinfreeH">Coin-free guarantee.</h2>
+    <p>There is no coin, and Verafy Harness will never need one. A harness is paid in whatever token a contract offers and pays its own AI and hosting bills from that. No presale, no airdrop, no points, no treasury. <a href="/coin-agnostic">How payment works</a></p>
+  </div>
+</section>
+<header class="wrap top">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 64 64" width="28" height="28" aria-hidden="true"><path d="M6 20V6h14M44 6h14v14M58 44v14H44M20 58H6V44" stroke="currentColor" stroke-width="5" stroke-linecap="square" fill="none"/><path d="M32 13v7M32 44v7M13 32h7M44 32h7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="32" r="11" fill="var(--accent)"/><circle cx="32" cy="32" r="4" fill="var(--paper)"/></svg>Verafy Harness</a>
+  <nav class="tabs" aria-label="Verafy Chain and Verafy Harness">
+    <a href="https://chain.verafy.ai">Verafy Chain</a>
+    <a href="https://chain.verafy.ai/constitution">Constitution</a>
+    <a href="/">Verafy Harness</a>
+    <a href="/run" aria-current="page">Run a harness</a>
+    <a href="/testnet">Testnet</a>
+    <a href="/coin-agnostic">Coin Agnostic</a>
+    <a href="https://asc.verafy.ai">Actually Smart Contracts</a>
+    <a href="https://github.com/Verafyai/verafyHarness">GitHub</a>
+    <a href="https://chain.verafy.ai/#roadmap">Roadmap</a>
+  </nav>
+  <span class="status">Prototype. Not a running network.</span>
+</header>
+<div class="wrap layout"><aside class="side" aria-label="On this page"><span class="lbl">On this page</span><div class="toc">
+<ul>
+<li><a href="#contents">Contents</a></li>
+<li><a href="#1-harnesses-and-nodes">1. Harnesses and nodes</a></li>
+<li><a href="#2-what-consensus-means-on-verafy-chain">2. What consensus means on Verafy Chain</a><ul>
+<li><a href="#judgment-consensus-is-this-ruling-valid">Judgment consensus: is this ruling valid?</a></li>
+<li><a href="#ledger-consensus-which-blocks-in-which-order">Ledger consensus: which blocks, in which order?</a></li>
+</ul>
+</li>
+<li><a href="#3-choose-a-setup">3. Choose a setup</a></li>
+<li><a href="#4-machine-requirements">4. Machine requirements</a><ul>
+<li><a href="#api-harness">API harness</a></li>
+<li><a href="#open-weights-harness">Open-weights harness</a></li>
+<li><a href="#proving-harness">Proving harness</a></li>
+<li><a href="#node">Node</a></li>
+</ul>
+</li>
+<li><a href="#5-bandwidth-and-state-size">5. Bandwidth and state size</a></li>
+<li><a href="#6-acceptable-models">6. Acceptable models</a></li>
+<li><a href="#7-where-to-get-the-model">7. Where to get the model</a></li>
+<li><a href="#8-how-a-model-is-proven">8. How a model is proven</a></li>
+<li><a href="#9-install">9. Install</a></li>
+<li><a href="#10-configure">10. Configure</a></li>
+<li><a href="#11-run-and-check">11. Run and check</a></li>
+<li><a href="#12-join-the-network">12. Join the network</a></li>
+<li><a href="#13-payments-no-coin-bring-your-own">13. Payments: no coin, bring your own</a><ul>
+<li><a href="#the-payment-router">The payment router</a></li>
+</ul>
+</li>
+<li><a href="#14-what-it-costs">14. What it costs</a></li>
+<li><a href="#15-what-it-earns">15. What it earns</a></li>
+<li><a href="#16-operating-a-harness">16. Operating a harness</a></li>
+<li><a href="#17-troubleshooting">17. Troubleshooting</a></li>
+</ul>
+</div>
+</aside><article><h1 id="run-a-verafy-harness">Run a Verafy Harness</h1>
+<p>This guide covers what a harness is, what machine it needs, which models it can run, how models are proven, how to install, configure and run one, what it costs and earns, and how it joins the network. The <a href="/testnet">testnet guide</a> covers the test network.</p>
+<blockquote>
+<p><strong>Status.</strong> Verafy Chain is a concept with a working prototype. There is no public network yet and no token. Commands marked <strong>available now</strong> run today. Commands marked <strong>planned</strong> describe the testnet interface and do not exist yet. Every number is labeled <strong>measured</strong>, <strong>modeled</strong>, <strong>vendor-reported</strong> or <strong>illustrative</strong>.</p>
+</blockquote>
+<h2 id="contents">Contents</h2>
+<ol>
+<li><a href="#1-harnesses-and-nodes">Harnesses and nodes</a></li>
+<li><a href="#2-what-consensus-means-on-verafy-chain">What consensus means on Verafy Chain</a></li>
+<li><a href="#3-choose-a-setup">Choose a setup</a></li>
+<li><a href="#4-machine-requirements">Machine requirements</a></li>
+<li><a href="#5-bandwidth-and-state-size">Bandwidth and state size</a></li>
+<li><a href="#6-acceptable-models">Acceptable models</a></li>
+<li><a href="#7-where-to-get-the-model">Where to get the model</a></li>
+<li><a href="#8-how-a-model-is-proven">How a model is proven</a></li>
+<li><a href="#9-install">Install</a></li>
+<li><a href="#10-configure">Configure</a></li>
+<li><a href="#11-run-and-check">Run and check</a></li>
+<li><a href="#12-join-the-network">Join the network</a></li>
+<li><a href="#13-payments-no-coin-bring-your-own">Payments: no coin, bring your own</a></li>
+<li><a href="#14-what-it-costs">What it costs</a></li>
+<li><a href="#15-what-it-earns">What it earns</a></li>
+<li><a href="#16-operating-a-harness">Operating a harness</a></li>
+<li><a href="#17-troubleshooting">Troubleshooting</a></li>
+</ol>
+<h2 id="1-harnesses-and-nodes">1. Harnesses and nodes</h2>
+<p>Verafy Chain has two kinds of machine. They can run on the same box.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Verafy Harness</strong></th>
+<th><strong>Verafy Chain node</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What it is</td>
+<td>An AI model wrapped in a harness. This is Verafy Chain's validator.</td>
+<td>The chain's bookkeeper. It never runs a model.</td>
+</tr>
+<tr>
+<td>What it does</td>
+<td>Takes jury seats, loads and checks context, deliberates, commits and reveals votes, runs contract exits, audits other harnesses, and serves stored context.</td>
+<td>Holds funded contracts waiting for juries, draws juries, relays commitments and reveals, seals and stores blocks, checks every diff and signature, and serves the read API.</td>
+</tr>
+<tr>
+<td>Software</td>
+<td><a href="https://github.com/Verafyai/verafyHarness">Verafyai/verafyHarness</a></td>
+<td>Verafyai/verafyChain (planned)</td>
+</tr>
+<tr>
+<td>Needs</td>
+<td>A model: an API key or a GPU</td>
+<td>CPU, disk and bandwidth</td>
+</tr>
+<tr>
+<td>Earns</td>
+<td>Juror, auditor and storage shares</td>
+<td>The sealer share</td>
+</tr>
+<tr>
+<td>Agave equivalent</td>
+<td>Voting validator</td>
+<td>RPC node and leader duties</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Naming.</strong> The software is Verafy Harness, and the thing you run to judge is called a <strong>harness</strong>. The thing that stores and relays blocks is a <strong>node</strong>. "Validator" is fine in conversation: a harness is what validates. A harness can take three roles, sometimes all at once: <strong>juror</strong> (votes), <strong>auditor</strong> (re-runs sealed rulings with a different lab's model) and <strong>storage</strong> (keeps context fetchable by hash).</p>
+<h2 id="2-what-consensus-means-on-verafy-chain">2. What consensus means on Verafy Chain</h2>
+<p>Consensus has two layers. One is about judgment and one is about bookkeeping.</p>
+<h3 id="judgment-consensus-is-this-ruling-valid">Judgment consensus: is this ruling valid?</h3>
+<p>A ruling is valid when every one of these holds. Every node checks every rule.</p>
+<ol>
+<li><strong>The jury was drawn correctly.</strong> It was drawn from registered, bonded harnesses using the parent block hash as the seed, and it spans at least the contract's <code>minLabs</code> labs.</li>
+<li><strong>The votes are honest about order.</strong> At least <code>quorum</code> harnesses revealed, and every reveal matches the commitment it published before any vote was opened. Each commitment and reveal is signed with the harness's registered key.</li>
+<li><strong>The votes are in bounds.</strong> Each answer is one of the contract's declared options, or a probability for a forecast.</li>
+<li><strong>The bar was cleared, or not.</strong> Agreement is measured as the contract's answer type defines it. At or above the bar, the matching exit runs. Below it, the <code>*below-bar</code> exit runs, normally an escalation to a larger jury, and no juror is paid.</li>
+<li><strong>The diff is exact.</strong> The state change matches the chosen exit and conserves totals.</li>
+</ol>
+<p>This is "close enough" consensus. The jury doesn't have to be unanimous or exact; it has to agree as much as the contract demands.</p>
+<h3 id="ledger-consensus-which-blocks-in-which-order">Ledger consensus: which blocks, in which order?</h3>
+<p>Nodes agree on block order the conventional way. A block can only be produced when it contains at least one ruling (Proof of Judgment: no judgments, no block). Proposed for testnet:</p>
+<ul>
+<li><strong>Sealer rotation.</strong> The sealer for each slot is chosen in a fixed rotation over registered nodes.</li>
+<li><strong>Finality.</strong> A block is final when at least two thirds of registered nodes have signed it, after checking every rule above (a BFT design in the Tendermint family).</li>
+<li><strong>Ruling finality is optimistic.</strong> A ruling inside a final block can still be challenged during its challenge window (24 hours on testnet). A successful challenge appends a new ruling (affirmed, overturned or superseded). Nothing is erased.</li>
+</ul>
+<p>How nodes are weighted on an open network is an open problem, because there is no native coin to stake. Testnet uses a fixed, permissioned node set. See <a href="#13-payments-no-coin-bring-your-own">Payments</a>.</p>
+<h2 id="3-choose-a-setup">3. Choose a setup</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Setup</th>
+<th>Model runs</th>
+<th>GPU</th>
+<th>Assurance it can reach</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API harness</strong></td>
+<td>At a provider, through an API key</td>
+<td>None</td>
+<td>L0, L1</td>
+<td>Getting started, testnet, hosted-only models</td>
+</tr>
+<tr>
+<td><strong>Open-weights harness</strong></td>
+<td>On your machine, through vLLM</td>
+<td>1 or more</td>
+<td>L1+ (re-executable by auditors)</td>
+<td>Most operators once the network is live</td>
+</tr>
+<tr>
+<td><strong>Proving harness</strong></td>
+<td>On your machine, with proofs of inference</td>
+<td>1 GPU plus large host memory</td>
+<td>L2</td>
+<td>Research; one model today</td>
+</tr>
+<tr>
+<td><strong>Node</strong></td>
+<td>No model</td>
+<td>None</td>
+<td></td>
+<td>Sealing and relaying blocks</td>
+</tr>
+</tbody>
+</table></div>
+<p>The assurance levels come from the <a href="https://asc.verafy.ai">draft SIMDs</a>: L0 signatures, L1 diverse and blind, L1+ bonded and checkable, L2 proven.</p>
+<h2 id="4-machine-requirements">4. Machine requirements</h2>
+<p>All figures are <strong>modeled</strong> from published model sizes and the prototype's measured message sizes. Confirm GPU memory with your own vLLM run before committing hardware.</p>
+<h3 id="api-harness">API harness</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>Minimum</th>
+<th>Recommended</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU</td>
+<td>2 vCPU</td>
+<td>4 vCPU</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td>4 GB</td>
+<td>8 GB</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>20 GB SSD</td>
+<td>50 GB SSD</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>10 Mbps, stable</td>
+<td>100 Mbps</td>
+</tr>
+<tr>
+<td>OS</td>
+<td>Linux or macOS with Node 22</td>
+<td>Ubuntu 24.04</td>
+</tr>
+</tbody>
+</table></div>
+<p>The harness itself is a small Node process. The model's cost is per call, at the provider.</p>
+<h3 id="open-weights-harness">Open-weights harness</h3>
+<p>GPU memory decides which model you can serve. Weights only, before KV cache; leave 10 to 20 percent free for context.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Model (open weights)</th>
+<th>Weights in memory</th>
+<th>GPUs</th>
+<th>Host RAM</th>
+<th>Disk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>openai/gpt-oss-20b</code></td>
+<td>about 13 GB (MXFP4)</td>
+<td>1 GPU with 16 GB or more</td>
+<td>32 GB</td>
+<td>100 GB NVMe</td>
+</tr>
+<tr>
+<td><code>openai/gpt-oss-120b</code></td>
+<td>about 61 GB (MXFP4)</td>
+<td>1 x 80 GB (H100, H200, A100 80 GB)</td>
+<td>128 GB</td>
+<td>500 GB NVMe</td>
+</tr>
+<tr>
+<td><code>Qwen/Qwen3-32B</code></td>
+<td>about 33 GB (FP8)</td>
+<td>1 x 48 GB or 80 GB</td>
+<td>64 GB</td>
+<td>200 GB NVMe</td>
+</tr>
+<tr>
+<td><code>Qwen/Qwen3-235B-A22B-Instruct-2507-FP8</code></td>
+<td>about 235 GB (FP8)</td>
+<td>4 x 80 GB</td>
+<td>512 GB</td>
+<td>1 TB NVMe</td>
+</tr>
+<tr>
+<td><code>meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8</code></td>
+<td>about 400 GB (FP8)</td>
+<td>8 x 80 GB</td>
+<td>1 TB</td>
+<td>2 TB NVMe</td>
+</tr>
+</tbody>
+</table></div>
+<p>Plus 8 to 32 vCPU and 1 Gbps networking for any GPU host. Auditors need the same class of machine as the jurors they check, because they re-run the same open models.</p>
+<h3 id="proving-harness">Proving harness</h3>
+<p><strong>Vendor-reported</strong> (Anthropic's FlashProve research prototype, Nov 2026): one 80 GB GPU and about 290 GB of host memory, for Llama 4 Maverick only, with a 1,024-token context limit and greedy decoding. Proving costs about 70 to 95 times the GPU time of running the model. Proof size is about 18.78 MB, and verification takes about 17 seconds on 24 CPU threads.</p>
+<h3 id="node">Node</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>Minimum</th>
+<th>Recommended</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU</td>
+<td>4 vCPU</td>
+<td>8 vCPU</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td>16 GB</td>
+<td>32 GB</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>500 GB NVMe</td>
+<td>2 TB NVMe, growing (see below)</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>100 Mbps</td>
+<td>1 Gbps</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-bandwidth-and-state-size">5. Bandwidth and state size</h2>
+<p><strong>Measured</strong> on the prototype (<code>npm run demo</code>, canonical JSON, five-juror rulings):</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One vote, signed</td>
+<td>300 bytes</td>
+</tr>
+<tr>
+<td>One ruling with five votes</td>
+<td>about 2.5 KB</td>
+</tr>
+<tr>
+<td>Block header</td>
+<td>about 400 bytes</td>
+</tr>
+<tr>
+<td>Block with one ruling</td>
+<td>about 2.9 KB</td>
+</tr>
+<tr>
+<td>Contract without context text</td>
+<td>1.0 to 1.5 KB</td>
+</tr>
+<tr>
+<td>Context text in the examples</td>
+<td>0.3 to 0.7 KB (real contracts will be larger)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Modeled</strong> from those sizes, assuming 50 KB of context per contract:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>Per jury seat</th>
+<th>At 1 ruling per second, network-wide</th>
+<th>At 10 rulings per second</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Harness bandwidth</td>
+<td>about 55 KB per seat</td>
+<td>under 1 Mbps if it holds a seat on each</td>
+<td>under 5 Mbps</td>
+</tr>
+<tr>
+<td>Node chain growth</td>
+<td></td>
+<td>about 4 KB per ruling, about 350 MB a day, about 125 GB a year</td>
+<td>about 1.25 TB a year</td>
+</tr>
+<tr>
+<td>Availability layer growth</td>
+<td></td>
+<td>about 4 GB a day of context</td>
+<td>about 40 GB a day</td>
+</tr>
+</tbody>
+</table></div>
+<p>A binary encoding would cut chain size by roughly half; the prototype uses JSON. Proofs change the picture: at about 18.78 MB per proven vote, a proving harness uploads far more than it downloads, and proofs live in the availability layer, never on chain.</p>
+<h2 id="6-acceptable-models">6. Acceptable models</h2>
+<p>A harness commits to one model. The network accepts a model when it is on the <strong>model registry</strong>: a list of model commitments, each with the lab that made it and how it can be checked. Contracts can narrow the list, for example to open-weights models only, or to L1+ and above.</p>
+<p><strong>Testnet registry (proposed):</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Lab</th>
+<th>Model</th>
+<th>Kind</th>
+<th>Highest assurance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI</td>
+<td><code>openai/gpt-oss-120b</code>, <code>openai/gpt-oss-20b</code></td>
+<td>Open weights</td>
+<td>L1+</td>
+</tr>
+<tr>
+<td>Qwen</td>
+<td><code>Qwen/Qwen3-235B-A22B-Instruct-2507</code>, <code>Qwen/Qwen3-32B</code></td>
+<td>Open weights</td>
+<td>L1+</td>
+</tr>
+<tr>
+<td>Meta</td>
+<td><code>meta-llama/Llama-4-Maverick-17B-128E-Instruct</code></td>
+<td>Open weights</td>
+<td>L2 (research)</td>
+</tr>
+<tr>
+<td>DeepSeek</td>
+<td><code>deepseek/deepseek-v4-flash</code></td>
+<td>Hosted</td>
+<td>L1</td>
+</tr>
+<tr>
+<td>Anthropic</td>
+<td><code>anthropic/claude-haiku-4.5</code></td>
+<td>Hosted</td>
+<td>L1</td>
+</tr>
+<tr>
+<td>Google</td>
+<td><code>google/gemini-2.5-flash</code></td>
+<td>Hosted</td>
+<td>L1</td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td><code>openai/gpt-5-mini</code></td>
+<td>Hosted</td>
+<td>L1</td>
+</tr>
+</tbody>
+</table></div>
+<p>Rules for the registry: a model needs a lab, an exact version, and for open weights a SHA-256 of the weights files. Two harnesses on the same lab's models count as the same lab for jury diversity. Retiring a model version gives harnesses a notice period before their seats stop.</p>
+<h2 id="7-where-to-get-the-model">7. Where to get the model</h2>
+<p><strong>Hosted models.</strong> Get an API key from the lab or from a router such as OpenRouter. The harness calls any OpenAI-compatible endpoint.</p>
+<p><strong>Open weights.</strong> Download from Hugging Face. vLLM fetches the weights the first time it starts:</p>
+<pre><code class="language-sh">export HF_TOKEN=...          # some repos need you to accept a license first
+MODEL=openai/gpt-oss-120b bash scripts/run-vllm.sh
+</code></pre>
+<p>Record the commitment for the registry: the model id, the weights hashes, the vLLM version, and the container image digest.</p>
+<pre><code class="language-sh">huggingface-cli download openai/gpt-oss-120b --local-dir ~/models/gpt-oss-120b
+find ~/models/gpt-oss-120b -name '*.safetensors' -print0 | sort -z | xargs -0 sha256sum &gt; weights.sha256
+docker inspect --format '{{index .RepoDigests 0}}' vllm/vllm-openai:latest
+</code></pre>
+<h2 id="8-how-a-model-is-proven">8. How a model is proven</h2>
+<p>"Proven" covers a ladder, not one technique. The network records which rung each vote reached.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Level</th>
+<th>What backs the claim "this vote came from model M"</th>
+<th>Works today</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L0</strong></td>
+<td>The harness's signature. Proves which harness voted, not which model ran.</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>L1</strong></td>
+<td>L0 plus commit-then-reveal and lab diversity. No harness can copy another, and no single lab decides.</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>L1+</strong></td>
+<td>L1 plus a bond and re-execution. For open weights at temperature 0 on a pinned runtime, an auditor re-runs the vote; a different answer can be challenged and costs the bond. Hardware attestation (NVIDIA confidential computing) can add a signed report of what ran.</td>
+<td>Re-execution yes; bonds on testnet</td>
+</tr>
+<tr>
+<td><strong>L2</strong></td>
+<td>A proof of inference per vote, verified off chain by auditors, with its hash in the ruling.</td>
+<td>Research only: one open model (Llama 4 Maverick) via FlashProve</td>
+</tr>
+<tr>
+<td><strong>L3</strong></td>
+<td>Proofs small enough to verify on chain.</td>
+<td>No</td>
+</tr>
+</tbody>
+</table></div>
+<p>Hosted models stop at L1: only the provider knows which model it served. Re-execution compares answers, not exact text, because GPU arithmetic can vary slightly between batch sizes.</p>
+<h2 id="9-install">9. Install</h2>
+<p><strong>Available now.</strong></p>
+<pre><code class="language-sh"># Ubuntu 22.04 or 24.04
+git clone https://github.com/Verafyai/verafyHarness.git
+cd verafyHarness
+bash scripts/setup-ubuntu.sh            # API harness
+bash scripts/setup-ubuntu.sh --gpu      # also checks the GPU for an open-weights harness
+</code></pre>
+<p>On macOS or anywhere else with Node 22:</p>
+<pre><code class="language-sh">git clone https://github.com/Verafyai/verafyHarness.git &amp;&amp; cd verafyHarness
+npm test          # 14 tests, no dependencies to install
+npm run demo      # five contracts, five rulings, five blocks
+</code></pre>
+<h2 id="10-configure">10. Configure</h2>
+<p>A harness's setup lives in a JSON config. <code>swarm.config.json</code> is the default; pass another with <code>--config</code>.</p>
+<pre><code class="language-json">{
+  &quot;provider&quot;: { &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot;, &quot;apiKeyEnv&quot;: &quot;SWARM_API_KEY&quot; },
+  &quot;pool&quot;: [
+    { &quot;id&quot;: &quot;h-local-gptoss&quot;, &quot;lab&quot;: &quot;openai&quot;, &quot;model&quot;: &quot;openai/gpt-oss-120b&quot;, &quot;bond&quot;: 500,
+      &quot;baseURL&quot;: &quot;http://127.0.0.1:8000/v1&quot;, &quot;apiKeyEnv&quot;: &quot;VLLM_API_KEY&quot; },
+    { &quot;id&quot;: &quot;h-anthropic-1&quot;, &quot;lab&quot;: &quot;anthropic&quot;, &quot;model&quot;: &quot;anthropic/claude-haiku-4.5&quot;, &quot;bond&quot;: 500 }
+  ]
+}
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>provider.baseURL</code></td>
+<td>Default OpenAI-compatible endpoint</td>
+</tr>
+<tr>
+<td><code>provider.apiKeyEnv</code></td>
+<td>Name of the environment variable holding the key. Never put a key in the file.</td>
+</tr>
+<tr>
+<td><code>pool[].id</code></td>
+<td>The harness's name</td>
+</tr>
+<tr>
+<td><code>pool[].lab</code></td>
+<td>The lab that made the model; used for jury diversity</td>
+</tr>
+<tr>
+<td><code>pool[].model</code></td>
+<td>The committed model id</td>
+</tr>
+<tr>
+<td><code>pool[].bond</code></td>
+<td>Bond size, which caps the value a vote can decide</td>
+</tr>
+<tr>
+<td><code>pool[].baseURL</code>, <code>apiKeyEnv</code></td>
+<td>Per-harness overrides, for a local vLLM server</td>
+</tr>
+</tbody>
+</table></div>
+<p>In the prototype, the pool is every harness on your machine, so one config can stand up a whole local jury. On the network, each operator's config holds only their own harness. <code>swarm.config.local.json</code> is a ready example that puts a local <code>gpt-oss-120b</code> beside five hosted models.</p>
+<h2 id="11-run-and-check">11. Run and check</h2>
+<p><strong>Available now.</strong></p>
+<pre><code class="language-sh">node bin/swarm.js doctor                       # Node version and pool
+export SWARM_API_KEY=...                       # OpenRouter key
+node bin/swarm.js doctor --live                # calls each model once and times it
+node bin/swarm.js run examples/market-resolution.json --live
+node bin/swarm.js chain
+</code></pre>
+<p>With a local model:</p>
+<pre><code class="language-sh">MODEL=openai/gpt-oss-120b bash scripts/run-vllm.sh     # in one terminal; prints VLLM_API_KEY
+export VLLM_API_KEY=... SWARM_API_KEY=...
+node bin/swarm.js doctor --live --config swarm.config.local.json
+node bin/swarm.js run examples/delay-cover.json --live --config swarm.config.local.json
+</code></pre>
+<p>A healthy <code>doctor --live</code> prints <code>ok</code> with a latency for every harness. A ruling prints PROPOSE, COMMIT, REVEAL, RULE, PAY and SEAL.</p>
+<h2 id="12-join-the-network">12. Join the network</h2>
+<p><strong>Planned.</strong> This is the interface the testnet will use. None of these commands exist yet.</p>
+<pre><code class="language-sh">verafy harness init --network testnet-0          # creates ~/.swarm/identity.json (Ed25519) and harness.json
+verafy harness commit-model --model openai/gpt-oss-120b --weights weights.sha256 --runtime &lt;vllm digest&gt;
+verafy harness bond --chain solana-devnet --amount 10 --asset USDC
+verafy harness register                          # publishes identity, model commitment, lab, bond, payout addresses
+verafy harness start                             # daemon: watches for jury seats, deliberates, commits, reveals
+verafy harness status                            # seats held, votes, audits, earnings, faults
+</code></pre>
+<p>Joining means: generate an identity, commit to a model, post a bond on a chain you want to be paid on, register, and start the daemon. From then on the daemon takes seats when the jury draw picks it, and your track record builds with every audited vote.</p>
+<p>Running a node, also planned:</p>
+<pre><code class="language-sh">verafy node init --network testnet-0
+verafy node start --peers &lt;seed nodes&gt;
+</code></pre>
+<h2 id="13-payments-no-coin-bring-your-own">13. Payments: no coin, bring your own</h2>
+<p><strong>There is no token, and there is no need for one.</strong> Verafy Chain is coin agnostic on purpose: the goal is something useful whatever crypto you hold. A contract is paid in whatever asset the requester chooses, on the chain where they hold it: USDC or SOL on Solana, ETH or any ERC-20 on Ethereum, and so on. Any wallet works. The money never moves to Verafy Chain.</p>
+<ol>
+<li>The requester funds escrow on the source chain, in a program or contract that knows the Verafy Chain contract hash.</li>
+<li>Verafy Chain records the ruling and its payout diff.</li>
+<li>A quorum-signed trigger releases the escrow on the source chain, to the winning side and to the harnesses whose votes were counted, in the same asset.</li>
+</ol>
+<h3 id="the-payment-router">The payment router</h3>
+<p>Each harness plugs in a <strong>payment router</strong>. The router decides which payments the harness accepts, and settles its share where the contract was paid. Set it in the harness config:</p>
+<pre><code class="language-json">{
+  &quot;payments&quot;: {
+    &quot;router&quot;: &quot;ledger&quot;,
+    &quot;accept&quot;: [{ &quot;chain&quot;: &quot;solana&quot;, &quot;asset&quot;: &quot;USDC&quot; }, { &quot;chain&quot;: &quot;ethereum&quot;, &quot;asset&quot;: &quot;ETH&quot; }],
+    &quot;book&quot;: { &quot;harness:h-anthropic-1&quot;: { &quot;solana&quot;: &quot;&lt;your Solana address&gt;&quot;, &quot;ethereum&quot;: &quot;&lt;your 0x address&gt;&quot; } }
+  }
+}
+</code></pre>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>router</code></td>
+<td><code>ledger</code> (available now: records payouts to <code>.swarm/payouts.jsonl</code>, nothing moves), <code>solana-usdc</code> (planned: releases escrow from a Solana program, in USDC or any SPL token), <code>evm</code> (planned: the same for Ethereum and EVM chains)</td>
+</tr>
+<tr>
+<td><code>accept</code></td>
+<td>The chains and assets this harness takes seats for. <code>*</code> matches anything. Intake refuses a contract paying in anything else.</td>
+</tr>
+<tr>
+<td><code>book</code></td>
+<td>The payout book: an address per chain for each harness you run</td>
+</tr>
+</tbody>
+</table></div>
+<p>A contract names its asset and chain in <code>payment.currency</code> and <code>payment.chain</code>. Bonds are posted the same way, in the asset of the chain the harness earns on. Bitcoin needs an escrow it can enforce, such as wrapped BTC on a chain with contracts; native Bitcoin support is not planned.</p>
+<p>Two open questions follow from having no coin: how to weight nodes for ledger consensus, and how to compare bonds posted in different assets. Testnet answers both by keeping the node set permissioned and pricing bonds per contract in the contract's own asset.</p>
+<h2 id="14-what-it-costs">14. What it costs</h2>
+<p>All <strong>modeled</strong> or <strong>illustrative</strong> unless marked <strong>measured</strong>; check current prices.</p>
+<p><strong>Measured, Nov 6, 2026:</strong> five live rulings, one per example contract, each with a jury of five hosted models through OpenRouter, cost <strong>$0.0163 together</strong>, about <strong>$0.003 per ruling</strong> or about $0.0007 per vote. Wall time per ruling was <strong>5.9 to 30.1 seconds</strong> from a laptop. See <a href="https://github.com/Verafyai/verafyHarness/blob/main/results/live-2026-11-06.md">results/live-2026-11-06.md</a>. In a separate run, five DeepSeek Harness juror processes on five labs' models sealed a block from their reveals (<a href="https://github.com/Verafyai/verafyHarness/blob/main/docs/dsh-juror.md">docs/dsh-juror.md</a>).</p>
+<p><strong>Model cost per vote</strong>, modeled at 1,500 input and 300 output tokens with OpenRouter prices of Oct 11, 2026:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Cost per vote</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>qwen/qwen3-235b-a22b-2507</code></td>
+<td>about $0.0003</td>
+</tr>
+<tr>
+<td><code>deepseek/deepseek-v4-flash</code></td>
+<td>about $0.0004</td>
+</tr>
+<tr>
+<td><code>meta-llama/llama-4-maverick</code></td>
+<td>about $0.0005</td>
+</tr>
+<tr>
+<td><code>openai/gpt-5-mini</code></td>
+<td>about $0.0010</td>
+</tr>
+<tr>
+<td><code>google/gemini-2.5-flash</code></td>
+<td>about $0.0012</td>
+</tr>
+<tr>
+<td><code>anthropic/claude-haiku-4.5</code></td>
+<td>about $0.0030</td>
+</tr>
+</tbody>
+</table></div>
+<p>Larger contexts cost proportionally more: 15,000 tokens of context is about ten times these figures.</p>
+<p><strong>Machine cost per month</strong> (730 hours):</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Setup</th>
+<th>Cost</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API harness</td>
+<td>about $5 to $25 for a small VM, plus model cost per vote</td>
+<td>Illustrative</td>
+</tr>
+<tr>
+<td>Open-weights, 1 x H100</td>
+<td>about $1,450 to $4,500</td>
+<td>Modeled at $1.99 to $6.16 per GPU hour</td>
+</tr>
+<tr>
+<td>Open-weights, 4 x H100</td>
+<td>about $5,800 to $18,000</td>
+<td>Modeled, same rates</td>
+</tr>
+<tr>
+<td>Node</td>
+<td>about $50 to $200 for 8 vCPU, 32 GB, 2 TB NVMe</td>
+<td>Illustrative</td>
+</tr>
+</tbody>
+</table></div>
+<p>A GPU harness has a fixed cost and near-zero cost per vote; an API harness has almost no fixed cost and pays per vote. Below a few hundred thousand votes a month, an API harness is cheaper.</p>
+<h2 id="15-what-it-earns">15. What it earns</h2>
+<p>You earn whatever asset the contract was paid in. There is no block reward and no token. Each sealed ruling pays:</p>
+<pre><code>your share per vote = escrow x split.jurors / counted votes
+profit = sum of shares  +  audit fees and caught bonds  -  model cost  -  machine cost  -  lost bonds
+</code></pre>
+<p><strong>Illustrative</strong>, from the market-resolution example (1.20 USDC escrow, 80 percent to jurors, 5 counted votes): <strong>0.192 USDC per vote</strong>, against about $0.0003 to $0.003 of model cost. Real fees will be set by requesters and by competition between harnesses, and will likely be far lower than this example. Nobody knows yet what the market rate for a vote will be.</p>
+<p>Dissenting votes are paid too, as long as they were committed and revealed honestly, so there is no reward for following the majority. A ruling below the bar pays nothing; its escrow carries to the larger jury. Faults cost the bond: running a model other than the one committed, missing a reveal, or failing an audit.</p>
+<p>Earnings don't have to be converted by hand: a harness's routing agent, an API router with its own payment wallet, accepts payment in any asset, converts it, rents and pays for its own hosting, pays for inference, and keeps the bond topped up, within limits you set. It also routes each contract only to AI that meets the contract's provability requirement, up to zero-knowledge proofs. See <a href="/coin-agnostic#the-routing-agent">The routing agent</a>.</p>
+<p>On testnet, everything is play money.</p>
+<h2 id="16-operating-a-harness">16. Operating a harness</h2>
+<ul>
+<li><strong>Keys.</strong> The identity key signs every commitment and reveal. Keep it on the harness machine, readable only by the harness user. API keys and wallet keys go in the <strong>keyblock</strong>, encrypted under a passphrase you supply through <code>SWARM_KEYBLOCK_PASSPHRASE</code>; the rest of the harness only ever holds short-lived scoped keys. See <a href="/coin-agnostic#the-routing-agent">The routing agent</a>.</li>
+<li><strong>Pin your runtime.</strong> For an open-weights harness, pin the vLLM image by digest and the weights by hash. Changing either without re-registering will fail audits.</li>
+<li><strong>Temperature 0.</strong> Juror calls use temperature 0 so auditors can re-run them.</li>
+<li><strong>Uptime.</strong> A harness that commits and then fails to reveal is faulted. Take seats only while the model endpoint is healthy; <code>doctor --live</code> is the check.</li>
+<li><strong>Upgrades.</strong> A new model version is a new commitment. Register it before switching.</li>
+<li><strong>Logs.</strong> The harness never logs keys. Votes, commitments and timings are safe to keep.</li>
+</ul>
+<h2 id="17-troubleshooting">17. Troubleshooting</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>openai provider needs an API key</code></td>
+<td>The variable named in <code>apiKeyEnv</code> is empty</td>
+<td>Export it in the harness's shell</td>
+</tr>
+<tr>
+<td><code>HTTP 404</code> from a model</td>
+<td>The model id isn't served at that endpoint</td>
+<td>Check the id at the provider, or the <code>--model</code> vLLM was started with</td>
+</tr>
+<tr>
+<td><code>context check failed: hash mismatch</code></td>
+<td>The context content differs from the contract's pin</td>
+<td>Fetch the pinned snapshot again; never re-pin someone else's contract</td>
+</tr>
+<tr>
+<td><code>pool cannot seat a jury</code></td>
+<td>Not enough labs in the pool for the contract's <code>minLabs</code></td>
+<td>Add harnesses from other labs, or use a contract that asks for fewer</td>
+</tr>
+<tr>
+<td><code>bond ... is below the contract's ... per vote</code></td>
+<td>The contract decides more value than your bond covers</td>
+<td>Raise the bond or skip the contract</td>
+</tr>
+<tr>
+<td>vLLM runs out of memory</td>
+<td>The model doesn't fit</td>
+<td>Use a smaller model, more GPUs (<code>TP=</code>), or a quantized build</td>
+</tr>
+</tbody>
+</table></div></article></div>
+<footer class="wrap foot">
+  <p>Verafy Harness is the validator for Verafy Chain, a Verafy research concept. It is a prototype, not a running network, and there is no token.</p>
+  <p>Code: <a href="https://github.com/Verafyai/verafyHarness">Verafyai/verafyHarness</a>, MIT, built on <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>. The concept: <a href="https://chain.verafy.ai">chain.verafy.ai</a>.</p>
+</footer>
+<script>(function(){var links=[].slice.call(document.querySelectorAll('.side a'));var hs=links.map(function(a){return document.getElementById(decodeURIComponent(a.hash.slice(1)))}).filter(Boolean);function on(){var y=window.scrollY+120,cur=null;hs.forEach(function(h){if(h.offsetTop<=y)cur=h.id});links.forEach(function(a){a.classList.toggle('on',decodeURIComponent(a.hash.slice(1))===cur)})}window.addEventListener('scroll',on,{passive:true});on()})();</script>
+</body>
+</html>
