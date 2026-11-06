@@ -160,6 +160,8 @@ Every Actually Smart Contract has four parts. The schema is [`schemas/asc.schema
 
 The contract's identity is a hash over everything except snapshot content, so it is the same whether the content travels with the contract or is fetched later by hash.
 
+Payment may also say when the contract is willing to seal: `minBatch` (never in a block with fewer contracts) and `maxWaitSeconds` (no later than this after it is queued, paying a larger share of the block's fixed cost). Both are optional; a contract without them keeps its hash. Before its jury is drawn, a contract can wait in the chain's encrypted queue (`src/queue.js`), readable by nobody; see the [Verafy Chain batching doc](https://github.com/Verafyai/verafyChain/blob/main/docs/batching.md) for what that does and does not hide.
+
 ## The harnessed validator
 
 <p align="center">
@@ -405,6 +407,7 @@ packages/core/              zero-dependency core
   src/network.js                  jury draw, ruling from recorded messages, ruling verifier, sealing, Proof of Judgment
   src/trigger.js                  quorum-signed triggers (verafy.trigger/1; swarm.trigger/0 still verifies)
   src/challenge.js                auditors, challenges and reviews, escalated contracts
+  src/queue.js                    the encrypted queue: a contract sealed t of n to the node set (Shamir over an AES-256-GCM key)
   src/providers.js                mock and OpenAI-compatible model providers, retry with backoff
   test/                           node:test suite
 packages/dsh-verafy-juror/        juror mode as a DeepSeek Harness plugin

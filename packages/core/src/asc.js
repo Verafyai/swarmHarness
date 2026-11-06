@@ -3,7 +3,8 @@
  *
  *   context   links, text and policies, each pinned by SHA-256
  *   question  what must be decided, and the form of the answer
- *   payment   escrow, jury rules and the bar the jury must clear
+ *   payment   escrow, jury rules and the bar the jury must clear, and
+ *             optionally when it may seal (`minBatch`, `maxWaitSeconds`)
  *   exits     the only things the contract can do with an answer
  *
  * @module @verafyharness/core/asc
@@ -95,6 +96,10 @@ export function validate(asc) {
     for (const o of q?.answer?.options ?? []) if (!outcomes.has(o)) p.push(`no exit for option "${o}"`)
   }
   if (!(asc?.exits ?? []).some(e => e.outcome === BELOW_BAR)) p.push(`an exit for "${BELOW_BAR}" is required`)
+  // Batching (optional; absent fields leave a contract's hash unchanged).
+  // minBatch: never seal in a block with fewer contracts. maxWaitSeconds: seal no later than this after queueing.
+  if (pay?.minBatch !== undefined && !(Number.isInteger(pay.minBatch) && pay.minBatch >= 1)) p.push('payment.minBatch must be a whole number of contracts, at least 1')
+  if (pay?.maxWaitSeconds !== undefined && !(typeof pay.maxWaitSeconds === 'number' && pay.maxWaitSeconds > 0)) p.push('payment.maxWaitSeconds must be a positive number of seconds')
   for (const k of ['excludeLabs', 'excludeHarnesses']) {
     if (j?.[k] !== undefined && !(Array.isArray(j[k]) && j[k].every(x => typeof x === 'string'))) p.push(`payment.jury.${k} must be a list of names`)
   }
