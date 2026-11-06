@@ -201,3 +201,72 @@ test('the payment wallet pays only allowlisted suppliers, within caps, above the
   assert.equal(w.pay('gpu-host', 150, 'hosting', { month: '2026-11', approved: true }).purpose, 'hosting')
   assert.equal(w.log.filter(e => e.type === 'pay').length, 2)
 })
+
+test('the banker accepts any allowed token, swaps at the best approved quote, and pays external routers in their token', async () => {
+  const { Banker, PaymentWallet, fixedRateVenue } = await import('../src/index.js')
+  const wallet = new PaymentWallet({ payees: [{ id: 'ai-router', asset: 'USDC', monthlyCap: 100 }, { id: 'gpu-host', asset: 'USDC', monthlyCap: 500 }], bondReserve: { SOL: 2 } })
+  const venues = [
+    fixedRateVenue({ name: 'dex-a', rates: { 'SOL/USDC': 150, 'ETH/USDC': 3000 }, feeRate: 0.003 }),
+    fixedRateVenue({ name: 'dex-b', rates: { 'SOL/USDC': 151 }, feeRate: 0.003 }),
+    fixedRateVenue({ name: 'shady', rates: { 'SOL/USDC': 200 } }),
+  ]
+  const banker = new Banker({ wallet, venues, approved: ['dex-a', 'dex-b'], accept: [{ chain: 'solana', asset: 'SOL' }, { chain: 'ethereum', asset: 'ETH' }], maxSlippage: 0.01, prefer: ['SOL'], reference: { SOL: 150, ETH: 3000, USDC: 1 } })
+  assert.throws(() => banker.receive({ chain: 'solana', asset: 'BONK', amount: 1, source: 'x' }), /does not accept BONK/)
+  banker.receive({ chain: 'solana', asset: 'SOL', amount: 2.5, source: 'ruling a' })
+  banker.receive({ chain: 'ethereum', asset: 'ETH', amount: 0.01, source: 'ruling b' })
+  const q = banker.quote('SOL', 'USDC', 1)
+  assert.equal(q.venue, 'dex-b')
+  const { swaps, payment } = banker.pay('ai-router', 40, 'inference', { month: '2026-11' })
+  assert.equal(payment.asset, 'USDC'); assert.equal(payment.amount, 40)
+  assert.ok(swaps.length >= 1 && swaps.every(s => s.venue !== 'shady'))
+  assert.ok(wallet.balances.SOL >= 2 - 1e-9, 'bond reserve kept')
+  assert.throws(() => banker.pay('gpu-host', 400, 'hosting', { month: '2026-11' }), /cannot raise 400 USDC/)
+  const thin = new Banker({ wallet, venues: [fixedRateVenue({ name: 'thin', rates: { 'ETH/USDC': 2800 } })], reference: { ETH: 3000, USDC: 1 }, maxSlippage: 0.01 })
+  assert.throws(() => thin.quote('ETH', 'USDC', 0.01), /over the 1% limit/)
+})
+
+test('the keyblock encrypts keys and only lends them through scoped keys', async () => {
+  const { Keyblock } = await import('../src/index.js')
+  const kb = new Keyblock({ passphrase: 'correct horse battery' })
+  kb.put('openrouter', 'sk-or-secret')
+  assert.ok(!JSON.stringify(kb.export()).includes('sk-or-secret'), 'stored encrypted')
+  const reopened = new Keyblock({ passphrase: 'correct horse battery', ...kb.export() })
+  const t = reopened.issue({ holder: 'api-router', scopes: ['call:openrouter'], maxUses: 2 })
+  assert.equal(reopened.withSecret(t, 'call:openrouter', 'openrouter', s => s.length), 12)
+  assert.throws(() => reopened.authorize(t, 'pay:gpu-host'), /does not allow pay:gpu-host/)
+  reopened.withSecret(t, 'call:openrouter', 'openrouter', () => 0)
+  assert.throws(() => reopened.authorize(t, 'call:openrouter'), /no uses left/)
+  const t2 = reopened.issue({ holder: 'x', scopes: ['call:*'] })
+  reopened.revoke(t2)
+  assert.throws(() => reopened.authorize(t2, 'call:openrouter'), /revoked/)
+  const wrong = new Keyblock({ passphrase: 'a different passphrase', ...kb.export() })
+  assert.throws(() => wrong.withSecret(wrong.issue({ holder: 'x', scopes: ['call:openrouter'] }), 'call:openrouter', 'openrouter', s => s))
+  assert.throws(() => reopened.authorize(t2.slice(0, -2) + 'xx', 'call:openrouter'), /signature is invalid|revoked/)
+})
+
+test('the API router calls plugged-in APIs with keys it never exposes, and pays them through the banker', async () => {
+  const { Keyblock, Banker, PaymentWallet, ApiRouter, fixedRateVenue } = await import('../src/index.js')
+  const kb = new Keyblock({ passphrase: 'correct horse battery' })
+  kb.put('openrouter', 'sk-or-secret'); kb.put('gpucloud', 'gpu-secret')
+  const wallet = new PaymentWallet({ payees: [{ id: 'openrouter', asset: 'USDC', monthlyCap: 50 }, { id: 'gpucloud', asset: 'USDC', monthlyCap: 500 }] })
+  const banker = new Banker({ wallet, venues: [fixedRateVenue({ name: 'dex', rates: { 'SOL/USDC': 150 } })], prefer: ['SOL'] })
+  banker.receive({ chain: 'solana', asset: 'SOL', amount: 1, source: 'rulings' })
+  const seen = []
+  const fakeFetch = async (url, init) => { seen.push({ url, auth: init.headers.authorization ?? init.headers['x-api-key'] }); return { status: 200, json: async () => ({ usage: { prompt_tokens: 1500, completion_tokens: 300 } }) } }
+  const router = new ApiRouter({ keyblock: kb, banker, fetch: fakeFetch, apis: [
+    { id: 'openrouter', kind: 'inference', baseURL: 'https://openrouter.ai/api/v1', secret: 'openrouter', payee: 'openrouter', price: { perInputToken: 1e-6, perOutputToken: 5e-6 } },
+    { id: 'gpucloud', kind: 'hosting', baseURL: 'https://gpu.example/v1', secret: 'gpucloud', auth: 'x-api-key', payee: 'gpucloud', price: { perCall: 2.5 }, billing: 'accrue' },
+  ] })
+  const juror = kb.issue({ holder: 'juror', scopes: ['call:openrouter'] })
+  const r = await router.call(juror, 'openrouter', { path: '/chat/completions', body: {}, purpose: 'vote' })
+  assert.equal(r.cost, 0.003)
+  assert.equal(seen[0].auth, 'Bearer sk-or-secret')
+  assert.ok(wallet.log.some(e => e.type === 'swap'), 'banker converted SOL to pay in USDC')
+  assert.ok(wallet.log.some(e => e.type === 'pay' && e.payee === 'openrouter'))
+  await assert.rejects(router.call(juror, 'gpucloud', { path: '/servers' }), /does not allow call:gpucloud/)
+  const ops = kb.issue({ holder: 'hosting', scopes: ['call:gpucloud'] })
+  await router.call(ops, 'gpucloud', { path: '/servers', purpose: 'rent 1x80GB' })
+  assert.equal(seen[1].auth, 'gpu-secret')
+  const paid = router.settle()
+  assert.equal(paid[0].payment.payee, 'gpucloud'); assert.equal(paid[0].payment.amount, 2.5)
+})
