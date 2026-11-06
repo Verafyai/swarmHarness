@@ -12,6 +12,7 @@ Swarm Harness goes from a local prototype to an open network in stages. Each mil
 - [x] Contract runtime: exits, escrow split, conservation check, cross-chain triggers, escalation below the bar
 - [x] Seeded jury draw across labs; rulings sealed into linked blocks
 - [x] CLI with scripted and live (OpenAI-compatible) providers; five example contracts; 14 tests
+- [x] Payment routers: per-harness accept lists and a local payout ledger, in the contract's own asset (added with the run-a-harness guide)
 
 Done when: `npm test` passes and `npm run demo` seals five blocks. Met.
 

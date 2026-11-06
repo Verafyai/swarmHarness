@@ -47,7 +47,8 @@
       "auditors": 0.1,
       "storage": 0.05,
       "sealer": 0.05
-    }
+    },
+    "chain": "solana"
   },
   "exits": [
     {

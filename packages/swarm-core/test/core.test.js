@@ -151,3 +151,23 @@ test('a reveal that does not match its commitment, or a forged attestation, is n
   assert.ok(events.some(e => e.phase === 'commit-failed' && e.harness === entries[1].card.id))
   assert.equal(r.passed, false, 'three of five is below the quorum of four')
 })
+
+test('payment routers: a harness refuses assets it does not accept, and the ledger records payouts', async () => {
+  const { acceptsPayment, createRouter } = await import('../src/index.js')
+  const asc = ex('market-resolution')
+  assert.equal(acceptsPayment({ accept: [{ chain: 'solana', asset: 'USDC' }] }, asc.payment), true)
+  assert.equal(acceptsPayment({ accept: [{ chain: 'ethereum', asset: 'ETH' }] }, asc.payment), false)
+  assert.equal(acceptsPayment({}, asc.payment), true)
+  const h = new Harness({ id: 'eth-only', lab: 'qwen', model: 'm', bond: 500, provider: mockProvider(mock, asc.id, 'qwen'), payments: { accept: [{ chain: 'ethereum', asset: 'ETH' }] } })
+  assert.ok(h.intake(asc).some(p => p.includes('does not accept USDC on solana')))
+  const { mkdtempSync, readFileSync: read } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const file = `${mkdtempSync(`${tmpdir()}/swarm-`)}/payouts.jsonl`
+  const pool = poolFor(asc)
+  const jury = drawJury(pool, asc.payment.jury, 'genesis')
+  const r = await rule(asc, jury, pool.find(x => !jury.includes(x)))
+  const lines = await createRouter({ router: 'ledger', file }).settle(r, asc, {})
+  assert.equal(lines.every(l => l.asset === 'USDC' && l.chain === 'solana'), true)
+  assert.equal(read(file, 'utf8').trim().split('\n').length, lines.length)
+  await assert.rejects(createRouter({ router: 'solana-usdc' }).settle(r, asc), /planned, not built/)
+})
