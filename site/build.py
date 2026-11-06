@@ -260,6 +260,7 @@ td.neg{color:var(--deny,#B3263A)}td.pos{color:var(--allow)}
 .figure{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;overflow-x:auto;margin:16px 0}
 .figure svg{display:block;width:100%;min-width:640px;height:auto}
 article section{scroll-margin-top:16px}
+img.anim{display:block;width:100%;height:auto;max-width:960px;border:1px solid var(--rule);border-radius:3px;margin:18px 0}
 """
 
 ECON_MENU = [('overview', 'The short version'), ('calculator', 'Calculator'), ('packing', 'Proof packing'),

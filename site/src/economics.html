@@ -59,6 +59,7 @@
   <li><b>Prove once, verify many.</b> Today only one model can be proven, and with integer weights and greedy decoding, every juror running it on the same input gets the same answer. So each packed request is proven once, by a prover drawn from the block hash, and the other jurors become verifiers. Lab diversity returns as soon as a second model is provable: one proof per distinct model.</li>
 </ol>
 <div class="callout"><b>The safeguard.</b> A proof shows the model answered the atoms correctly, not that the atoms and the rule capture the original question. So every atom plan is either agreed by the contract's parties before funding, or checked by a cheap unproven panel from several labs (the fidelity check), and auditors spot-check its citations. A plan that drops the deciding fact or reaches a different outcome fails the check, and that contract runs unpacked.</div>
+<img class="anim" src="/assets/proof-packing.gif" alt="Animation: six contracts are atomized into twelve small questions; a question shared by four contracts becomes one slot; the nine unique atoms pack into two 1,024-token requests; one prover proves each request once and verifiers check the proofs. Then the cost per decision: unpacked $0.1043, briefs $0.0085, atomized $0.0059, atomized with a Jev screen $0.0039, modeled." width="1280" height="720" loading="lazy">
 <div class="callout"><b>What the numbers show.</b> Once contracts are packed, proving stops being the big cost. At 1,000 contracts, the proving GPU costs about $1.29 and the fidelity checks about $3.26 (modeled). The next savings come from cheaper checks, not cheaper proofs.</div>
 
 <h3>Unpacked and packed, on your inputs</h3>
@@ -79,6 +80,8 @@
   <li><b>Triage and sizing:</b> its probability decides which atoms need a proof at all, and how big the jury should be.</li>
 </ul>
 <p>It can't be the court. It's one hosted, closed model, so it adds no lab diversity and can't carry a proof of inference, and on its vendor's own benchmark it scored 67.8% against 73 to 74% for frontier models. Calibrated isn't the same as correct.</p>
+
+<img class="anim" src="/assets/jev-screen.gif" alt="Animation: the cost equation C = (1 - s) P + W + (1 - r) F + S, with a Jev screen cutting cost per contract from $0.0069 to $0.0045 at 1,000 contracts (modeled); the screen routes atoms to three lanes; and its limits: one closed model, no proof, 67.8% against 73 to 74%, calibrated is not correct." width="1280" height="720" loading="lazy">
 
 <h3>What packing does not change</h3>
 <ul>
