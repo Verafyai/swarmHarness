@@ -67,11 +67,13 @@ Verafy Harness does two things.
 
 | | Status | Evidence |
 |---|---|---|
-| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (17 tests), `npm run demo` |
+| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (37 tests), `npm run demo` |
 | Live rulings by five labs' models through OpenRouter | **Measured** Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total | [results/live-2026-11-06.md](results/live-2026-11-06.md) |
 | Juror mode inside DeepSeek Harness: five DSH processes on five labs' models, block sealed from their reveals | **Measured** Nov 6, 2026: all five voted NO, 100% against an 80% bar; 24 of 24 non-swarm tools denied | [docs/dsh-juror.md](docs/dsh-juror.md) |
 | Payment router: accept lists, a local payout ledger | Works; on-chain routers planned | `swarm.config.json`, `.swarm/payouts.jsonl` |
-| A network of harnesses, bonds, auditors, challenges, testnet | Planned | [ROADMAP.md](ROADMAP.md), [docs/testnet.md](docs/testnet.md) |
+| Auditors, challenges and escalation in core: an auditor from another lab re-checks a sealed ruling; a challenge appends affirm, overturn or supersede and never edits the ruling; a below-bar ruling's escrow funds a wider jury from other labs | Works with scripted models; not yet run live or on a network | `packages/core/src/challenge.js`, `packages/core/test/m3.test.js` |
+| Retry for rate-limited models: each harness backs off on 429, 5xx and network errors, then is dropped if it still fails | Works with fake providers; not yet measured live | `packages/core/src/providers.js` |
+| A network of harnesses, bonds and slashing, testnet | Planned | [ROADMAP.md](ROADMAP.md), [docs/testnet.md](docs/testnet.md) |
 
 ## Quick start
 
@@ -80,7 +82,7 @@ Needs Node 22 or later. The core has no dependencies.
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 17 tests
+npm test          # 37 tests
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
 ```
 
@@ -384,8 +386,10 @@ packages/core/              zero-dependency core
   src/payments.js                 payment routers: accept lists, ledger, planned on-chain routers
   src/routing.js                  routing agent: payment wallet, inference routes by assurance level up to ZK proofs
   src/harness.js                  the harnessed validator
-  src/network.js                  jury draw, ruling, sealing from reveals, Proof of Judgment
-  src/providers.js                mock and OpenAI-compatible model providers
+  src/network.js                  jury draw, ruling from recorded messages, ruling verifier, sealing, Proof of Judgment
+  src/trigger.js                  quorum-signed triggers (swarm.trigger/0)
+  src/challenge.js                auditors, challenges and reviews, escalated contracts
+  src/providers.js                mock and OpenAI-compatible model providers, retry with backoff
   test/                           node:test suite
 packages/dsh-swarm-juror/         juror mode as a DeepSeek Harness plugin
 config/cordis.swarm.yml           DSH profile overlay: one model route per lab, juror mode

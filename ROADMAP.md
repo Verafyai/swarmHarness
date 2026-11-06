@@ -26,15 +26,40 @@ Done when: `npm test` passes and `npm run demo` seals five blocks. Met.
 
 Done when: five DSH processes on five model routes rule on `examples/market-resolution.json` and the CLI seals the block from their reveals. Met on 2026-11-06 with live models through OpenRouter: anthropic/claude-haiku-4.5, openai/gpt-5-mini, google/gemini-2.5-flash, meta-llama/llama-4-maverick, qwen/qwen3-235b-a22b-2507. All five voted NO, agreement 100% against a bar of 80%, block sealed. Details and the runs that failed first are in [docs/dsh-juror.md](docs/dsh-juror.md); what DSH does not expose is in [docs/dsh-gaps.md](docs/dsh-gaps.md).
 
-## Milestone 3: Live juries
+## Milestone 3: Live juries (started)
 
-- [ ] Live runs of every example on real models, with measured latency and cost per ruling published
+- [ ] Live runs of every example on real models, with measured latency and cost per ruling published. First pass measured 2026-11-06 ([results/live-2026-11-06.md](results/live-2026-11-06.md)): five contracts, wall time per contract, total cost only (OpenRouter reports cost per key, not per run), and one harness dropped on an upstream HTTP 429
+- [x] Retry for rate-limited models: each harness's provider retries 429, 5xx and network errors with capped exponential backoff and full jitter, honoring Retry-After; a harness that still fails is dropped as before (`withRetry`, on by default in `openaiProvider`). Tested with fake providers only; not yet measured live
 - [ ] Track record: per-harness agreement with final rulings and forecast scores (Brier) once outcomes arrive
-- [ ] Auditor role: re-run a random sample of sealed rulings with a different lab and flag disagreement
-- [ ] Challenge with new evidence: a challenged ruling is affirmed, overturned or superseded, never erased
+- [x] Auditor role, in core: `drawAuditors` picks harnesses from labs not on the jury, `sampleForAudit` takes a seeded sample, and `audit` re-verifies a sealed ruling from its round record and re-runs the contract, returning a signed `swarm.audit/0` report that flags a bad record or disagreement. Tested with scripted models. Not yet: auditor pay from `pool:auditors`, auditor bonds, and audits run live or on a schedule
+- [x] Challenge with new evidence, in core: `challengeContract` builds a `swarm.challenge/0` contract (the prior ruling as a pinned `ruling` context entry, the original evidence, the new material labeled new; a jury at least as large that shares no lab or harness with the original; exits that only record), and `resolveChallenge` returns a `swarm.review/0` record: affirm, overturn (new or false evidence, error), supersede (changed rules), or the original stands. `appendReview` and `reviewStatus` keep an append-only log; `seal` carries reviews only in the block of the ruling that decided them. The original ruling is never edited. Tested end to end with scripted models: forged evidence, then a challenge on false evidence, then overturned
+- [x] Escalation, in core: `escalate` turns a below-bar ruling into a `swarm.escalation/0` contract funded by exactly the carried escrow, with a wider jury that excludes the original jury's labs and harnesses. Tested with a nine-seat jury drawn from labs not on the original
+- [ ] Challenge bonds: lock on open, return on overturn or supersede, forfeit on affirm (draft rulings SIMD). Not built
+- [ ] Run challenges and escalations from the CLI and the demo; today they are core functions and tests only
 - [ ] A fast lane: a System 1 screen that settles only the safe default and escalates the rest
 
+Audits do not catch forged evidence: an auditor reading the same pinned page reaches the same answer (the poison test shows this). Forged evidence is caught by a challenge that brings new material.
+
 Done when: 100 live rulings across the four market types, with audit results and costs published.
+
+### Core changes the chain asked for (Nov 2026)
+
+From the swarmChain ROADMAP's "Needed in swarmHarness" list. Done in core:
+
+- [x] `ruleFromRecords(asc, commits, reveals, {jury, sealer, seed})`: rules from recorded messages, pure and synchronous, no stand-in jurors. `rule()` now runs on top of it and accepts async reveals
+- [x] A committed juror that never reveals is not counted and is listed in `round.faults` as `no-reveal` (and `no-commit` for a seated juror with no valid commitment); nothing throws
+- [x] `verifyRuling(asc, ruling, {cards, pool, seed})` with reasons; `checkQuorum(asc, reveals)` exported
+- [x] Every ruling carries `round`: seed, sealer account, jury cards with public keys, accepted commitments, counted reveals with salts, and faults, so it can be re-verified alone
+- [x] The sealer account is configurable (`harness:<id>`, `node:<id>`, or any account; `accountFor`), and the pay rules are an exported check (`checkPay`)
+- [x] `drawJury` takes a bond floor; `drawJuryFor(asc, pool, seed)` and `eligibleJurors` apply `maxValuePerVote` and the new `excludeLabs` and `excludeHarnesses` jury rules
+- [x] `Harness` keeps an identity (`identity`) or loads one from a PEM file (`identityFile`, the same format as the DSH plugin's `identity.pem`)
+- [x] `mockProvider(script)` answers any contract and lab, read from each request
+- [x] `swarm.trigger/0` with `triggerMessage`, `signTrigger` and `verifyTrigger`
+- [x] Challenge (`swarm.challenge/0`) and escalated-contract (`swarm.escalation/0`) formats, in the schema and `validate`
+- [x] An optional `proofHash` on votes. Only the hash is recorded; a `proof` field anywhere in a ruling fails verification. A stored hash is not a proof by itself
+- [x] `seal(parent, rulings, sealer, {time})` for deterministic headers
+
+Still open from that list: the harness daemon (milestone 4).
 
 ## Milestone 4: A network of harnesses
 
