@@ -42,8 +42,10 @@
               "text",
               "policy",
               "document",
-              "repo"
-            ]
+              "repo",
+              "ruling"
+            ],
+            "description": "ruling: a prior ruling carried as evidence, such as the ruling under challenge."
           },
           "url": {
             "type": "string"
@@ -63,6 +65,10 @@
           "content": {
             "type": "string",
             "description": "Snapshot text. Optional on chain; fetched from the availability layer by sha256."
+          },
+          "label": {
+            "type": "string",
+            "description": "Shown to jurors, such as \"new evidence\" on a challenge."
           }
         }
       }
@@ -160,6 +166,20 @@
                 "L3"
               ],
               "description": "Minimum assurance for the AI that rules: L1+ re-executable, L2 a proof of inference per vote."
+            },
+            "excludeLabs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Labs that may not sit, such as the original jury's labs on an escalated or challenge jury."
+            },
+            "excludeHarnesses": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Harness ids that may not sit."
             }
           }
         },
@@ -245,6 +265,80 @@
               }
             }
           }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "description": "Present on a challenge contract: the sealed ruling it reviews.",
+      "required": [
+        "kind",
+        "ruling",
+        "ascHash",
+        "grounds"
+      ],
+      "properties": {
+        "kind": {
+          "const": "swarm.challenge/0"
+        },
+        "ruling": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "The challenged ruling id."
+        },
+        "ascHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "The challenged contract hash."
+        },
+        "grounds": {
+          "enum": [
+            "new-evidence",
+            "false-evidence",
+            "error",
+            "changed-rules"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "description": "Hashes of the new material."
+        }
+      }
+    },
+    "escalation": {
+      "type": "object",
+      "description": "Present on an escalated contract: funded by exactly the escrow a below-bar ruling carried.",
+      "required": [
+        "kind",
+        "from",
+        "ascHash",
+        "account",
+        "carried"
+      ],
+      "properties": {
+        "kind": {
+          "const": "swarm.escalation/0"
+        },
+        "from": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "The below-bar ruling id."
+        },
+        "ascHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "account": {
+          "type": "string",
+          "pattern": "^escrow:"
+        },
+        "carried": {
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       }
     }

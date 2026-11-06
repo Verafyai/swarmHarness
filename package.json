@@ -8,7 +8,7 @@
   "bin": { "swarm": "bin/swarm.js" },
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node --test packages/core/test/core.test.js",
+    "test": "node --test packages/core/test/core.test.js packages/core/test/m3.test.js",
     "demo": "rm -rf .swarm && node bin/swarm.js run examples/market-resolution.json && node bin/swarm.js run examples/fact-check.json && node bin/swarm.js run examples/forecast.json && node bin/swarm.js run examples/delay-cover.json && node bin/swarm.js run examples/fact-check-escalation.json && node bin/swarm.js chain",
     "live": "node bin/swarm.js run examples/market-resolution.json --live"
   }
