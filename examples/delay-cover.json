@@ -1,5 +1,5 @@
 {
-  "kind": "swarm.asc/0",
+  "kind": "verafy.asc/1",
   "id": "delay-cover-ua1532",
   "title": "Pay the claim if UA 1532 lands 3+ hours late",
   "instructions": "You decide a flight-delay insurance claim. Pay if the pinned flight record shows an arrival at least three hours after the scheduled arrival. Deny if it shows less. Hold if the record is missing or contradictory.",

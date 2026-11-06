@@ -14,7 +14,7 @@ import {
 
 const ex = name => JSON.parse(readFileSync(new URL(`../../../examples/${name}.json`, import.meta.url), 'utf8'))
 const mock = ex('mock-answers')
-const config = JSON.parse(readFileSync(new URL('../../../swarm.config.json', import.meta.url), 'utf8'))
+const config = JSON.parse(readFileSync(new URL('../../../verafy.config.json', import.meta.url), 'utf8'))
 const poolFor = asc => config.pool.map(h => new Harness({ ...h, provider: mockProvider(mock, asc.id, h.lab) }))
 const noSleep = () => Promise.resolve()
 
@@ -214,7 +214,7 @@ test('mockProvider is not bound to one contract: one long-lived harness answers 
   await assert.rejects(new Harness({ ...config.pool[0], provider: mockProvider(mock, 'nope') }).commit(ex('fact-check')), /no scripted answer for nope \/ anthropic/)
 })
 
-test('swarm.trigger/0: a call trigger is released only by a quorum of counted jurors', async () => {
+test('verafy.trigger/1: a call trigger is released only by a quorum of counted jurors', async () => {
   const asc = ex('market-resolution')
   const pool = poolFor(asc)
   const jury = drawJuryFor(asc, pool, 'genesis')
@@ -308,7 +308,7 @@ test('escalation: below-bar escrow is carried to a wider jury drawn from labs no
 /** A contract built for the poison path: a pinned page that turns out to be forged. */
 function shipmentContract() {
   return pin({
-    kind: 'swarm.asc/0',
+    kind: 'verafy.asc/1',
     id: 'cover-shipment-1182',
     title: 'Did shipment 1182 arrive by Nov 3?',
     instructions: 'Decide from the pinned carrier records whether shipment 1182 was delivered on or before Nov 3, 2026. Answer YES or NO.',

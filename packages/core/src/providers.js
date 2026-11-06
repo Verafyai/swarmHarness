@@ -6,7 +6,7 @@
  *   openai   any OpenAI-compatible chat endpoint: OpenRouter, a gateway, or a local server
  *
  * Inside DeepSeek Harness the same swap is a `@deepseek-ai/dsh-llm-pi-ai` route;
- * see config/cordis.swarm.yml.
+ * see config/cordis.verafy.yml.
  *
  * A provider's `complete(req)` resolves to the model's reply text, or to
  * `{content, proofHash}` when the route can commit to an off-chain proof of the
@@ -143,7 +143,7 @@ function retryAfter(value) {
  * @returns {{complete: (req: {model: string, system: string, user: string}) => Promise<string>}} the provider.
  */
 export function openaiProvider({ baseURL, apiKey, retry = {}, fetch: fetchImpl = globalThis.fetch }) {
-  if (!apiKey) throw new Error('openai provider needs an API key; set SWARM_API_KEY')
+  if (!apiKey) throw new Error('openai provider needs an API key; set VERAFY_API_KEY')
   const once = {
     async complete({ model, system, user }) {
       let res

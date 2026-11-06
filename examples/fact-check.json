@@ -1,5 +1,5 @@
 {
-  "kind": "swarm.asc/0",
+  "kind": "verafy.asc/1",
   "id": "factcheck-ceo-revenue-doubled",
   "title": "Fact check: The CEO said revenue doubled",
   "instructions": "You grade a public claim against the pinned transcript. Grade it true if the transcript supports it as stated, mostly true if it supports it with minor qualifications, misleading if it is accurate only for a part or a period the claim does not name, and false if the transcript contradicts it. Quote nothing beyond what you need.",

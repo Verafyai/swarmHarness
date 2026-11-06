@@ -1,10 +1,10 @@
 {
-  "name": "@verafyharness/dsh-swarm-juror",
+  "name": "@verafyharness/dsh-verafy-juror",
   "version": "0.1.0",
-  "description": "Juror mode for DeepSeek Harness: turns a DSH agent into a harnessed Swarm Chain validator.",
+  "description": "Juror mode for DeepSeek Harness: turns a DSH agent into a harnessed Verafy Chain validator.",
   "type": "module",
   "license": "MIT",
-  "keywords": ["dsh-plugin", "deepseek-harness", "swarm-chain"],
+  "keywords": ["dsh-plugin", "deepseek-harness", "verafy-chain"],
   "exports": "./src/index.ts",
   "dependencies": { "@verafyharness/core": "workspace:*" },
   "peerDependencies": {

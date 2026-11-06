@@ -1,5 +1,5 @@
 {
-  "provider": { "baseURL": "https://openrouter.ai/api/v1", "apiKeyEnv": "SWARM_API_KEY" },
+  "provider": { "baseURL": "https://openrouter.ai/api/v1", "apiKeyEnv": "VERAFY_API_KEY" },
   "pool": [
     { "id": "h-local-gptoss", "lab": "openai", "model": "openai/gpt-oss-120b", "bond": 500, "baseURL": "http://127.0.0.1:8000/v1", "apiKeyEnv": "VLLM_API_KEY" },
     { "id": "h-anthropic-1", "lab": "anthropic", "model": "anthropic/claude-haiku-4.5", "bond": 500 },

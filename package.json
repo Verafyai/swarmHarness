@@ -5,11 +5,11 @@
   "description": "Verafy Harness: harnessed AI validators for Actually Smart Contracts, built on DeepSeek Harness.",
   "type": "module",
   "license": "MIT",
-  "bin": { "swarm": "bin/swarm.js" },
+  "bin": { "verafy": "bin/verafy.js", "swarm": "bin/swarm.js" },
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node --test packages/core/test/core.test.js packages/core/test/m3.test.js",
-    "demo": "rm -rf .swarm && node bin/swarm.js run examples/market-resolution.json && node bin/swarm.js run examples/fact-check.json && node bin/swarm.js run examples/forecast.json && node bin/swarm.js run examples/delay-cover.json && node bin/swarm.js run examples/fact-check-escalation.json && node bin/swarm.js chain",
-    "live": "node bin/swarm.js run examples/market-resolution.json --live"
+    "test": "node --test packages/core/test/core.test.js packages/core/test/m3.test.js packages/core/test/rename.test.js",
+    "demo": "rm -rf .verafy .swarm && node bin/verafy.js run examples/market-resolution.json && node bin/verafy.js run examples/fact-check.json && node bin/verafy.js run examples/forecast.json && node bin/verafy.js run examples/delay-cover.json && node bin/verafy.js run examples/fact-check-escalation.json && node bin/verafy.js chain",
+    "live": "node bin/verafy.js run examples/market-resolution.json --live"
   }
 }

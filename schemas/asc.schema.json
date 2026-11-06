@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Verafyai/verafyHarness/schemas/asc.schema.json",
-  "title": "Actually Smart Contract (swarm.asc/0)",
+  "title": "Actually Smart Contract (verafy.asc/1)",
   "type": "object",
   "required": [
     "kind",
@@ -14,7 +14,8 @@
   ],
   "properties": {
     "kind": {
-      "const": "swarm.asc/0"
+      "enum": ["verafy.asc/1", "swarm.asc/0"],
+      "description": "verafy.asc/1 for new contracts. swarm.asc/0, the kind before the rename, still validates, and a contract that carries it keeps its hash."
     },
     "id": {
       "type": "string"

@@ -1,15 +1,20 @@
 /**
- * Quorum-signed triggers, `swarm.trigger/0`. A `call` trigger in a sealed
+ * Quorum-signed triggers, `verafy.trigger/1`. A `call` trigger in a sealed
  * ruling (such as `market.settle(NO)` on Solana) may leave the chain only with
  * signatures from at least the contract's quorum of the jurors whose votes were
  * counted. A relay or a program on the target chain checks the same message.
+ * Messages from before the rename carry `swarm.trigger/0`; they still verify.
  * @module @verafyharness/core/trigger
  */
 import { canonical } from './hash.js'
 import { signMessage, verifyMessage } from './signer.js'
 import { rulingId } from './network.js'
 
-export const TRIGGER_KIND = 'swarm.trigger/0'
+export const TRIGGER_KIND = 'verafy.trigger/1'
+/** The pre-rename trigger kind. Verifiers accept it; new triggers are never signed with it. */
+export const LEGACY_TRIGGER_KIND = 'swarm.trigger/0'
+/** Every trigger kind a verifier accepts. */
+export const TRIGGER_KINDS = [TRIGGER_KIND, LEGACY_TRIGGER_KIND]
 
 /**
  * The message jurors sign to release one trigger.
@@ -32,7 +37,7 @@ export function triggerMessage(ruling, trigger, { block = null } = {}) {
  * @returns {{harness: string, signature: string}} the signature.
  */
 export function signTrigger(juror, message) {
-  if (message?.kind !== TRIGGER_KIND) throw new Error(`not a ${TRIGGER_KIND} message`)
+  if (!TRIGGER_KINDS.includes(message?.kind)) throw new Error(`not a ${TRIGGER_KIND} message`)
   const signature = typeof juror.sign === 'function' ? juror.sign(message) : signMessage(juror.privateKey ?? juror.identity.privateKey, message)
   return { harness: juror.id, signature }
 }
@@ -50,7 +55,7 @@ export function signTrigger(juror, message) {
  */
 export function verifyTrigger(message, signatures, ruling, { asc, quorum, cards } = {}) {
   const p = []
-  if (message?.kind !== TRIGGER_KIND) p.push(`not a ${TRIGGER_KIND} message`)
+  if (!TRIGGER_KINDS.includes(message?.kind)) p.push(`not a ${TRIGGER_KINDS.join(' or ')} message`)
   if (message?.ruling !== rulingId(ruling)) p.push('message names another ruling')
   if (message?.ascHash !== ruling.ascHash) p.push('message names another contract')
   if (!ruling.passed) p.push('a ruling below the bar emits no call triggers')

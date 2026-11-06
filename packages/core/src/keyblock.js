@@ -14,6 +14,7 @@
  * @module @verafyharness/core/keyblock
  */
 import { createCipheriv, createDecipheriv, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
+import { keyblockPassphraseFromEnv } from './env.js'
 
 const b64 = buf => buf.toString('base64url')
 const unb64 = s => Buffer.from(s, 'base64url')
@@ -34,6 +35,19 @@ export class Keyblock {
     this.revoked = new Set()
     this.locked = false
     this.audit = []
+  }
+
+  /**
+   * Open a keyblock with the passphrase from VERAFY_KEYBLOCK_PASSPHRASE, or
+   * from SWARM_KEYBLOCK_PASSPHRASE when only the old name is set.
+   * @param {{salt?: string, sealed?: Record<string, string>}} [stored] - the output of an earlier `export()`.
+   * @param {Record<string, string | undefined>} [env] - defaults to process.env.
+   * @returns {Keyblock} the opened keyblock.
+   */
+  static fromEnv(stored = {}, env = process.env) {
+    const passphrase = keyblockPassphraseFromEnv(env)
+    if (!passphrase) throw new Error('set VERAFY_KEYBLOCK_PASSPHRASE to open the keyblock')
+    return new Keyblock({ ...stored, passphrase })
   }
 
   /**

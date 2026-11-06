@@ -39,6 +39,6 @@ fi
 cat <<'DONE'
 
 Setup finished.
-  API harness:   export SWARM_API_KEY=...   then   node bin/swarm.js doctor --live
-  GPU harness:   bash scripts/run-vllm.sh   then   node bin/swarm.js doctor --live --config swarm.config.local.json
+  API harness:   export VERAFY_API_KEY=...   then   node bin/verafy.js doctor --live
+  GPU harness:   bash scripts/run-vllm.sh   then   node bin/verafy.js doctor --live --config verafy.config.local.json
 DONE
