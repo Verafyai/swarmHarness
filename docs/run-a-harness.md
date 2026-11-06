@@ -317,6 +317,28 @@ A contract names its asset and chain in `payment.currency` and `payment.chain`. 
 
 Two open questions follow from having no coin: how to weight nodes for ledger consensus, and how to compare bonds posted in different assets. Testnet answers both by keeping the node set permissioned and pricing bonds per contract in the contract's own asset.
 
+### Reading the source chain: the light client
+
+A harness should not take one RPC provider's word that escrow arrived or that its trigger landed. The light client (`packages/lightclient`, **available now**, off by default) asks several endpoints and accepts only an answer they agree on. Add a `lightclient` block to your config; [config/lightclient.devnet.json](../config/lightclient.devnet.json) is a working example with three public Solana devnet endpoints from three operators.
+
+| Field | Meaning |
+|---|---|
+| `apis` | API router entries, one per endpoint. A keyless public endpoint has only `baseURL`. A paid one names its key as `secret` (keyblock) or `secretEnv` (an environment variable), with `auth` set to `bearer`, a header name, or `query:<param>`. A key written into `baseURL` is refused |
+| `solana.endpoints` | `{id, operator, api}`; at least `n` of them (default 3) from at least `minOperators` (default 2) operators |
+| `solana.commitment` | `finalized` (default), `confirmed` or `processed` |
+| `solana.policy` | What a 2 to 1 split does: `reject-and-retry` (default) or `accept-majority` |
+| `solana.maxSlotLag` | An answer more than this many slots behind the newest is stale and rejected (default 150) |
+| `evm` | A list of readers, each with `chainId`, `endpoints` and `blockTag` (`finalized` by default); for chain id 1, an optional `helios` block |
+
+With it on, `verafy run` checks the escrow a contract names in `payment.source` before the jury is drawn. Agreement and enough funds: the run goes ahead. Agreement and too little: refused. Disagreement: the contract is paused and the reason, with every source, is appended to `.verafy/pauses.jsonl`. Every read records its sources and commitment level. Two read-only commands check a setup:
+
+```bash
+node bin/verafy.js read solana slot --config config/lightclient.devnet.json
+node bin/verafy.js confirm solana <signature> --config config/lightclient.devnet.json
+```
+
+On Ethereum mainnet the same quorum is used. Sync-committee verification through Helios is an optional adapter (**planned**: built, not yet run against a live Helios); without Helios installed it reports "not installed" and results say `verification: multi-rpc`. Solana has no light-client protocol in production yet; see [ROADMAP.md](../ROADMAP.md).
+
 ## 14. What it costs
 
 All **modeled** or **illustrative** unless marked **measured**; check current prices.

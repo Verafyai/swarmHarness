@@ -7,6 +7,7 @@ import { ascHash, validate } from './asc.js'
 import { loadContext, deliberate } from './juror.js'
 import { createIdentity, importIdentity, loadIdentity, commit, signMessage } from './signer.js'
 import { acceptsPayment } from './payments.js'
+import { fundingCheck } from './sourcechain.js'
 
 export class Harness {
   /**
@@ -15,8 +16,13 @@ export class Harness {
    *   `identity` keeps a key the caller already holds (an identity, KeyObject or
    *   PKCS#8 PEM); `identityFile` loads the key from a PEM file, creating it on
    *   first use. With neither, the harness makes a fresh key, as before.
+   *   `sourceChain` (optional, off by default) is a light-client checker such as
+   *   `@verafyharness/lightclient`'s `sourceChain()`; `admit` uses it to check
+   *   funding on the source chain, and `pauses` records contracts it pauses.
    */
-  constructor({ id, lab, model, bond, provider, payments, identity, identityFile }) {
+  constructor({ id, lab, model, bond, provider, payments, identity, identityFile, sourceChain = null, pauses = null }) {
+    this.sourceChain = sourceChain
+    this.pauses = pauses
     this.id = id
     this.payments = payments
     this.lab = lab
@@ -44,6 +50,22 @@ export class Harness {
     if (asc.payment?.maxValuePerVote && asc.payment.maxValuePerVote > this.bond) problems.push(`bond ${this.bond} is below the contract's ${asc.payment.maxValuePerVote} per vote`)
     if (asc.payment && !acceptsPayment(this.payments, asc.payment)) problems.push(`does not accept ${asc.payment.currency} on ${asc.payment.chain ?? 'any chain'}`)
     return problems
+  }
+
+  /**
+   * Intake, then the funding check on the source chain, before a contract is
+   * queued. Without a light client this is `intake` alone. A funding read
+   * whose sources disagree pauses the contract (recorded in `pauses`) and
+   * refuses it; it never proceeds on one source.
+   * @param {object} asc - the contract.
+   * @param {{require?: boolean}} [options] - refuse a contract with no `payment.source` when a light client is set.
+   * @returns {Promise<{admitted: boolean, problems: string[], funding: object}>} the decision and the funding read.
+   */
+  async admit(asc, { require = false } = {}) {
+    const problems = this.intake(asc)
+    if (problems.length) return { admitted: false, problems, funding: { checked: false, reason: 'refused at intake' } }
+    const funding = await fundingCheck(asc, { sourceChain: this.sourceChain, pauses: this.pauses, require })
+    return { admitted: funding.ok, problems: funding.problems, funding }
   }
 
   /**

@@ -8,7 +8,7 @@
   "bin": { "verafy": "bin/verafy.js", "swarm": "bin/swarm.js" },
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node --test packages/core/test/core.test.js packages/core/test/m3.test.js packages/core/test/rename.test.js packages/economics/test/economics.test.js packages/pack/test/pack.test.js",
+    "test": "node --test packages/core/test/core.test.js packages/core/test/m3.test.js packages/core/test/rename.test.js packages/economics/test/economics.test.js packages/pack/test/pack.test.js packages/lightclient/test/lightclient.test.js",
     "demo": "rm -rf .verafy .swarm && node bin/verafy.js run examples/market-resolution.json && node bin/verafy.js run examples/fact-check.json && node bin/verafy.js run examples/forecast.json && node bin/verafy.js run examples/delay-cover.json && node bin/verafy.js run examples/fact-check-escalation.json && node bin/verafy.js chain",
     "live": "node bin/verafy.js run examples/market-resolution.json --live"
   }

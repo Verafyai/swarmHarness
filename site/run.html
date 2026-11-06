@@ -122,6 +122,7 @@ tr:last-child td{border-bottom:0}
 <li><a href="#12-join-the-network">12. Join the network</a></li>
 <li><a href="#13-payments-no-coin-bring-your-own">13. Payments: no coin, bring your own</a><ul>
 <li><a href="#the-payment-router">The payment router</a></li>
+<li><a href="#reading-the-source-chain-the-light-client">Reading the source chain: the light client</a></li>
 </ul>
 </li>
 <li><a href="#14-what-it-costs">14. What it costs</a></li>
@@ -696,6 +697,47 @@ verafy node start --peers &lt;seed nodes&gt;
 </table></div>
 <p>A contract names its asset and chain in <code>payment.currency</code> and <code>payment.chain</code>. Bonds are posted the same way, in the asset of the chain the harness earns on. Bitcoin needs an escrow it can enforce, such as wrapped BTC on a chain with contracts; native Bitcoin support is not planned.</p>
 <p>Two open questions follow from having no coin: how to weight nodes for ledger consensus, and how to compare bonds posted in different assets. Testnet answers both by keeping the node set permissioned and pricing bonds per contract in the contract's own asset.</p>
+<h3 id="reading-the-source-chain-the-light-client">Reading the source chain: the light client</h3>
+<p>A harness should not take one RPC provider's word that escrow arrived or that its trigger landed. The light client (<code>packages/lightclient</code>, <strong>available now</strong>, off by default) asks several endpoints and accepts only an answer they agree on. Add a <code>lightclient</code> block to your config; <a href="https://github.com/Verafyai/verafyHarness/blob/main/config/lightclient.devnet.json">config/lightclient.devnet.json</a> is a working example with three public Solana devnet endpoints from three operators.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apis</code></td>
+<td>API router entries, one per endpoint. A keyless public endpoint has only <code>baseURL</code>. A paid one names its key as <code>secret</code> (keyblock) or <code>secretEnv</code> (an environment variable), with <code>auth</code> set to <code>bearer</code>, a header name, or <code>query:&lt;param&gt;</code>. A key written into <code>baseURL</code> is refused</td>
+</tr>
+<tr>
+<td><code>solana.endpoints</code></td>
+<td><code>{id, operator, api}</code>; at least <code>n</code> of them (default 3) from at least <code>minOperators</code> (default 2) operators</td>
+</tr>
+<tr>
+<td><code>solana.commitment</code></td>
+<td><code>finalized</code> (default), <code>confirmed</code> or <code>processed</code></td>
+</tr>
+<tr>
+<td><code>solana.policy</code></td>
+<td>What a 2 to 1 split does: <code>reject-and-retry</code> (default) or <code>accept-majority</code></td>
+</tr>
+<tr>
+<td><code>solana.maxSlotLag</code></td>
+<td>An answer more than this many slots behind the newest is stale and rejected (default 150)</td>
+</tr>
+<tr>
+<td><code>evm</code></td>
+<td>A list of readers, each with <code>chainId</code>, <code>endpoints</code> and <code>blockTag</code> (<code>finalized</code> by default); for chain id 1, an optional <code>helios</code> block</td>
+</tr>
+</tbody>
+</table></div>
+<p>With it on, <code>verafy run</code> checks the escrow a contract names in <code>payment.source</code> before the jury is drawn. Agreement and enough funds: the run goes ahead. Agreement and too little: refused. Disagreement: the contract is paused and the reason, with every source, is appended to <code>.verafy/pauses.jsonl</code>. Every read records its sources and commitment level. Two read-only commands check a setup:</p>
+<pre><code class="language-bash">node bin/verafy.js read solana slot --config config/lightclient.devnet.json
+node bin/verafy.js confirm solana &lt;signature&gt; --config config/lightclient.devnet.json
+</code></pre>
+<p>On Ethereum mainnet the same quorum is used. Sync-committee verification through Helios is an optional adapter (<strong>planned</strong>: built, not yet run against a live Helios); without Helios installed it reports "not installed" and results say <code>verification: multi-rpc</code>. Solana has no light-client protocol in production yet; see <a href="https://github.com/Verafyai/verafyHarness/blob/main/ROADMAP.md">ROADMAP.md</a>.</p>
 <h2 id="14-what-it-costs">14. What it costs</h2>
 <p>All <strong>modeled</strong> or <strong>illustrative</strong> unless marked <strong>measured</strong>; check current prices.</p>
 <p><strong>Measured, Nov 6, 2026:</strong> five live rulings, one per example contract, each with a jury of five hosted models through OpenRouter, cost <strong>$0.0163 together</strong>, about <strong>$0.003 per ruling</strong> or about $0.0007 per vote. Wall time per ruling was <strong>5.9 to 30.1 seconds</strong> from a laptop. See <a href="https://github.com/Verafyai/verafyHarness/blob/main/results/live-2026-11-06.md">results/live-2026-11-06.md</a>. In a separate run, five DeepSeek Harness juror processes on five labs' models sealed a block from their reveals (<a href="https://github.com/Verafyai/verafyHarness/blob/main/docs/dsh-juror.md">docs/dsh-juror.md</a>).</p>

@@ -1,0 +1,14 @@
+{
+  "name": "@verafyharness/lightclient",
+  "version": "0.1.0",
+  "description": "Read a source chain without trusting one RPC: a multi-RPC reader for Solana and EVM chains, and an optional Helios adapter for Ethereum mainnet. Zero dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./index.js",
+    "./solana": "./solana/index.js",
+    "./evm": "./evm/index.js"
+  },
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test test/" }
+}
