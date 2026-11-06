@@ -26,7 +26,7 @@ Three choices shape the project:
 - **No token.** There is no Swarm coin and no need for one. Contracts are paid in whatever asset the requester holds, on whatever chain they hold it, and the harnesses are paid in the same asset. Coin agnostic is the point: it should be useful regardless of the crypto.
 - **No venture capital.** This is being built without outside money so the idea has to stand on its own.
 - **Copy it.** Everything is MIT licensed. If it works, other people will copy it, and they are welcome to. The goal is a prototype that is useful.
-- **Just a project.** There is no foundation. There is no UAE entity. There is no BVI company hidden somewhere. It's literally just a project. [Come test it](docs/testnet.md). We are having fun again.
+- **Just a project.** There is no UAE entity. There is no BVI company hidden somewhere. It's literally just a project. [Come test it](docs/testnet.md). We are having fun again.
 
 ## What it is
 
