@@ -5,21 +5,25 @@
  */
 import { ascHash, validate } from './asc.js'
 import { loadContext, deliberate } from './juror.js'
-import { createIdentity, commit, signMessage } from './signer.js'
+import { createIdentity, importIdentity, loadIdentity, commit, signMessage } from './signer.js'
 import { acceptsPayment } from './payments.js'
 
 export class Harness {
   /**
-   * @param {{id: string, lab: string, model: string, bond: number, provider: object, payments?: object}} options - the harness setup; `payments` is the harness's payment router config.
+   * @param {{id: string, lab: string, model: string, bond: number, provider: object, payments?: object, identity?: object | string, identityFile?: string}} options -
+   *   the harness setup. `payments` is the harness's payment router config.
+   *   `identity` keeps a key the caller already holds (an identity, KeyObject or
+   *   PKCS#8 PEM); `identityFile` loads the key from a PEM file, creating it on
+   *   first use. With neither, the harness makes a fresh key, as before.
    */
-  constructor({ id, lab, model, bond, provider, payments }) {
+  constructor({ id, lab, model, bond, provider, payments, identity, identityFile }) {
     this.id = id
     this.payments = payments
     this.lab = lab
     this.model = model
     this.bond = bond
     this.provider = provider
-    this.identity = createIdentity()
+    this.identity = identity ? importIdentity(identity) : identityFile ? loadIdentity(identityFile) : createIdentity()
     this.record = { votes: 0, audited: 0, faults: 0 }
     this.pending = new Map()
   }
@@ -53,7 +57,7 @@ export class Harness {
     const loaded = loadContext(asc)
     if (!loaded.ok) throw new Error(`${this.id} context check failed: ${loaded.problems.join('; ')}`)
     const h = ascHash(asc)
-    const vote = await deliberate(asc, this.provider, this.model)
+    const vote = await deliberate(asc, this.provider, this.model, { lab: this.lab })
     const { commitment, salt } = commit(h, vote)
     this.pending.set(h, { vote, salt })
     const attestation = { harness: this.id, lab: this.lab, model: this.model, ascHash: h, commitment }

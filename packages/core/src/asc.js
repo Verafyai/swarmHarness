@@ -12,7 +12,13 @@ import { sha256 } from './hash.js'
 
 export const ASC_KIND = 'swarm.asc/0'
 export const ANSWER_TYPES = ['verdict', 'forecast', 'graded']
-export const CONTEXT_KINDS = ['link', 'text', 'policy', 'document', 'repo']
+export const CONTEXT_KINDS = ['link', 'text', 'policy', 'document', 'repo', 'ruling']
+/** A challenge contract (`asc.review`): a new contract that reviews a sealed ruling. */
+export const CHALLENGE_KIND = 'swarm.challenge/0'
+/** An escalated contract (`asc.escalation`): funded by the escrow a below-bar ruling carried. */
+export const ESCALATION_KIND = 'swarm.escalation/0'
+/** Grounds a challenge may state, from the draft rulings SIMD (0 to 3). */
+export const GROUNDS = ['new-evidence', 'false-evidence', 'error', 'changed-rules']
 export const EFFECT_TYPES = ['pay', 'refund', 'hold', 'record', 'call', 'escalate']
 /** The reserved exit taken when agreement is below the bar. */
 export const BELOW_BAR = '*below-bar'
@@ -82,5 +88,24 @@ export function validate(asc) {
     for (const o of q?.answer?.options ?? []) if (!outcomes.has(o)) p.push(`no exit for option "${o}"`)
   }
   if (!(asc?.exits ?? []).some(e => e.outcome === BELOW_BAR)) p.push(`an exit for "${BELOW_BAR}" is required`)
+  for (const k of ['excludeLabs', 'excludeHarnesses']) {
+    if (j?.[k] !== undefined && !(Array.isArray(j[k]) && j[k].every(x => typeof x === 'string'))) p.push(`payment.jury.${k} must be a list of names`)
+  }
+  const hex = /^[0-9a-f]{64}$/
+  if (asc?.review !== undefined) {
+    const r = asc.review
+    if (r?.kind !== CHALLENGE_KIND) p.push(`review.kind must be "${CHALLENGE_KIND}"`)
+    if (!hex.test(r?.ruling ?? '')) p.push('review.ruling must be the challenged ruling id')
+    if (!hex.test(r?.ascHash ?? '')) p.push('review.ascHash must be the challenged contract hash')
+    if (!GROUNDS.includes(r?.grounds)) p.push(`review.grounds must be one of ${GROUNDS.join(', ')}`)
+  }
+  if (asc?.escalation !== undefined) {
+    const e = asc.escalation
+    if (e?.kind !== ESCALATION_KIND) p.push(`escalation.kind must be "${ESCALATION_KIND}"`)
+    if (!hex.test(e?.from ?? '')) p.push('escalation.from must be the below-bar ruling id')
+    if (typeof e?.account !== 'string' || !e.account.startsWith('escrow:')) p.push('escalation.account must be the escrow account the parent carried into')
+    if (!(Math.abs((e?.carried ?? NaN) - (pay?.escrow ?? NaN)) < 1e-9)) p.push('an escalated contract is funded by exactly the escrow carried to it')
+  }
+  if (asc?.review !== undefined && asc?.escalation !== undefined) p.push('a contract is a challenge or an escalation, not both')
   return p
 }

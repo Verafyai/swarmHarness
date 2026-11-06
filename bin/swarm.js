@@ -17,7 +17,7 @@ import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  Harness, drawJury, rule, ruleFromReveals, seal, validate, pin, ascHash, short,
+  Harness, drawJuryFor, rule, ruleFromReveals, seal, validate, pin, ascHash, short,
   mockProvider, openaiProvider, createRouter,
 } from '../packages/core/src/index.js'
 
@@ -48,7 +48,10 @@ async function loadChain() {
 function providerFor(config, h) {
   const baseURL = h.baseURL ?? config.provider.baseURL
   const apiKey = process.env[h.apiKeyEnv ?? config.provider.apiKeyEnv]
-  return openaiProvider({ baseURL, apiKey })
+  // Each harness retries 429, 5xx and network errors on its own, with backoff;
+  // set provider.retry (or a pool entry's retry) to tune it, or false to disable.
+  const retry = h.retry ?? config.provider.retry ?? {}
+  return openaiProvider({ baseURL, apiKey, retry })
 }
 
 async function loadConfig() {
@@ -106,7 +109,7 @@ async function main() {
   const pool = config.pool.map(h => new Harness({ ...h, provider: flag('--live') ? providerFor(config, h) : mockProvider(script, asc.id, h.lab) }))
   const chain = await loadChain()
   const parent = chain.at(-1) ?? null
-  const jury = drawJury(pool, asc.payment.jury, parent?.hash ?? 'genesis')
+  const jury = drawJuryFor(asc, pool, parent?.hash ?? 'genesis')
   const sealer = pool.find(h => !jury.includes(h)) ?? jury[0]
   const log = flag('--json') ? () => {} : event => print(event, asc)
 
@@ -114,7 +117,7 @@ async function main() {
     console.log(c.b(`\n${asc.title}`))
     console.log(c.d(`mode ${flag('--live') ? 'live models' : 'mock answers'} · escrow ${asc.payment.escrow} ${asc.payment.currency} · bar ${pct(asc.payment.bar)} · jury ${asc.payment.jury.size} across ${asc.payment.jury.minLabs}+ labs`))
   }
-  const ruling = await rule(asc, jury, sealer, log)
+  const ruling = await rule(asc, jury, sealer, log, { seed: parent?.hash ?? 'genesis' })
   const block = seal(parent, [ruling], sealer)
   const router = createRouter(config.payments)
   const payouts = ruling.passed ? await router.settle(ruling, asc, config.payments?.book) : []

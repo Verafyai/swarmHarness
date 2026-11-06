@@ -37,7 +37,7 @@ export function buildPrompt(asc) {
     `Answer with ${form}.`,
     'Reply with JSON only: {"answer": ..., "confidence": 0..1, "reasoning": "two or three sentences", "sources": ["context ids you relied on"]}.',
   ].join('\n')
-  const ctx = asc.context.map((c, i) => `<context id="c${i}" kind="${c.kind}" sha256="${c.sha256}"${c.url ? ` url="${c.url}"` : ''}>\n${c.content}\n</context>`).join('\n\n')
+  const ctx = asc.context.map((c, i) => `<context id="c${i}" kind="${c.kind}" sha256="${c.sha256}"${c.url ? ` url="${c.url}"` : ''}${c.label ? ` label="${String(c.label).replace(/"/g, "'")}"` : ''}>\n${c.content}\n</context>`).join('\n\n')
   const user = `<instructions>\n${asc.instructions}\n</instructions>\n\n${ctx}\n\n<question>\n${asc.question.prompt}\n</question>`
   return { system, user }
 }
@@ -61,14 +61,28 @@ export function parseVote(asc, text) {
   return { answer: json.answer, confidence: Number(json.confidence) || 0, reasoning: String(json.reasoning ?? ''), sources: json.sources ?? [] }
 }
 
+/** A proof hash is a SHA-256 hex digest of a proof held off chain. */
+export const PROOF_HASH = /^[0-9a-f]{64}$/
+
 /**
- * Ask one harnessed model for its vote.
+ * Ask one harnessed model for its vote. A provider may resolve to the reply
+ * text, or to `{content, proofHash}` when its route commits to an off-chain
+ * proof of the inference. Only the hash is kept on the vote; the proof itself
+ * never travels with it, and a stored hash is not a proof by itself.
  * @param {object} asc - the contract.
- * @param {{complete: (req: {model: string, system: string, user: string}) => Promise<string>}} provider - the model provider.
+ * @param {{complete: (req: {model: string, system: string, user: string, ascId: string, lab?: string}) => Promise<string | {content: string, proofHash?: string}>}} provider - the model provider.
  * @param {string} model - the committed model id.
- * @returns {Promise<object>} the parsed vote.
+ * @param {{lab?: string}} [options] - the juror's lab, passed to the provider so a scripted provider can answer any contract.
+ * @returns {Promise<object>} the parsed vote, with `proofHash` when the route gave one.
  */
-export async function deliberate(asc, provider, model) {
+export async function deliberate(asc, provider, model, { lab } = {}) {
   const { system, user } = buildPrompt(asc)
-  return parseVote(asc, await provider.complete({ model, system, user }))
+  const out = await provider.complete({ model, system, user, ascId: asc.id, lab })
+  const text = typeof out === 'string' ? out : String(out?.content ?? '')
+  const vote = parseVote(asc, text)
+  if (out && typeof out === 'object' && out.proofHash !== undefined) {
+    if (!PROOF_HASH.test(out.proofHash)) throw new Error('proofHash must be a SHA-256 hex digest; proofs stay off chain')
+    vote.proofHash = out.proofHash
+  }
+  return vote
 }
