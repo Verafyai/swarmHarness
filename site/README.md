@@ -16,7 +16,7 @@ pip install markdown
 python3 site/build.py
 ```
 
-The build fails if a page still says an old name (Swarm Chain, Swarm Harness) or contains an em or en dash.
+The build fails if a page still uses the chain or validator name from before the rename, or contains an em or en dash.
 
 `logo.svg` is the favicon (it follows the system theme). `banner.png` is the share image. `assets/harness-diagram.png` is the diagram the Coin Agnostic guide embeds.
 

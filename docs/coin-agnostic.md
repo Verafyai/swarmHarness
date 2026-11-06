@@ -117,7 +117,7 @@ The operator stays in charge through limits in the harness config. The keyblock,
 
 ```json
 {
-  "keyblock": { "file": "~/.swarm/keyblock.json", "passphraseEnv": "SWARM_KEYBLOCK_PASSPHRASE" },
+  "keyblock": { "file": "~/.verafy/keyblock.json", "passphraseEnv": "VERAFY_KEYBLOCK_PASSPHRASE" },
   "banker": {
     "accept": [{ "chain": "*", "asset": "*" }],
     "venues": ["<approved Solana DEX aggregator>", "<approved EVM DEX aggregator>"],

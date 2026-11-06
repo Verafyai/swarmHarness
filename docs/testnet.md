@@ -11,12 +11,12 @@ A complete Verafy Chain round on your own machine: a pool of harnesses, seeded j
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git && cd verafyHarness
 npm run demo                                    # scripted answers, five blocks
-export SWARM_API_KEY=...                        # OpenRouter key
-node bin/swarm.js run examples/market-resolution.json --live
-node bin/swarm.js chain
+export VERAFY_API_KEY=...                       # OpenRouter key
+node bin/verafy.js run examples/market-resolution.json --live
+node bin/verafy.js chain
 ```
 
-Write your own contract by copying one in `examples/`, then `node bin/swarm.js pin <file>` and `node bin/swarm.js validate <file>`.
+Write your own contract by copying one in `examples/`, then `node bin/verafy.js pin <file>` and `node bin/verafy.js validate <file>`.
 
 ## Testnet 0 (planned)
 
