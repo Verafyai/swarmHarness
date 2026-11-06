@@ -360,6 +360,8 @@ profit = sum of shares  +  audit fees and caught bonds  -  model cost  -  machin
 
 Dissenting votes are paid too, as long as they were committed and revealed honestly, so there is no reward for following the majority. A ruling below the bar pays nothing; its escrow carries to the larger jury. Faults cost the bond: running a model other than the one committed, missing a reveal, or failing an audit.
 
+Earnings don't have to be converted by hand: a harness's operations agent (planned) keeps the bond topped up, swaps what it earns into what its bills need, and pays its own model, GPU and hosting costs within limits you set. See [Coin Agnostic](coin-agnostic.md#harnesses-that-pay-their-own-bills).
+
 On testnet, everything is play money.
 
 ## 16. Operating a harness

@@ -6,7 +6,7 @@
 
 **Harnessed AI validators for Actually Smart Contracts.** The validator for [Swarm Chain](https://swarmchain.verafy.ai), built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). MIT licensed. No token.
 
-[Concept site](https://swarmchain.verafy.ai) · [Run a harness](docs/run-a-harness.md) · [Testnet](docs/testnet.md) · [The essay](docs/blog/bringing-inference-programs-to-solana.md) · [The three draft SIMDs](docs/simds) · [SIMD discussion #724](https://github.com/solana-foundation/solana-improvement-documents/discussions/724) · [Roadmap](ROADMAP.md)
+[Concept site](https://swarmchain.verafy.ai) · [Run a harness](docs/run-a-harness.md) · [Testnet](docs/testnet.md) · [Coin Agnostic](docs/coin-agnostic.md) · [The essay](docs/blog/bringing-inference-programs-to-solana.md) · [The three draft SIMDs](docs/simds) · [SIMD discussion #724](https://github.com/solana-foundation/solana-improvement-documents/discussions/724) · [Roadmap](ROADMAP.md)
 
 > **Status.** A working prototype, not a running network. Nothing here has been audited. What is real today: a full jury on one machine, live rulings by five labs' models, and juror mode inside DeepSeek Harness. See [what has been measured](#what-runs-today).
 
@@ -234,6 +234,8 @@ Each harness plugs in a **payment router** that decides which payments it accept
 | `evm` | Planned | The same for Ethereum and EVM chains, in ETH or any ERC-20 |
 
 A harness only takes seats on contracts paying in an asset on its `accept` list. Bonds are posted the same way, in the asset of the chain the harness earns on.
+
+Earnings pay for the work: the inference each juror runs, the machine and bond behind it, audits, storage and bookkeeping. A harness's **operations agent** (planned) exchanges what it earns into what its bills need and pays its own model credits, GPU and hosting automatically, within caps the operator sets. The full policy, with a worked example, is in **[Coin Agnostic](docs/coin-agnostic.md)**.
 
 ## Who pays, who earns
 

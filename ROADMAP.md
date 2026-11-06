@@ -54,6 +54,14 @@ Done when: ten independently operated harnesses, on at least five labs' models, 
 
 Done when: a devnet market is created, funded, resolved by a jury, and settled by a quorum-signed call, with the ruling readable by any program.
 
+## Milestone 5a: Self-funding harnesses
+
+- [ ] Operations agent in the harness: keep the bond topped up, hold a reserve, swap earnings into what bills need on approved venues, and pay allowlisted suppliers (model credits, GPU or cloud host, storage) within caps
+- [ ] Off-ramp hook for suppliers that only take cards or bank transfers
+- [ ] Per-ruling accounting: what each ruling earned and what it cost to produce
+
+Done when: a testnet harness runs for a week paying its own model and hosting costs from its earnings, with every swap and payment logged and no manual transfers.
+
 ## Milestone 6: Proofs of inference
 
 - [ ] Optional proof per vote for open models that can be proven today
