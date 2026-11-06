@@ -15,15 +15,15 @@ Swarm Harness goes from a local prototype to an open network in stages. Each mil
 
 Done when: `npm test` passes and `npm run demo` seals five blocks. Met.
 
-## Milestone 2: Juror mode inside DeepSeek Harness
+## Milestone 2: Juror mode inside DeepSeek Harness (done, 2026-11-06)
 
-- [ ] Add `packages/dsh-swarm-juror` to a DSH workspace build at the pinned commit
-- [ ] Run a headless DSH agent with `config/cordis.swarm.yml` that loads a contract and casts a committed vote
-- [ ] Confirm the tool lock denies every non-swarm tool during a juror run
-- [ ] Record a keyless session snapshot of a juror run
-- [ ] One harness per lab, each a DSH process with a different `dsh-llm-pi-ai` route
+- [x] Build DSH at the pinned commit and load `packages/dsh-swarm-juror` into it. Not through DSH's pnpm workspace, which would mean editing `upstream/`: DSH is built in place, and `scripts/dsh-juror.mjs setup` links the plugin into the headless profile and links its peers to the built DSH packages
+- [x] Run a headless DSH agent with `config/cordis.swarm.yml` that loads a contract and casts a committed vote
+- [x] Confirm the tool lock denies every non-swarm tool during a juror run: the agent is offered 2 tools; a scripted probe called all 24 other tools the headless profile mounts, and all 24 were denied (measured, every juror in a five-juror run)
+- [x] Record a keyless session snapshot of a juror run: `results/dsh-juror-session-2026-11-06.jsonl`
+- [x] One harness per lab, each a DSH process with a different `dsh-llm-pi-ai` route
 
-Done when: five DSH processes on five model routes rule on `examples/market-resolution.json` and the CLI seals the block from their reveals.
+Done when: five DSH processes on five model routes rule on `examples/market-resolution.json` and the CLI seals the block from their reveals. Met on 2026-11-06 with live models through OpenRouter: anthropic/claude-haiku-4.5, openai/gpt-5-mini, google/gemini-2.5-flash, meta-llama/llama-4-maverick, qwen/qwen3-235b-a22b-2507. All five voted NO, agreement 100% against a bar of 80%, block sealed. Details and the runs that failed first are in [docs/dsh-juror.md](docs/dsh-juror.md); what DSH does not expose is in [docs/dsh-gaps.md](docs/dsh-gaps.md).
 
 ## Milestone 3: Live juries
 

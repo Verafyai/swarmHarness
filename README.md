@@ -66,7 +66,7 @@ export SWARM_API_KEY=...        # never commit it
 node bin/swarm.js run examples/market-resolution.json --live
 ```
 
-Other commands: `swarm validate <file>`, `swarm pin <file>` (writes SHA-256 pins for every context entry), `swarm chain`, and `--json` for machine output.
+Other commands: `swarm validate <file>`, `swarm pin <file>` (writes SHA-256 pins for every context entry), `swarm seal <file> <juror-dir...>` (seals a block from reveals that separate harness processes wrote, such as DSH jurors), `swarm chain`, and `--json` for machine output.
 
 ## Anatomy of an Actually Smart Contract
 
@@ -208,18 +208,23 @@ The network does not care which lab a harness uses. It requires that each jury s
 
 - a `swarm:juror` system prompt section with the juror rules,
 - `swarm_load_contract`, which validates a contract and checks every context pin,
-- `swarm_cast_vote`, which validates the vote against the contract and returns a commitment, then concludes the turn,
-- a `tools/pre-execute` lock that denies every non-swarm tool while juror mode is mounted.
+- `swarm_cast_vote`, which validates the vote, signs a commitment and an attestation, keeps the vote and salt in a private reveal file, returns only the commitment, and concludes the turn,
+- a tool lock: each juror agent is offered only the two swarm tools (`tools.restrict`), and a `tools/pre-execute` gate denies any other call,
+- a stop-boundary reminder: a juror that answers in prose instead of calling `swarm_cast_vote` is told, at most twice, that only the tool call counts.
 
 ```sh
 git submodule update --init --depth 1
 cd upstream/deepseek-harness
-pnpm install && pnpm run build                 # needs Node 24.9 or later
-pnpm dsh --profile headless --patch ../../config/cordis.swarm.yml \
-  "Rule on the contract at ../../examples/market-resolution.json"
+CI=true npx -y pnpm@11.28.5 install --frozen-lockfile   # needs Node 24.9 or later
+CI=true npx -y pnpm@11.28.5 run build
+cd ../..
+node scripts/dsh-juror.mjs setup                        # link the plugin into the headless profile
+node scripts/dsh-juror.mjs vote --lab anthropic         # one DSH juror, scripted model, no key
+node scripts/dsh-juror.mjs jury                         # five DSH jurors, then swarm seal
+SWARM_API_KEY=... node scripts/dsh-juror.mjs jury --route openrouter   # five labs' live models
 ```
 
-Status: the plugin is written against DSH v0.2's documented tool, system prompt and hook APIs, but has not yet been built inside the DSH workspace. That is milestone 2 on the [roadmap](ROADMAP.md).
+Status: milestone 2 is met. Five DeepSeek Harness processes on five labs' models (one `dsh-llm-pi-ai` route each, through OpenRouter) ruled on `examples/market-resolution.json` and `swarm seal` sealed the block from their reveals. See [docs/dsh-juror.md](docs/dsh-juror.md) for the run, and [docs/dsh-gaps.md](docs/dsh-gaps.md) for what DSH does not expose.
 
 ## Networks of harnesses
 
@@ -286,6 +291,8 @@ packages/swarm-core/              zero-dependency core
   test/                           node:test suite
 packages/dsh-swarm-juror/         juror mode as a DeepSeek Harness plugin
 config/cordis.swarm.yml           DSH profile overlay: model routes and juror mode
+scripts/dsh-juror.mjs             run DSH jurors and seal their reveals
+scripts/scripted-llm.mjs          keyless OpenAI-compatible test double for DSH jurors
 examples/                         five Actually Smart Contracts and scripted answers
 schemas/asc.schema.json           JSON Schema for swarm.asc/0
 swarm.config.json                 the local pool of harnesses

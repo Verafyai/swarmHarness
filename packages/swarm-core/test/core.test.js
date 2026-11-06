@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import {
   canonical, sha256, validate, ascHash, loadContext, buildPrompt, parseVote,
   commit, checkReveal, verdictAgreement, forecastAgreement, gradedAgreement,
-  chooseExit, buildDiff, conserves, drawJury, Harness, mockProvider, rule, seal,
+  chooseExit, buildDiff, conserves, drawJury, Harness, mockProvider, rule, ruleFromReveals, seal,
 } from '../src/index.js'
 
 const ex = name => JSON.parse(readFileSync(new URL(`../../../examples/${name}.json`, import.meta.url), 'utf8'))
@@ -117,4 +117,37 @@ test('a harness whose bond is too small refuses the contract', async () => {
   const asc = ex('delay-cover')
   const h = new Harness({ id: 'small', lab: 'qwen', model: 'm', bond: 10, provider: mockProvider(mock, asc.id, 'qwen') })
   await assert.rejects(h.commit(asc), /bond 10 is below/)
+})
+
+async function processEntries(asc, labs) {
+  const out = []
+  for (const lab of labs) {
+    const h = new Harness({ ...config.pool.find(p => p.lab === lab), provider: mockProvider(mock, asc.id, lab) })
+    const c = await h.commit(asc)
+    out.push({ card: h.card, commit: c, reveal: h.reveal(ascHash(asc)) })
+  }
+  return out
+}
+
+test('reveals from separate harness processes rule like an in-process jury', async () => {
+  const asc = ex('market-resolution')
+  const entries = await processEntries(asc, ['anthropic', 'openai', 'google', 'meta', 'qwen'])
+  const r = ruleFromReveals(asc, entries, 'h-sealer', 'genesis')
+  assert.equal(r.answer, 'NO')
+  assert.equal(r.passed, true)
+  assert.equal(r.votes.length, 5)
+  assert.ok(conserves(r.diff))
+})
+
+test('a reveal that does not match its commitment, or a forged attestation, is not counted', async () => {
+  const asc = ex('market-resolution')
+  const entries = await processEntries(asc, ['anthropic', 'openai', 'google', 'meta', 'qwen'])
+  entries[0].reveal = { ...entries[0].reveal, vote: { ...entries[0].reveal.vote, answer: 'YES' } }
+  entries[1].commit = { ...entries[1].commit, attestation: { ...entries[1].commit.attestation, model: 'another-model' } }
+  const events = []
+  const r = ruleFromReveals(asc, entries, 'h-sealer', 'genesis', e => events.push(e))
+  assert.equal(r.votes.length, 3)
+  assert.ok(events.some(e => e.phase === 'reveal-failed' && e.harness === entries[0].card.id))
+  assert.ok(events.some(e => e.phase === 'commit-failed' && e.harness === entries[1].card.id))
+  assert.equal(r.passed, false, 'three of five is below the quorum of four')
 })

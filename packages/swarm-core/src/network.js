@@ -58,6 +58,21 @@ export async function rule(asc, jury, sealer, onEvent = () => {}) {
     if (ok) reveals.push({ ...r, lab: j.lab, model: j.model })
     else onEvent({ phase: 'reveal-failed', harness: j.id })
   }
+  return tally(asc, reveals, sealer.id, onEvent)
+}
+
+/**
+ * Measure agreement over verified reveals, run the contract, and build the ruling.
+ * Shared by an in-process jury (`rule`) and by reveals collected from separate
+ * harness processes (`ruleFromReveals`).
+ * @param {object} asc - the contract.
+ * @param {object[]} reveals - verified reveals, each with `harness`, `lab`, `model`, `vote`, `signature`.
+ * @param {string} sealerId - the harness that assembles the block.
+ * @param {(event: object) => void} [onEvent] - progress callback for UIs.
+ * @returns {object} the ruling.
+ */
+export function tally(asc, reveals, sealerId, onEvent = () => {}) {
+  const h = ascHash(asc)
   onEvent({ phase: 'reveal', votes: reveals.map(r => ({ harness: r.harness, lab: r.lab, answer: r.vote.answer, confidence: r.vote.confidence })) })
   const quorum = asc.payment.jury.quorum ?? Math.ceil(asc.payment.jury.size / 2)
   const labsRevealed = new Set(reveals.map(r => r.lab)).size
@@ -65,7 +80,7 @@ export async function rule(asc, jury, sealer, onEvent = () => {}) {
     ? measure(asc.question, reveals.map(r => r.vote))
     : { answer: null, agreement: 0 }
   const { exit, passed } = chooseExit(asc, result)
-  const diff = buildDiff(asc, exit, passed, reveals.map(r => r.harness), sealer.id)
+  const diff = buildDiff(asc, exit, passed, reveals.map(r => r.harness), sealerId)
   if (!conserves(diff)) throw new Error('diff does not conserve totals; block rejected')
   const ruling = {
     ascHash: h,
@@ -85,6 +100,50 @@ export async function rule(asc, jury, sealer, onEvent = () => {}) {
   }
   onEvent({ phase: 'rule', ruling })
   return ruling
+}
+
+/**
+ * Rule on one contract from commitments and reveals that separate harness
+ * processes produced, such as DeepSeek Harness jurors. Each entry carries the
+ * harness card it signed with. The jury is drawn from the submitted cards with
+ * the parent block hash as seed, so only drawn harnesses are counted; every
+ * attestation, commitment and reveal is checked before a vote counts.
+ * @param {object} asc - the contract.
+ * @param {{card: object, commit: {harness: string, commitment: string, attestation: object, signature: string}, reveal: {harness: string, ascHash: string, vote: object, salt: string, signature: string} | null}[]} entries - one per harness.
+ * @param {string} sealerId - the harness that assembles the block.
+ * @param {string} seed - the parent block hash, or 'genesis'.
+ * @param {(event: object) => void} [onEvent] - progress callback for UIs.
+ * @returns {object} the ruling.
+ */
+export function ruleFromReveals(asc, entries, sealerId, seed, onEvent = () => {}) {
+  const h = ascHash(asc)
+  const jury = drawJury(entries.map(e => e.card), asc.payment.jury, seed)
+  const seated = new Set(jury.map(j => j.id))
+  onEvent({ phase: 'propose', ascHash: h, jury })
+  for (const e of entries) if (!seated.has(e.card.id)) onEvent({ phase: 'commit-failed', harness: e.card.id, error: 'not drawn for this jury' })
+  const commits = []
+  for (const e of entries.filter(x => seated.has(x.card.id))) {
+    const { card, commit: c } = e
+    const a = c.attestation
+    const problem = c.harness !== card.id ? 'commitment names another harness'
+      : a.harness !== card.id || a.lab !== card.lab || a.model !== card.model ? 'attestation does not match the harness card'
+      : a.ascHash !== h ? 'commitment is for another contract'
+      : a.commitment !== c.commitment ? 'attestation does not carry the commitment'
+      : !verifyMessage(card.publicKey, a, c.signature) ? 'bad signature'
+      : null
+    if (problem) onEvent({ phase: 'commit-failed', harness: card.id, error: problem })
+    else commits.push(e)
+  }
+  onEvent({ phase: 'commit', commitments: commits.map(e => ({ harness: e.card.id, commitment: e.commit.commitment })) })
+  const reveals = []
+  for (const { card, commit: c, reveal: r } of commits) {
+    const ok = r && r.harness === card.id && r.ascHash === h
+      && checkReveal(h, r.vote, r.salt, c.commitment)
+      && verifyMessage(card.publicKey, { harness: r.harness, ascHash: h, vote: r.vote, salt: r.salt }, r.signature)
+    if (ok) reveals.push({ ...r, lab: card.lab, model: card.model })
+    else onEvent({ phase: 'reveal-failed', harness: card.id })
+  }
+  return tally(asc, reveals, sealerId, onEvent)
 }
 
 /**
