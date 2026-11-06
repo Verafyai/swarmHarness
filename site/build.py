@@ -105,7 +105,7 @@ def check(name, text):
     # are written `verafy harness ...`; nothing should still say the old names.
     old = re.search(r'swarm\s?(chain|harness|testnet)', low)
     assert not old, f'{name}: still says "{old.group(0) if old else ""}"'
-    assert '—' not in text and '–' not in text, f'{name}: em or en dash'
+    assert '\u2014' not in text and '\u2013' not in text, f'{name}: em or en dash'
 
 
 LANDING_EXTRA = '''
