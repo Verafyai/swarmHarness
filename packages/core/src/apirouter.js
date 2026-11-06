@@ -10,7 +10,11 @@
  *   kind        "inference" | "hosting" | "payment" | "data"
  *   baseURL     where requests go
  *   secret      the keyblock secret name holding its API key
- *   auth        "bearer" (default) or a header name such as "x-api-key"
+ *   secretEnv   or: the environment variable holding it (a reference, never the key)
+ *               With neither, the API is keyless, such as a public RPC endpoint,
+ *               and the router sends the request without a key or a scoped key.
+ *   auth        "bearer" (default), a header name such as "x-api-key", or
+ *               "query:<param>" for providers that take the key in the URL
  *   payee       the wallet payee id that bills for it
  *   price       {perCall?, perInputToken?, perOutputToken?} in the payee's token
  *   billing     "per-call" (pay as you go) or "accrue" (settle with settle())
@@ -20,10 +24,13 @@
 
 export class ApiRouter {
   /**
-   * @param {{keyblock: import('./keyblock.js').Keyblock, banker: import('./banker.js').Banker, apis: object[], fetch?: typeof fetch}} options -
-   *   `fetch` can be replaced for tests or for a proxy.
+   * @param {{keyblock?: import('./keyblock.js').Keyblock, banker?: import('./banker.js').Banker, apis: object[], fetch?: typeof fetch, env?: Record<string, string | undefined>}} options -
+   *   `fetch` can be replaced for tests or for a proxy. `env` (default process.env)
+   *   is where `secretEnv` references are read. A router with only keyless APIs
+   *   needs no keyblock.
    */
-  constructor({ keyblock, banker, apis, fetch: f = globalThis.fetch }) {
+  constructor({ keyblock = null, banker = null, apis, fetch: f = globalThis.fetch, env = process.env }) {
+    this.env = env
     this.keyblock = keyblock
     this.banker = banker
     this.apis = new Map(apis.map(a => [a.id, a]))
@@ -44,12 +51,27 @@ export class ApiRouter {
   async call(token, apiId, { path, method = 'POST', body, purpose = 'api call' }) {
     const api = this.apis.get(apiId)
     if (!api) throw new Error(`no API named "${apiId}" is plugged in`)
-    const res = await this.keyblock.withSecret(token, `call:${apiId}`, api.secret, key => {
+    const send = key => {
       const headers = { 'content-type': 'application/json' }
-      if (!api.auth || api.auth === 'bearer') headers.authorization = `Bearer ${key}`
-      else headers[api.auth] = key
-      return this.fetch(`${api.baseURL.replace(/\/$/, '')}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
-    })
+      let url = `${api.baseURL.replace(/\/$/, '')}${path}`
+      if (key !== undefined) {
+        if (api.auth?.startsWith('query:')) url += `${url.includes('?') ? '&' : '?'}${encodeURIComponent(api.auth.slice(6))}=${encodeURIComponent(key)}`
+        else if (!api.auth || api.auth === 'bearer') headers.authorization = `Bearer ${key}`
+        else headers[api.auth] = key
+      }
+      return this.fetch(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
+    }
+    let res
+    if (api.secret) {
+      if (!this.keyblock) throw new Error(`API "${apiId}" needs the keyblock secret "${api.secret}", and no keyblock is open`)
+      res = await this.keyblock.withSecret(token, `call:${apiId}`, api.secret, send)
+    } else if (api.secretEnv) {
+      const key = this.env[api.secretEnv]
+      if (!key) throw new Error(`API "${apiId}" needs ${api.secretEnv} set in the environment`)
+      res = await send(key)
+    } else {
+      res = await send(undefined)
+    }
     const data = await res.json().catch(() => null)
     const cost = this.price(api, data)
     this.meter.push({ api: apiId, kind: api.kind, purpose, status: res.status, cost })

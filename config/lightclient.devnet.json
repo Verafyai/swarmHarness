@@ -1,0 +1,24 @@
+{
+  "lightclient": {
+    "apis": [
+      { "id": "solana-devnet", "kind": "data", "baseURL": "https://api.devnet.solana.com" },
+      { "id": "onfinality-devnet", "kind": "data", "baseURL": "https://solana-devnet.api.onfinality.io/public" },
+      { "id": "rpcpool-devnet", "kind": "data", "baseURL": "https://devnet.rpcpool.com" }
+    ],
+    "solana": {
+      "cluster": "solana-devnet",
+      "commitment": "finalized",
+      "n": 3,
+      "minOperators": 2,
+      "policy": "reject-and-retry",
+      "retries": 2,
+      "retryDelayMs": 2000,
+      "maxSlotLag": 150,
+      "endpoints": [
+        { "id": "solana-devnet", "operator": "solana", "api": "solana-devnet" },
+        { "id": "onfinality-devnet", "operator": "onfinality", "api": "onfinality-devnet" },
+        { "id": "rpcpool-devnet", "operator": "triton", "api": "rpcpool-devnet" }
+      ]
+    }
+  }
+}

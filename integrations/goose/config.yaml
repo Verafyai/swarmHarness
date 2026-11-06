@@ -1,0 +1,12 @@
+# Verafy Harness extension for goose. Paste under extensions: in ~/.config/goose/config.yaml.
+# Generated from integrations/_shared by scripts/sync-integrations.mjs. Edit the source, not this file.
+# env_keys names VERAFY_API_KEY; goose reads its value from your environment or its secret store.
+extensions:
+  verafy:
+    type: stdio
+    name: verafy
+    enabled: true
+    cmd: npx
+    args: ["-y", "-p", "github:Verafyai/verafyHarness", "verafy-mcp"]
+    env_keys: ["VERAFY_API_KEY"]
+    timeout: 300

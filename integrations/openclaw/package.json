@@ -1,0 +1,25 @@
+{
+  "name": "verafy-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Draft, check, pin and run Actually Smart Contracts with Verafy Harness, and read the rulings it seals. Your agent is the client; the jurors stay inside the harness.",
+  "license": "MIT",
+  "homepage": "https://harness.verafy.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Verafyai/verafyHarness.git",
+    "directory": "integrations/openclaw"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.js"
+    ]
+  },
+  "files": [
+    "openclaw.plugin.json",
+    "index.js",
+    "skills",
+    "README.md"
+  ]
+}

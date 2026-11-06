@@ -165,3 +165,6 @@ td.k{color:var(--mute)}
 .prob p{font-size:16.5px;color:var(--mute)}
 .foot{padding-block:36px 56px;font-size:15px;color:var(--mute);display:flex;flex-direction:column;gap:8px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.plugs .card code{font-family:var(--mono);font-size:12.5px;line-height:1.45;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:2px;padding:6px 8px;overflow-wrap:anywhere;word-break:break-word}
+.plugs .card .tag{align-self:flex-start;margin-top:auto}

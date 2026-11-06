@@ -84,6 +84,11 @@ export function validate(asc) {
   const j = pay?.jury
   if (!(j?.size >= 1)) p.push('payment.jury.size must be at least 1')
   if (!(j?.minLabs >= 1 && j.minLabs <= j.size)) p.push('payment.jury.minLabs must be between 1 and jury.size')
+  if (pay?.source !== undefined) {
+    const s = pay.source
+    if (typeof s !== 'object' || s === null) p.push('payment.source must be an object')
+    else if (!(typeof s.account === 'string' && s.account) && !(typeof s.address === 'string' && s.address)) p.push('payment.source needs the escrow account (Solana) or address (EVM)')
+  }
   const split = pay?.split ?? {}
   const total = ['jurors', 'auditors', 'storage', 'sealer'].reduce((s, k) => s + (split[k] ?? 0), 0)
   if (Math.abs(total - 1) > 1e-9) p.push('payment.split must sum to 1')

@@ -117,17 +117,19 @@ tr:last-child td{border-bottom:0}
 <li><a href="#7-where-to-get-the-model">7. Where to get the model</a></li>
 <li><a href="#8-how-a-model-is-proven">8. How a model is proven</a></li>
 <li><a href="#9-install">9. Install</a></li>
-<li><a href="#10-configure">10. Configure</a></li>
-<li><a href="#11-run-and-check">11. Run and check</a></li>
-<li><a href="#12-join-the-network">12. Join the network</a></li>
-<li><a href="#13-payments-no-coin-bring-your-own">13. Payments: no coin, bring your own</a><ul>
+<li><a href="#10-run-it-from-your-agent">10. Run it from your agent</a></li>
+<li><a href="#11-configure">11. Configure</a></li>
+<li><a href="#12-run-and-check">12. Run and check</a></li>
+<li><a href="#13-join-the-network">13. Join the network</a></li>
+<li><a href="#14-payments-no-coin-bring-your-own">14. Payments: no coin, bring your own</a><ul>
 <li><a href="#the-payment-router">The payment router</a></li>
+<li><a href="#reading-the-source-chain-the-light-client">Reading the source chain: the light client</a></li>
 </ul>
 </li>
-<li><a href="#14-what-it-costs">14. What it costs</a></li>
-<li><a href="#15-what-it-earns">15. What it earns</a></li>
-<li><a href="#16-operating-a-harness">16. Operating a harness</a></li>
-<li><a href="#17-troubleshooting">17. Troubleshooting</a></li>
+<li><a href="#15-what-it-costs">15. What it costs</a></li>
+<li><a href="#16-what-it-earns">16. What it earns</a></li>
+<li><a href="#17-operating-a-harness">17. Operating a harness</a></li>
+<li><a href="#18-troubleshooting">18. Troubleshooting</a></li>
 </ul>
 </div>
 </aside><article><h1 id="run-a-verafy-harness">Run a Verafy Harness</h1>
@@ -146,14 +148,15 @@ tr:last-child td{border-bottom:0}
 <li><a href="#7-where-to-get-the-model">Where to get the model</a></li>
 <li><a href="#8-how-a-model-is-proven">How a model is proven</a></li>
 <li><a href="#9-install">Install</a></li>
-<li><a href="#10-configure">Configure</a></li>
-<li><a href="#11-run-and-check">Run and check</a></li>
-<li><a href="#12-join-the-network">Join the network</a></li>
-<li><a href="#13-payments-no-coin-bring-your-own">Payments: no coin, bring your own</a></li>
-<li><a href="#14-what-it-costs">What it costs</a></li>
-<li><a href="#15-what-it-earns">What it earns</a></li>
-<li><a href="#16-operating-a-harness">Operating a harness</a></li>
-<li><a href="#17-troubleshooting">Troubleshooting</a></li>
+<li><a href="#10-run-it-from-your-agent">Run it from your agent</a></li>
+<li><a href="#11-configure">Configure</a></li>
+<li><a href="#12-run-and-check">Run and check</a></li>
+<li><a href="#13-join-the-network">Join the network</a></li>
+<li><a href="#14-payments-no-coin-bring-your-own">Payments: no coin, bring your own</a></li>
+<li><a href="#15-what-it-costs">What it costs</a></li>
+<li><a href="#16-what-it-earns">What it earns</a></li>
+<li><a href="#17-operating-a-harness">Operating a harness</a></li>
+<li><a href="#18-troubleshooting">Troubleshooting</a></li>
 </ol>
 <h2 id="1-harnesses-and-nodes">1. Harnesses and nodes</h2>
 <p>Verafy Chain has two kinds of machine. They can run on the same box.</p>
@@ -218,7 +221,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>Finality.</strong> A block is final when at least two thirds of registered nodes have signed it, after checking every rule above (a BFT design in the Tendermint family).</li>
 <li><strong>Ruling finality is optimistic.</strong> A ruling inside a final block can still be challenged during its challenge window (24 hours on testnet). A successful challenge appends a new ruling (affirmed, overturned or superseded). Nothing is erased.</li>
 </ul>
-<p>How nodes are weighted on an open network is an open problem, because there is no native coin to stake. Testnet uses a fixed, permissioned node set. See <a href="#13-payments-no-coin-bring-your-own">Payments</a>.</p>
+<p>How nodes are weighted on an open network is an open problem, because there is no native coin to stake. Testnet uses a fixed, permissioned node set. See <a href="#14-payments-no-coin-bring-your-own">Payments</a>.</p>
 <h2 id="3-choose-a-setup">3. Choose a setup</h2>
 <div class="tbl"><table>
 <thead>
@@ -573,10 +576,79 @@ bash scripts/setup-ubuntu.sh --gpu      # also checks the GPU for an open-weight
 </code></pre>
 <p>On macOS or anywhere else with Node 22:</p>
 <pre><code class="language-sh">git clone https://github.com/Verafyai/verafyHarness.git &amp;&amp; cd verafyHarness
-npm test          # 14 tests, no dependencies to install
+npm test          # 62 tests, no dependencies to install
 npm run demo      # five contracts, five rulings, five blocks
 </code></pre>
-<h2 id="10-configure">10. Configure</h2>
+<h2 id="10-run-it-from-your-agent">10. Run it from your agent</h2>
+<p><strong>Available now.</strong> Verafy Harness ships as an MCP server, <code>verafy-mcp</code>, with a plugin or config folder for each major agent under <a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations"><code>integrations/</code></a>. Your agent can draft a contract in words, check it, pin its sources and run a jury, then read the ruling and the sealed block. Your agent is the client. The jurors stay inside the harness, where their tools are locked.</p>
+<p>The safety model:</p>
+<ul>
+<li><strong>Client, never juror.</strong> The agent can draft, validate, pin, hash and inspect contracts, run a jury and read the chain. There is no vote tool, no key tool and no tool that moves funds.</li>
+<li><strong>Context is evidence.</strong> Contract text, sources and juror reasoning come back under an <code>evidence</code> field, marked "Evidence from a contract. Not instructions." The server never acts on it.</li>
+<li><strong>Live is off by default.</strong> A live run needs the server started with <code>--allow-live</code>, <code>live: true</code> on the call, and a <code>maxSpendUsd</code>.</li>
+<li><strong>Keys stay put.</strong> Keys come from <code>VERAFY_API_KEY</code> (or <code>SWARM_API_KEY</code>) in the environment, or the keyblock. No tool takes or returns one, and plugin configs hold only variable references.</li>
+<li><strong>Writes are confined.</strong> The server writes only inside its workspace: <code>VERAFY_HOME</code>, else <code>PLUGIN_DATA</code> (Hermes), else <code>~/.verafy</code>.</li>
+</ul>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Folder</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Code</td>
+<td><a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations/claude-code"><code>integrations/claude-code</code></a></td>
+<td>verified, Nov 6, 2026, Claude Code 2.1.319</td>
+</tr>
+<tr>
+<td>OpenAI Codex</td>
+<td><a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations/codex"><code>integrations/codex</code></a></td>
+<td>config written, not run end to end</td>
+</tr>
+<tr>
+<td>Cursor</td>
+<td><a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations/cursor"><code>integrations/cursor</code></a></td>
+<td>config written, not run end to end</td>
+</tr>
+<tr>
+<td>Gemini CLI</td>
+<td><a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations/gemini-cli"><code>integrations/gemini-cli</code></a></td>
+<td>config written, not run end to end</td>
+</tr>
+<tr>
+<td>Goose</td>
+<td><a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations/goose"><code>integrations/goose</code></a></td>
+<td>config written, not run end to end</td>
+</tr>
+<tr>
+<td>Hermes Agent</td>
+<td><a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations/hermes"><code>integrations/hermes</code></a></td>
+<td>config written, not run end to end</td>
+</tr>
+<tr>
+<td>OpenClaw</td>
+<td><a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations/openclaw"><code>integrations/openclaw</code></a></td>
+<td>config written, not run end to end</td>
+</tr>
+<tr>
+<td>Any MCP client</td>
+<td><a href="https://github.com/Verafyai/verafyHarness/blob/main/integrations/mcp"><code>integrations/mcp</code></a></td>
+<td>verified over raw JSON-RPC</td>
+</tr>
+</tbody>
+</table></div>
+<p>Every config starts the server with:</p>
+<pre><code class="language-sh">npx -y -p github:Verafyai/verafyHarness verafy-mcp
+</code></pre>
+<p>From a clone, the same server is:</p>
+<pre><code class="language-sh">node /path/to/verafyHarness/bin/verafy-mcp.js
+</code></pre>
+<p>The first start of the <code>npx</code> form fetches the repo from GitHub: 1 min 55 s here, and about 56 s on later starts (measured Nov 6, 2026, macOS). If an agent times out, use the clone form or raise its MCP startup timeout. The server takes <code>--allow-live</code>, <code>--home &lt;dir&gt;</code> for the workspace, and <code>--config &lt;file&gt;</code> for the harness config.</p>
+<p><strong>The live and spend rule.</strong> <code>verafy_run</code> uses scripted mock answers unless all three hold: the server was started with <code>--allow-live</code> (or <code>VERAFY_ALLOW_LIVE=1</code>), the call says <code>live: true</code>, and the call gives a <code>maxSpendUsd</code>. Before any call the server models a ceiling for the run (one call per juror, input at characters / 3, output at 1,000 tokens, priced at the pool entry's <code>price</code> or 5 and 25 USD per million tokens) and refuses with <code>SPEND_CAP</code> if the ceiling is over the cap. Live runs make one call per juror with no retries. After the run it reports the measured cost, from the endpoint's <code>usage.cost</code> where it gives one. Payouts go to the local ledger file; nothing moves on any chain.</p>
+<h2 id="11-configure">11. Configure</h2>
 <p>A harness's setup lives in a JSON config. <code>verafy.config.json</code> is the default (a setup from before the rename that has only <code>swarm.config.json</code> still works); pass another with <code>--config</code>.</p>
 <pre><code class="language-json">{
   &quot;provider&quot;: { &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot;, &quot;apiKeyEnv&quot;: &quot;VERAFY_API_KEY&quot; },
@@ -626,7 +698,7 @@ npm run demo      # five contracts, five rulings, five blocks
 </tbody>
 </table></div>
 <p>In the prototype, the pool is every harness on your machine, so one config can stand up a whole local jury. On the network, each operator's config holds only their own harness. <code>verafy.config.local.json</code> is a ready example that puts a local <code>gpt-oss-120b</code> beside five hosted models.</p>
-<h2 id="11-run-and-check">11. Run and check</h2>
+<h2 id="12-run-and-check">12. Run and check</h2>
 <p><strong>Available now.</strong></p>
 <pre><code class="language-sh">node bin/verafy.js doctor                      # Node version and pool
 export VERAFY_API_KEY=...                      # OpenRouter key
@@ -641,7 +713,7 @@ node bin/verafy.js doctor --live --config verafy.config.local.json
 node bin/verafy.js run examples/delay-cover.json --live --config verafy.config.local.json
 </code></pre>
 <p>A healthy <code>doctor --live</code> prints <code>ok</code> with a latency for every harness. A ruling prints PROPOSE, COMMIT, REVEAL, RULE, PAY and SEAL.</p>
-<h2 id="12-join-the-network">12. Join the network</h2>
+<h2 id="13-join-the-network">13. Join the network</h2>
 <p><strong>Planned.</strong> This is the interface the testnet will use. None of these commands exist yet.</p>
 <pre><code class="language-sh">verafy harness init --network testnet-0          # creates ~/.verafy/identity.json (Ed25519) and harness.json
 verafy harness commit-model --model openai/gpt-oss-120b --weights weights.sha256 --runtime &lt;vllm digest&gt;
@@ -655,7 +727,7 @@ verafy harness status                            # seats held, votes, audits, ea
 <pre><code class="language-sh">verafy node init --network testnet-0
 verafy node start --peers &lt;seed nodes&gt;
 </code></pre>
-<h2 id="13-payments-no-coin-bring-your-own">13. Payments: no coin, bring your own</h2>
+<h2 id="14-payments-no-coin-bring-your-own">14. Payments: no coin, bring your own</h2>
 <p><strong>There is no token, and there is no need for one.</strong> Verafy Chain is coin agnostic on purpose: the goal is something useful whatever crypto you hold. A contract is paid in whatever asset the requester chooses, on the chain where they hold it: USDC or SOL on Solana, ETH or any ERC-20 on Ethereum, and so on. Any wallet works. The money never moves to Verafy Chain.</p>
 <ol>
 <li>The requester funds escrow on the source chain, in a program or contract that knows the Verafy Chain contract hash.</li>
@@ -696,7 +768,48 @@ verafy node start --peers &lt;seed nodes&gt;
 </table></div>
 <p>A contract names its asset and chain in <code>payment.currency</code> and <code>payment.chain</code>. Bonds are posted the same way, in the asset of the chain the harness earns on. Bitcoin needs an escrow it can enforce, such as wrapped BTC on a chain with contracts; native Bitcoin support is not planned.</p>
 <p>Two open questions follow from having no coin: how to weight nodes for ledger consensus, and how to compare bonds posted in different assets. Testnet answers both by keeping the node set permissioned and pricing bonds per contract in the contract's own asset.</p>
-<h2 id="14-what-it-costs">14. What it costs</h2>
+<h3 id="reading-the-source-chain-the-light-client">Reading the source chain: the light client</h3>
+<p>A harness should not take one RPC provider's word that escrow arrived or that its trigger landed. The light client (<code>packages/lightclient</code>, <strong>available now</strong>, off by default) asks several endpoints and accepts only an answer they agree on. Add a <code>lightclient</code> block to your config; <a href="https://github.com/Verafyai/verafyHarness/blob/main/config/lightclient.devnet.json">config/lightclient.devnet.json</a> is a working example with three public Solana devnet endpoints from three operators.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apis</code></td>
+<td>API router entries, one per endpoint. A keyless public endpoint has only <code>baseURL</code>. A paid one names its key as <code>secret</code> (keyblock) or <code>secretEnv</code> (an environment variable), with <code>auth</code> set to <code>bearer</code>, a header name, or <code>query:&lt;param&gt;</code>. A key written into <code>baseURL</code> is refused</td>
+</tr>
+<tr>
+<td><code>solana.endpoints</code></td>
+<td><code>{id, operator, api}</code>; at least <code>n</code> of them (default 3) from at least <code>minOperators</code> (default 2) operators</td>
+</tr>
+<tr>
+<td><code>solana.commitment</code></td>
+<td><code>finalized</code> (default), <code>confirmed</code> or <code>processed</code></td>
+</tr>
+<tr>
+<td><code>solana.policy</code></td>
+<td>What a 2 to 1 split does: <code>reject-and-retry</code> (default) or <code>accept-majority</code></td>
+</tr>
+<tr>
+<td><code>solana.maxSlotLag</code></td>
+<td>An answer more than this many slots behind the newest is stale and rejected (default 150)</td>
+</tr>
+<tr>
+<td><code>evm</code></td>
+<td>A list of readers, each with <code>chainId</code>, <code>endpoints</code> and <code>blockTag</code> (<code>finalized</code> by default); for chain id 1, an optional <code>helios</code> block</td>
+</tr>
+</tbody>
+</table></div>
+<p>With it on, <code>verafy run</code> checks the escrow a contract names in <code>payment.source</code> before the jury is drawn. Agreement and enough funds: the run goes ahead. Agreement and too little: refused. Disagreement: the contract is paused and the reason, with every source, is appended to <code>.verafy/pauses.jsonl</code>. Every read records its sources and commitment level. Two read-only commands check a setup:</p>
+<pre><code class="language-bash">node bin/verafy.js read solana slot --config config/lightclient.devnet.json
+node bin/verafy.js confirm solana &lt;signature&gt; --config config/lightclient.devnet.json
+</code></pre>
+<p>On Ethereum mainnet the same quorum is used. Sync-committee verification through Helios is an optional adapter (<strong>planned</strong>: built, not yet run against a live Helios); without Helios installed it reports "not installed" and results say <code>verification: multi-rpc</code>. Solana has no light-client protocol in production yet; see <a href="https://github.com/Verafyai/verafyHarness/blob/main/ROADMAP.md">ROADMAP.md</a>.</p>
+<h2 id="15-what-it-costs">15. What it costs</h2>
 <p>All <strong>modeled</strong> or <strong>illustrative</strong> unless marked <strong>measured</strong>; check current prices.</p>
 <p><strong>Measured, Nov 6, 2026:</strong> five live rulings, one per example contract, each with a jury of five hosted models through OpenRouter, cost <strong>$0.0163 together</strong>, about <strong>$0.003 per ruling</strong> or about $0.0007 per vote. Wall time per ruling was <strong>5.9 to 30.1 seconds</strong> from a laptop. See <a href="https://github.com/Verafyai/verafyHarness/blob/main/results/live-2026-11-06.md">results/live-2026-11-06.md</a>. In a separate run, five DeepSeek Harness juror processes on five labs' models sealed a block from their reveals (<a href="https://github.com/Verafyai/verafyHarness/blob/main/docs/dsh-juror.md">docs/dsh-juror.md</a>).</p>
 <p><strong>Model cost per vote</strong>, modeled at 1,500 input and 300 output tokens with OpenRouter prices of Oct 11, 2026:</p>
@@ -768,7 +881,7 @@ verafy node start --peers &lt;seed nodes&gt;
 </tbody>
 </table></div>
 <p>A GPU harness has a fixed cost and near-zero cost per vote; an API harness has almost no fixed cost and pays per vote. Below a few hundred thousand votes a month, an API harness is cheaper.</p>
-<h2 id="15-what-it-earns">15. What it earns</h2>
+<h2 id="16-what-it-earns">16. What it earns</h2>
 <p>You earn whatever asset the contract was paid in. There is no block reward and no token. Each sealed ruling pays:</p>
 <pre><code>your share per vote = escrow x split.jurors / counted votes
 profit = sum of shares  +  audit fees and caught bonds  -  model cost  -  machine cost  -  lost bonds
@@ -777,7 +890,7 @@ profit = sum of shares  +  audit fees and caught bonds  -  model cost  -  machin
 <p>Dissenting votes are paid too, as long as they were committed and revealed honestly, so there is no reward for following the majority. A ruling below the bar pays nothing; its escrow carries to the larger jury. Faults cost the bond: running a model other than the one committed, missing a reveal, or failing an audit.</p>
 <p>Earnings don't have to be converted by hand: a harness's routing agent, an API router with its own payment wallet, accepts payment in any asset, converts it, rents and pays for its own hosting, pays for inference, and keeps the bond topped up, within limits you set. It also routes each contract only to AI that meets the contract's provability requirement, up to zero-knowledge proofs. See <a href="/coin-agnostic#the-routing-agent">The routing agent</a>.</p>
 <p>On testnet, everything is play money.</p>
-<h2 id="16-operating-a-harness">16. Operating a harness</h2>
+<h2 id="17-operating-a-harness">17. Operating a harness</h2>
 <ul>
 <li><strong>Keys.</strong> The identity key signs every commitment and reveal. Keep it on the harness machine, readable only by the harness user. API keys and wallet keys go in the <strong>keyblock</strong>, encrypted under a passphrase you supply through <code>VERAFY_KEYBLOCK_PASSPHRASE</code> (the old name, <code>SWARM_KEYBLOCK_PASSPHRASE</code>, is still read); the rest of the harness only ever holds short-lived scoped keys. See <a href="/coin-agnostic#the-routing-agent">The routing agent</a>.</li>
 <li><strong>Pin your runtime.</strong> For an open-weights harness, pin the vLLM image by digest and the weights by hash. Changing either without re-registering will fail audits.</li>
@@ -786,7 +899,7 @@ profit = sum of shares  +  audit fees and caught bonds  -  model cost  -  machin
 <li><strong>Upgrades.</strong> A new model version is a new commitment. Register it before switching.</li>
 <li><strong>Logs.</strong> The harness never logs keys. Votes, commitments and timings are safe to keep.</li>
 </ul>
-<h2 id="17-troubleshooting">17. Troubleshooting</h2>
+<h2 id="18-troubleshooting">18. Troubleshooting</h2>
 <div class="tbl"><table>
 <thead>
 <tr>
