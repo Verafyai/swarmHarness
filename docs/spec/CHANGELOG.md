@@ -2,6 +2,22 @@
 
 Versions follow semantic versioning with a pre-release tag. Requirement IDs never change meaning. See [VERAFY-SPEC.md](VERAFY-SPEC.md) for the rules.
 
+## v0.0.2-alpha, November 6, 2026
+
+Run it anywhere. Scored 65% overall across 119 requirements (from 58% across 105).
+
+**New in the spec**
+- DEPLOY, a new area: the daemon, `verafy up`, cloud clients, hardware profiles, the container and buttons, releases, the local testnet, the launcher page; hosted harnesses and a desktop app planned.
+- BANK-013 (API credits), SITE-004 (Learn) and SITE-005 (llms.txt, sitemap, structured data).
+
+**Status changes**
+- Built: JURY-009 (daemon), PACK-006 (fidelity gate), BANK-006, 008, 010, 011, GOV-001 to 004 (merged from the governance work).
+- Partial: PACK-011 (packing end to end in the harness, mock prover, not in chain intake), ROUTE-007 (calibration set and runner; no Jev run), SOL-002 (verafy_ruling on a local validator; not on devnet), BANK-007 (live quotes; execution untested on a funded wallet), BANK-009.
+
+**New in the code**
+- `packages/daemon`, `packages/deploy` (serve, up, clouds, user data, profiles, testnet), `packages/solana` (the verafy_ruling program and a zero-dependency client), `packages/banker` (BankerService, Jupiter and LI.FI venues, credits, advisor), `packages/pack/src/pipeline.js`, the calibration set and runner.
+- Dockerfile, compose.yaml, render.yaml, .do/deploy.template.yaml, install.sh and the release workflow.
+
 ## v0.0.1-alpha, November 6, 2026
 
 The first versioned spec, with a scoring pass.
