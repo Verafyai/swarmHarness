@@ -1,6 +1,6 @@
 {
  "version": "0.0.2-alpha",
- "overall": 0.6549019607843136,
+ "overall": 0.6568627450980391,
  "areas": {
   "CORE": {
    "name": "Core protocol: contracts, commit and reveal, agreement, exits",
@@ -20,7 +20,7 @@
   "SETTLE": {
    "name": "TinySVM: exact settlement next to the AI",
    "count": 6,
-   "score": 0.576923076923077
+   "score": 0.6153846153846154
   },
   "LIGHT": {
    "name": "Light client: reading source chains",

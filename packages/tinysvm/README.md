@@ -124,3 +124,55 @@ engine.close()
 `npm test` at the repository root runs `test/tinysvm.test.js`. With the engine built it runs every check against both runtimes; without it, every engine test is reported as skipped with the reason. `TINYSVM_CASES` and `TINYSVM_SEED` set the property test's size and seed.
 
 `cargo test` in `programs/` runs each program's logic natively.
+
+## svmLLM: an optional third runtime (research, Part H)
+
+[svmLLM](https://github.com/Verafyai/svmLLM) runs reduced-sBPF programs on hand-built transformer weights: every instruction is one forward pass through constant tensors, every activation is exactly 0 or 1, nothing is trained, and nothing drifts. Its settlement core (`svllm/settle.py` on the `settlement-core` branch) holds the integer settlement programs, written by hand in svmLLM's instruction subset, and `src/svmllm.js` runs it as a third runtime next to runtime.js and TinySVM. It is a demo. It decides nothing, and it is never the default runtime.
+
+**Covered:** `graded_payout.claim`, `ranked_split.split`, `milestone_escrow.release`, `bond`, `ledger`. **Not covered:** the jury pay rule (`jury`) and escrow hold and release (`escrow`). The jury pay rule splits escrow in IEEE-754 doubles, which TinySVM reproduces bit for bit in soft-float; the svmLLM core is integer only, so `jury` and `escrow` stay two-runtime. The numbers and every decision run in the weights; which account key each delta belongs to is attached around the run, as TinySVM's `jury` does.
+
+### Why hand-written, not the compiled programs
+
+The compiled programs were traced on solana-sbpf 0.12.2 over 1,546 calls to the five integer programs (and 300 jury splits), encoded exactly as this package encodes them (svmLLM `results/settlement_subset.json`, measured Nov 6, 2026). The five integer programs execute 40 distinct opcodes, two of them outside svmLLM's subset (`be` and internal `call`), plus the `sol_memcpy_` and `sol_memset_` syscalls, and they need the loader's 10 KiB-per-account input buffer and 4 KiB stack frames. svmLLM has no calls, no syscalls and 1,024-byte windows here. So the settlement math was written again in 31 opcodes of svmLLM's subset (no ALU32, no calls), 288 instructions for all five programs. The cost of that choice: a second implementation that must be kept in step with `settle.js` by tests, not by construction.
+
+### Run it
+
+```
+git clone -b settlement-core https://github.com/Verafyai/svmLLM ~/svmLLM && cd ~/svmLLM
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cd <verafyHarness> && SVMLLM_HOME=~/svmLLM SVMLLM_PYTHON=~/svmLLM/.venv/bin/python npm test
+SVMLLM_CASES=300 ...   # property test size (default 50 calls per program)
+```
+
+Without `SVMLLM_HOME`, the svmLLM tests are skipped with the reason and nothing else changes.
+
+### Checks (Nov 6, 2026, Apple M4, 16 GB)
+
+- `npm test` with svmLLM and TinySVM present: 172 tests, 172 pass. Without svmLLM: 168 pass, 4 skipped with the reason.
+- Property test, three runtimes, seed 20261106, 300 calls per program (1,500 calls): faults 0 (`SVMLLM_CASES=300`).
+- In svmLLM, `python run_settlement.py`: 1,547 calls (47 named edge cases, 300 random per program), weights machine equal to its reference interpreter, to Anza's solana-sbpf and to a transcription of `settle.js` on every one; full mode equal to lazy mode 20/20.
+
+### Size and latency (measured Nov 6, 2026, Apple M4, 16 GB, one CPU thread, torch 2.15.0)
+
+The settlement machine carries 690,256 constant parameters (2,761,024 bytes as float32), against 1,130,672 for svmLLM's general machine: it drops the 128-byte memory unit's shift tables and `xor`, and adds a 1,024-byte memory unit (98,464 parameters).
+
+| Call | Steps | Weights, lazy | Weights, full | Reference interpreter |
+|---|---|---|---|---|
+| graded_payout, 43 percent | 40 | 179 ms | 2,153 ms | 0.030 ms |
+| ranked_split, 3 places of 4 | 156 | 645 ms | 7,808 ms | 0.107 ms |
+| milestone_escrow release | 27 | 67 ms | 1,070 ms | 0.022 ms |
+| bond slash | 29 | 81 ms | 1,328 ms | 0.019 ms |
+| ledger, one move | 88 | 189 ms | 3,740 ms | 0.060 ms |
+
+Medians of 20 runs (lazy) and 4 (full). An earlier run the same day gave 169 ms lazy for graded_payout, so read these as plus or minus about 10%. Full mode evaluates every circuit each step, about 1.8 x 10^8 dense FLOPs per step (torch FlopCounterMode). TinySVM runs the same calls in 40 to 71 µs round trip (above).
+
+### Proving one settlement
+
+`node scripts/svmllm-proof.mjs --write` settles graded-insurance on all three runtimes, proves it with the mock prover from `packages/prove`, and models the cost of a real proof (`results/svmllm-settlement-2026-11-06.json`).
+
+- **Mock:** ran. The proof verifies; a tampered answer and another commitment fail. The mock binds commitment, input and answer; it proves nothing about the computation.
+- **DeepProve:** not run. Its license is not accepted; that is Rex's decision.
+- **FlashProve:** not run. It needs Linux and an NVIDIA GPU, and it is built for a specific transformer architecture, not this network.
+- **Modeled** with `packages/economics` (preset "L2, FlashProve, unpacked"), assuming proving cost scales with dense FLOPs: the judgment proof is 2 x 17B active parameters (Llama 4 Maverick, vendor-reported by Meta) x 1,024 tokens = 3.48 x 10^13 FLOPs at $0.0103 proving per request. A settlement is 0.014% to 0.080% of that for the measured calls ($1.4 x 10^-6 to $8.3 x 10^-6), and at most 0.32% at the worst step count in the suite (ranked_split, 624 steps). Verification and storage would not shrink with it.
+
+**Success criterion: untested, so not met.** A settlement proof cheaper than the judgment proof is plausible on this model, but the model is an assumption: no prover that takes this network has been run. Until one has, svmLLM settlement stays a demo.

@@ -426,9 +426,18 @@
       "id": "SETTLE-006",
       "area": "SETTLE",
       "weight": 1,
-      "status": "research",
+      "status": "partial",
       "title": "Settlement core compiled into weights (svmLLM), proven with the judgment",
-      "checks": []
+      "checks": [
+        {
+          "grep": "packages/tinysvm/src/svmllm.js",
+          "re": "export function svmllmRuntime"
+        },
+        {
+          "test": "packages/tinysvm/test/tinysvm.test.js"
+        }
+      ],
+      "gap": "Demo: the five integer programs run on svmLLM's hand-built weights as an optional third runtime and agree with runtime.js and TinySVM; the jury pay rule (doubles) is not covered. No real proof made: mock only. Success criterion (a settlement proof cheaper than the judgment proof) untested"
     },
     {
       "id": "LIGHT-001",

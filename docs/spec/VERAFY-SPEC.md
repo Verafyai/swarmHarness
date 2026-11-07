@@ -3,7 +3,7 @@
 **Version 0.0.2-alpha**, November 6, 2026. Covers Verafy Harness (this repo) and Verafy Chain ([Verafyai/verafyChain](https://github.com/Verafyai/verafyChain)).
 
 <!-- score -->
-**Scored 65% overall** at v0.0.2-alpha (see [SCORECARD.md](SCORECARD.md)).
+**Scored 66% overall** at v0.0.2-alpha (see [SCORECARD.md](SCORECARD.md)).
 <!-- /score -->
 
 This is an alpha spec for a prototype. Nothing here describes a running network, and there is no token. Every number is labeled **measured** (our own runs, with a date), **vendor-reported** (by whoever built the tool), **modeled** (computed from those, in `packages/economics`) or **illustrative** (an assumption to replace).
@@ -101,7 +101,7 @@ The AI judges and TinySVM settles: a restricted LiteSVM sidecar that runs only p
 | SETTLE-003 | built | runtime.js and TinySVM side by side; any disagreement is a fault |
 | SETTLE-004 | planned (needs Rex) | Integer micro-units in runtime.js; TinySVM as the default runtime. *Gap: Needs Rex: changes some future diffs by one micro-unit.* |
 | SETTLE-005 | planned | Phase 2: Anza's solana-svm crate; nodes re-run settlement when they verify a block |
-| SETTLE-006 | research | Settlement core compiled into weights (svmLLM), proven with the judgment |
+| SETTLE-006 | partial | Settlement core compiled into weights (svmLLM), proven with the judgment. *Gap: Demo: the five integer programs run on svmLLM's hand-built weights as an optional third runtime and agree with runtime.js and TinySVM; the jury pay rule (doubles) is not covered. No real proof made: mock only. Success criterion (a settlement proof cheaper than the judgment proof) untested.* |
 <!-- /reqs:SETTLE -->
 
 ## LIGHT: reading source chains
