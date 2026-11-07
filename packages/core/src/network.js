@@ -113,6 +113,30 @@ export function checkRevealRecord(card, c, r, h) {
   return null
 }
 
+/** A signed decline: a seated juror refuses its seat on ethics grounds (Constitution Article 3.4). */
+export const DECLINE_KIND = 'verafy.decline/1'
+
+/**
+ * Check one recorded decline against the juror's card. A harness may decline a
+ * seat on any contract it judges unethical; a valid decline is never a fault
+ * and never costs a bond. The seat is simply not counted.
+ * @param {{id: string, publicKey: string}} card - the juror.
+ * @param {{kind: string, harness: string, ascHash: string, grounds: string, reason: string, signature: string}} d - the decline.
+ * @param {string} h - the contract hash.
+ * @returns {string | null} the problem, or null when it checks.
+ */
+export function checkDecline(card, d, h) {
+  if (!d) return 'no decline'
+  if (d.kind !== DECLINE_KIND) return `a decline is "${DECLINE_KIND}"`
+  if (d.harness !== card.id) return 'decline names another harness'
+  if (d.ascHash !== h) return 'decline is for another contract'
+  if (d.grounds !== 'ethics') return 'a seat is declined without fault only on ethics grounds'
+  if (typeof d.reason !== 'string' || !d.reason.trim()) return 'a decline states its reason'
+  const { signature, ...message } = d
+  if (!safeVerify(card.publicKey, message, signature)) return 'bad decline signature'
+  return null
+}
+
 function safeVerify(publicKey, message, signature) {
   try { return typeof signature === 'string' && verifyMessage(publicKey, message, signature) } catch { return false }
 }
@@ -168,13 +192,16 @@ export function rulingId(ruling) {
  *   proof deadline) and `proofChecks` (verification results): a vote counts only
  *   with a proof that verifies (see `proving.js`); the rest are dropped with a
  *   `no-proof` or `bad-proof` fault, and agreement is measured without them.
+ *   `declines` are signed ethics declines (`checkDecline`): a seat declined on
+ *   ethics grounds is not counted and is never a fault; the round lists it
+ *   under `declines` (absent when there are none, so older rulings are unchanged).
  * @returns {object} the ruling, with its `round`.
  */
 export function ruleFromRecords(asc, commits, reveals, options) {
   return recordRound(asc, commits, reveals, { ...options, announce: true })
 }
 
-function recordRound(asc, commits, reveals, { jury, sealer, seed = null, onEvent = () => {}, announce, proofRecords = [], proofChecks = [] }) {
+function recordRound(asc, commits, reveals, { jury, sealer, seed = null, onEvent = () => {}, announce, proofRecords = [], proofChecks = [], declines = [] }) {
   if (!Array.isArray(jury) || jury.length === 0) throw new Error('ruleFromRecords needs the jury cards')
   if (sealer === undefined || sealer === null) throw new Error('ruleFromRecords needs a sealer')
   const h = ascHash(asc)
@@ -190,9 +217,20 @@ function recordRound(asc, commits, reveals, { jury, sealer, seed = null, onEvent
     list.push(c)
     byHarness.set(c.harness, list)
   }
+  // Declines on ethics grounds (Article 3.4): a seated juror that signed a valid
+  // decline and sent no commitment is not counted and carries no fault.
+  const declined = []
+  for (const d of declines ?? []) {
+    const card = seated.get(d?.harness)
+    const problem = card ? checkDecline(card, d, h) : 'not drawn for this jury'
+    if (problem || byHarness.has(d.harness) || declined.some(x => x.harness === d.harness)) { onEvent({ phase: 'decline-failed', harness: d?.harness, error: problem ?? 'declined and committed, or declined twice' }); continue }
+    declined.push({ kind: d.kind, harness: d.harness, ascHash: d.ascHash, grounds: d.grounds, reason: d.reason, signature: d.signature })
+  }
+  const declinedIds = new Set(declined.map(d => d.harness))
   const accepted = []
   const faults = []
   for (const card of cards) {
+    if (declinedIds.has(card.id)) continue
     const list = byHarness.get(card.id) ?? []
     const distinct = new Set(list.map(c => c.commitment))
     const problem = list.length === 0 ? null
@@ -231,7 +269,8 @@ function recordRound(asc, commits, reveals, { jury, sealer, seed = null, onEvent
   }
   const order = new Map(cards.map((c, i) => [c.id, i]))
   faults.sort((a, b) => order.get(a.harness) - order.get(b.harness))
-  const round = { seed, sealer: accountFor(sealer), jury: cards, commits: accepted, reveals: counted, faults, ...(proving ?? {}) }
+  declined.sort((a, b) => order.get(a.harness) - order.get(b.harness))
+  const round = { seed, sealer: accountFor(sealer), jury: cards, commits: accepted, reveals: counted, faults, ...(declined.length ? { declines: declined } : {}), ...(proving ?? {}) }
   const withLabs = proven.map(r => ({ ...r, lab: seated.get(r.harness).lab, model: seated.get(r.harness).model }))
   return tally(asc, withLabs, sealer, onEvent, round)
 }
@@ -259,8 +298,9 @@ export async function rule(asc, jury, sealer, onEvent, options = {}) {
   emit({ phase: 'propose', ascHash: h, jury: cards })
   const settled = await Promise.allSettled(jury.map(j => j.commit(asc)))
   const commits = []
+  const declines = []
   settled.forEach((s, i) => {
-    if (s.status === 'fulfilled') commits.push(s.value)
+    if (s.status === 'fulfilled' && s.value?.kind === DECLINE_KIND) { declines.push(s.value); emit({ phase: 'declined', harness: jury[i].id, reason: s.value.reason }) } else if (s.status === 'fulfilled') commits.push(s.value)
     else emit({ phase: 'commit-failed', harness: jury[i].id, error: String(s.reason?.message ?? s.reason) })
   })
   // The reveal round opens only after the commit round closes.
@@ -272,6 +312,7 @@ export async function rule(asc, jury, sealer, onEvent, options = {}) {
   }
   const thrown = new Set(jury.filter((j, i) => settled[i].status === 'fulfilled').map(j => j.id).filter(id => !reveals.some(r => r?.harness === id)))
   return recordRound(asc, commits, reveals.filter(Boolean), {
+    declines,
     jury: cards,
     sealer: opts.sealerAccount ?? sealer,
     seed: opts.seed ?? null,
@@ -450,7 +491,7 @@ export function verifyRuling(asc, ruling, { cards, pool, seed, verifiers } = {})
   for (const x of checkPay(asc, ruling, round.sealer)) p.push(x)
 
   try {
-    const again = ruleFromRecords(asc, round.commits, round.reveals, { jury, sealer: round.sealer, seed: round.seed, proofRecords: round.proofRecords, proofChecks: round.proofChecks })
+    const again = ruleFromRecords(asc, round.commits, round.reveals, { jury, sealer: round.sealer, seed: round.seed, proofRecords: round.proofRecords, proofChecks: round.proofChecks, declines: round.declines })
     const differs = Object.keys(again).filter(k => canonical(again[k]) !== canonical(ruling[k]))
     if (differs.length) p.push(`ruling does not match what its round computes (${differs.join(', ')})`)
   } catch (err) {
@@ -460,19 +501,23 @@ export function verifyRuling(asc, ruling, { cards, pool, seed, verifiers } = {})
 }
 
 /**
- * Seal rulings into a block that links to its parent. A block with no rulings
- * cannot be sealed. Pass `time` so any node can rebuild the header exactly;
+ * Seal rulings into a block that links to its parent. A block with no ruling
+ * cannot be sealed: it needs a contract ruling, or an ethics screening or
+ * governance record that carries a panel's rulings (`panels`). Pass `time` so any node can rebuild the header exactly;
  * without it the sealer's clock is used. Reviews (challenge results) ride in
  * the block of the challenge ruling that decided them, and only there.
  * @param {{height: number, hash: string} | null} parent - the previous block.
  * @param {object[]} rulings - rulings to include.
  * @param {{id: string, sign: (payload: unknown) => string}} sealer - the sealing harness or node.
- * @param {string | Date | {time?: string | Date, reviews?: object[]}} [options] - a timestamp, or options.
+ * @param {string | Date | {time?: string | Date, reviews?: object[], screenings?: object[], governance?: object[]}} [options] - a timestamp, or options.
  * @returns {object} the block.
  */
 export function seal(parent, rulings, sealer, options = {}) {
-  if (rulings.length === 0) throw new Error('no rulings, no block')
   const opts = typeof options === 'string' || options instanceof Date ? { time: options } : options
+  const screenings = opts.screenings ?? []
+  const governance = opts.governance ?? []
+  // A block exists only when a jury rules: a contract jury, an ethics panel, or a governance panel.
+  if (rulings.length === 0 && !screenings.some(s => s.panels?.length) && !governance.some(g => g.panels?.length)) throw new Error('no rulings, no block')
   const t = opts.time === undefined ? new Date() : new Date(opts.time)
   if (Number.isNaN(t.getTime())) throw new Error(`seal time "${opts.time}" is not a date`)
   const header = {
@@ -488,18 +533,22 @@ export function seal(parent, rulings, sealer, options = {}) {
     for (const r of reviews) if (!ids.has(r.by)) throw new Error('a review is sealed only with the challenge ruling that decided it')
     header.reviewsRoot = sha256(reviews.map(r => sha256(r)).join(''))
   }
-  return { ...header, hash: sha256(header), signature: sealer.sign(header), rulings, ...(reviews.length ? { reviews } : {}) }
+  if (screenings.length) header.screeningsRoot = sha256(screenings.map(r => sha256(r)).join(''))
+  if (governance.length) header.governanceRoot = sha256(governance.map(r => sha256(r)).join(''))
+  return { ...header, hash: sha256(header), signature: sealer.sign(header), rulings, ...(reviews.length ? { reviews } : {}), ...(screenings.length ? { screenings } : {}), ...(governance.length ? { governance } : {}) }
 }
 
 /**
  * The header fields `seal` hashes and signs. `reviewsRoot` is present only on
- * blocks that carry reviews.
+ * blocks that carry reviews; `screeningsRoot` only on blocks that carry ethics
+ * screenings, and `governanceRoot` only on blocks that carry governance records
+ * (verafyChain). A block without them hashes exactly as before.
  * @param {object} block - a block.
  * @returns {object} its header.
  */
 export function blockHeader(block) {
-  const { height, parent, rulingsRoot, sealer, time, reviewsRoot } = block
-  return { height, parent, rulingsRoot, sealer, time, reviewsRoot }
+  const { height, parent, rulingsRoot, sealer, time, reviewsRoot, screeningsRoot, governanceRoot } = block
+  return { height, parent, rulingsRoot, sealer, time, reviewsRoot, screeningsRoot, governanceRoot }
 }
 
 /**
