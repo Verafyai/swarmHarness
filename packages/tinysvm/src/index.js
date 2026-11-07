@@ -270,3 +270,6 @@ export function dualRuntime(reference = jsRuntime, other) {
   }
   return out
 }
+
+// svmLLM: an optional third runtime for the integer programs (research track, Part H).
+export { findSvmllm, SvmllmEngine, svmllmRuntime, crossRuntime } from './svmllm.js'

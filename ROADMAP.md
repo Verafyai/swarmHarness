@@ -135,6 +135,17 @@ Done when: a testnet harness runs for a week, accepting payment in at least two 
 - [ ] TinySVM as the default runtime (needs Rex)
 - [ ] Phase 2: Anza's `solana-svm` crate, and chain nodes re-running settlement when they verify a block
 
+## Research: a settlement core compiled into weights (svmLLM, Part H, demo, 2026-11-06)
+
+- [x] The instruction subset the compiled exit programs execute, traced on solana-sbpf (svmLLM `results/settlement_subset.json`)
+- [x] The five integer programs (`graded_payout`, `ranked_split`, `milestone_escrow`, `bond`, `ledger`) written in svmLLM's reduced sBPF and run on its hand-built weights: integer, deterministic, every activation exactly 0 or 1 (svmLLM `svllm/settle.py`)
+- [x] svmLLM as an optional third runtime in the cross-runtime test, agreeing with runtime.js and TinySVM; skipped with the reason when svmLLM is not installed (`packages/tinysvm/src/svmllm.js`)
+- [x] Size and latency measured (`packages/tinysvm/README.md`)
+- [x] One settlement proved with the mock prover; real-prover cost modeled with `packages/economics` (`packages/tinysvm/scripts/svmllm-proof.mjs`)
+- [ ] The jury pay rule and escrow hold and release on svmLLM (the pay rule is IEEE-754 doubles; the core is integer only)
+- [ ] A real proof of one settlement (needs a prover that takes this network; DeepProve's license and a FlashProve machine are Rex's decisions)
+- [ ] Success criterion, untested: a settlement proof cheaper than the judgment proof. Until then this stays a demo
+
 ## Milestone 6: Proofs of inference (Part D: mock flow built, 2026-11-06)
 
 - [x] Timing: commit, reveal, then a signed proof record (`verafy.proof/1`, the proof hash only) before a proof deadline; proving never blocks the commit (`packages/core/src/proving.js`)

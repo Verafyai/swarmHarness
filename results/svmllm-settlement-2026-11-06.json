@@ -1,0 +1,129 @@
+{
+ "date": "2026-11-06",
+ "machine": "Apple M4, darwin arm64",
+ "settlement": {
+  "contract": "examples/graded-insurance.json",
+  "percent": 43,
+  "runtimes": [
+   "runtime.js+tinysvm+svmllm"
+  ],
+  "transfers": [
+   {
+    "account": "pot:hail-cover-2026",
+    "delta": -2150000000
+   },
+   {
+    "account": "wallet:farm-117",
+    "delta": 2150000000
+   }
+  ]
+ },
+ "mockProof": {
+  "label": "mock/1: binds commitment, input and answer; not a proof of the computation",
+  "model": "svmllm-settlement/5c1385cb5f28e4c25b92f848e87423d80a931a1487f2c27ee9f937fbda9faa9b",
+  "commitment": "713b2c8960b4a806f1167503943eb6d8b438cb969a945054ffb54bd8ab6ed2ca",
+  "proofHash": "77078fb7887ee0e6842d91fcbef4df13999f1cd58a17f85c8a3ac567ae8cb094",
+  "verifies": true,
+  "tamperedAnswerVerifies": false,
+  "otherCommitmentVerifies": false
+ },
+ "provers": {
+  "mock": "ran",
+  "deepprove": "not run: its license (Lagrange License) is not accepted; that is Rex's decision",
+  "flashprove": "not run: needs Linux and an NVIDIA GPU; this machine is darwin arm64"
+ },
+ "modeled": {
+  "label": "modeled",
+  "basis": "proving cost proportional to dense FLOPs (torch FlopCounterMode, full mode: every circuit of the subset machine evaluated each step); judgment FLOPs = 2 x active parameters x tokens; attention, lookups and the prover's own overheads ignored",
+  "judgment": {
+   "model": "Llama 4 Maverick 17B-128E",
+   "activeParams": {
+    "value": 17000000000,
+    "label": "vendor-reported",
+    "source": "Meta model card"
+   },
+   "tokens": {
+    "value": 1024,
+    "label": "vendor-reported",
+    "source": "FlashProve context limit per proven request"
+   },
+   "flops": 34816000000000,
+   "proveUsd": 0.010324074074074074,
+   "allInUsd": 0.020869071643518516,
+   "preset": "L2, FlashProve, unpacked"
+  },
+  "settlement": [
+   {
+    "program": "graded_payout",
+    "call": "graded/43pct",
+    "steps": 40,
+    "worstStepsInSuite": 41,
+    "denseFlopsPerStep": 179578547,
+    "settlementFlops": 7183141880,
+    "flopRatio": 0.00020631726447610293,
+    "flopRatioWorst": 0.0002114751960880055,
+    "paramPassRatio": 0.0000015860661764705883,
+    "proveUsd": 0.000002130034721211618,
+    "proveUsdWorst": 0.000002183285589241909,
+    "allInUsd": 0.010547127604165655
+   },
+   {
+    "program": "ranked_split",
+    "call": "ranked/three-of-four",
+    "steps": 156,
+    "worstStepsInSuite": 624,
+    "denseFlopsPerStep": 179420521,
+    "settlementFlops": 27989601276,
+    "flopRatio": 0.0008039292645909927,
+    "flopRatioWorst": 0.0032157170583639707,
+    "paramPassRatio": 0.000006185658088235294,
+    "proveUsd": 0.000008299825277953304,
+    "proveUsdWorst": 0.000033199301111813216,
+    "allInUsd": 0.010553297394722397
+   },
+   {
+    "program": "milestone_escrow",
+    "call": "milestone/first",
+    "steps": 27,
+    "worstStepsInSuite": 27,
+    "denseFlopsPerStep": 179626458,
+    "settlementFlops": 4849914366,
+    "flopRatio": 0.00013930130876608455,
+    "flopRatioWorst": 0.00013930130876608455,
+    "paramPassRatio": 0.0000010705946691176472,
+    "proveUsd": 0.000001438157030316521,
+    "proveUsdWorst": 0.000001438157030316521,
+    "allInUsd": 0.010546435726474762
+   },
+   {
+    "program": "bond",
+    "call": "bond/slash",
+    "steps": 29,
+    "worstStepsInSuite": 29,
+    "denseFlopsPerStep": 179756085,
+    "settlementFlops": 5212926465,
+    "flopRatio": 0.00014972789708754596,
+    "flopRatioWorst": 0.00014972789708754596,
+    "paramPassRatio": 0.0000011498979779411764,
+    "proveUsd": 0.0000015458019004871642,
+    "proveUsdWorst": 0.0000015458019004871642,
+    "allInUsd": 0.010546543371344932
+   },
+   {
+    "program": "ledger",
+    "call": "ledger/move",
+    "steps": 88,
+    "worstStepsInSuite": 334,
+    "denseFlopsPerStep": 179488105,
+    "settlementFlops": 15794953240,
+    "flopRatio": 0.0004536693830422794,
+    "flopRatioWorst": 0.0017218815220013787,
+    "paramPassRatio": 0.0000034893455882352943,
+    "proveUsd": 0.000004683716315667977,
+    "proveUsdWorst": 0.000017776832379921643,
+    "allInUsd": 0.010549681285760112
+   }
+  ]
+ },
+ "successCriterion": "UNTESTED. Modeled from dense FLOPs, a settlement proof would cost 0.014% to 0.080% of the judgment proof's proving cost for the measured calls, and at most 0.322% at the worst step count in the suite; but no prover available here can prove this network: the mock proves nothing, DeepProve is not licensed for use (Rex's decision), and FlashProve needs Linux and a GPU and is built for a specific transformer architecture, not this one. FLOPs-proportional proving cost is an assumption, not a measurement. The success criterion is not met; svmLLM settlement stays a demo."
+}

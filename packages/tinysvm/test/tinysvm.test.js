@@ -8,7 +8,7 @@ import {
   Harness, mockProvider, rule, drawJuryFor, settle, jsRuntime, accountKey, canonical, initialState,
   EXIT_PROGRAMS, PROGRAM_HASHES,
 } from '../../core/src/index.js'
-import { findEngine, Engine, tinySvmRuntime, dualRuntime, SettlementFault, LOCK } from '../src/index.js'
+import { findEngine, Engine, tinySvmRuntime, dualRuntime, SettlementFault, LOCK, findSvmllm, SvmllmEngine, svmllmRuntime, crossRuntime } from '../src/index.js'
 
 const ROOT = new URL('../../../', import.meta.url)
 const ex = name => JSON.parse(readFileSync(new URL(`examples/${name}.json`, ROOT), 'utf8'))
@@ -31,6 +31,25 @@ async function both() {
   return dual
 }
 after(() => engine?.close())
+
+// svmLLM, the optional third runtime (Part H): the integer programs only.
+const whereS = findSvmllm()
+const skipS = whereS.ok ? false : `${whereS.reason}; svmLLM runtime tests skipped`
+if (skipS) console.log(`# svmllm: ${skipS}`)
+const SVMLLM_CASES = Number(process.env.SVMLLM_CASES ?? 50)
+let sEngine
+let cross
+const crossOthers = []
+async function three() {
+  if (!cross) {
+    sEngine = await SvmllmEngine.start(whereS)
+    if (where.ok) { await both(); crossOthers.push(tinySvmRuntime(engine)) }
+    crossOthers.push(svmllmRuntime(sEngine))
+    cross = crossRuntime(jsRuntime, crossOthers)
+  }
+  return cross
+}
+after(() => sEngine?.close())
 
 // A small deterministic PRNG, so a failing case can be replayed with TINYSVM_SEED.
 function rng(seed) {
@@ -203,4 +222,96 @@ test(`property: ${CASES} random in-bounds rulings per program produce identical 
   }
   console.log(`# tinysvm property test: ${JSON.stringify(counts)}, faults ${d.faults}`)
   assert.equal(d.faults, 0)
+})
+
+/* ------------------------------------------------------------------------- */
+/* svmLLM: the third runtime, integer programs only.                          */
+/* ------------------------------------------------------------------------- */
+
+// The integer calls of the property test above, same generator, same ranges.
+function integerCalls(r, i) {
+  const out = []
+  out.push(['exit', { program: 'graded_payout', entry: 'claim', state: { reserve: r.big(0, 2 ** 50), paid: r.big(0, 2 ** 40), claims: r.int(0, 1000) }, input: { percent: r.int(0, 100), coverage: r.big(0, 2 ** 50), pot: accountKey(`pot:${i}`), beneficiary: accountKey(`b:${i}`) } }])
+  const n = r.int(1, 12), k = r.int(1, Math.min(n, 15))
+  out.push(['exit', { program: 'ranked_split', entry: 'split', state: {}, input: { prize: r.big(0, 2 ** 52), shares: r.partition(1_000_000, k), ranking: r.shuffle([...Array(n).keys()]).slice(0, k), pot: accountKey(`pot:${i}`), entrants: Array.from({ length: n }, (_, q) => accountKey(`e:${i}:${q}`)) } }])
+  const m = r.int(1, 64)
+  const released = [...Array(m).keys()].filter(() => r.next() < 0.3)
+  out.push(['exit', { program: 'milestone_escrow', entry: 'release', state: { released, paid: r.big(0, 2 ** 40) }, input: { milestone: r.int(0, m - 1), tranches: Array.from({ length: m }, () => r.big(0, 2 ** 45)), pot: accountKey('pot'), contractor: accountKey('c') } }])
+  const locked = r.big(0, 2 ** 45)
+  out.push(['bond', { state: { deposited: locked + 10, locked, slashed: 6, released: 4 }, op: r.pick(['lock', 'release', 'slash', 'slash']), amount: r.big(0, locked * 2 + 1) }])
+  const keys = Array.from({ length: r.int(1, 6) }, (_, q) => accountKey(`acct:${i}:${q}`))
+  const table = keys.slice(0, r.int(0, keys.length)).map(key => ({ key, balance: r.big(0, 1e9) }))
+  const moves = Array.from({ length: r.int(1, 4) }, () => { const amt = r.big(0, 1e9); return [{ key: r.pick(keys), delta: -amt }, { key: r.pick(keys), delta: amt }] }).flat()
+  out.push(['ledger', { table, transfers: moves, capacity: 6 }])
+  return out
+}
+
+test('svmLLM covers exactly the integer programs, and nothing else', () => {
+  const rt = svmllmRuntime({ request: () => { throw new Error('not started') } })
+  assert.deepEqual(rt.covers, ['exit', 'bond', 'ledger'])
+  assert.equal(rt.jury, undefined, 'the jury pay rule is IEEE-754 doubles; the svmLLM core is integer only')
+  assert.equal(rt.escrow, undefined)
+})
+
+test('svmLLM: the three exit examples settle identically on every runtime, from a real ruling', { skip: skipS }, async () => {
+  const x = await three()
+  for (const name of ['graded-insurance', 'ranked-prize', 'milestone-escrow']) {
+    const asc = ex(name)
+    const pool = config.pool.map(h => new Harness({ ...h, provider: mockProvider(mock, asc.id, h.lab) }))
+    const jury = drawJuryFor(asc, pool, 'genesis')
+    const ruling = await rule(asc, jury, jury[0], { seed: 'genesis' })
+    const s = await settle(asc, ruling, { runtime: x })
+    assert.equal(s.ok, true, name)
+    assert.deepEqual(s, settle(asc, ruling), `${name}: the cross-runtime result is the reference result`)
+  }
+  console.log(`# svmllm examples ran on: ${JSON.stringify(x.calls)}`)
+})
+
+test('svmLLM: graded claims over time from one reserve, a bad grade, and an oversized slash, on every runtime', { skip: skipS }, async () => {
+  const x = await three()
+  const asc = ex('graded-insurance')
+  let state
+  let total = 0
+  for (const percent of [43, 100, 7, 100, 0, 100, 100, 100, 100, 100, 100, 100, 100, 100]) {
+    const s = await settle(asc, { exit: 'PAY', passed: true, params: { percent } }, { state, runtime: x })
+    assert.equal(s.ok, true)
+    total += s.transfers[1]?.delta ?? 0
+    state = s.state
+  }
+  assert.equal(total, 50_000_000_000)
+  const r = await x.exit({ program: 'graded_payout', entry: 'claim', state: initialState('graded_payout', { reserve: 1000 }), input: { percent: 101, coverage: 1000, pot: accountKey('pot'), beneficiary: accountKey('b') } })
+  assert.deepEqual([r.ok, r.code], [false, 6])
+  let st = { deposited: 0, locked: 0, slashed: 0, released: 0 }
+  st = (await x.bond({ state: st, op: 'lock', amount: 500_000_000 })).state
+  assert.equal((await x.bond({ state: st, op: 'slash', amount: 500_000_001 })).code, 100)
+  assert.equal((await x.bond({ state: st, op: 'spend', amount: 1 })).code, 1)
+  assert.equal(x.faults, 0)
+})
+
+test('svmLLM: a disagreement with the third runtime is a fault', { skip: skipS }, async () => {
+  await three()
+  const liar = { ...jsRuntime, name: 'liar', bond: input => { const r = jsRuntime.bond(input); return r.ok ? { ...r, state: { ...r.state, locked: r.state.locked + 1 } } : r } }
+  const check = crossRuntime(liar, [svmllmRuntime(sEngine)])
+  await assert.rejects(check.bond({ state: { deposited: 5, locked: 5, slashed: 0, released: 0 }, op: 'slash', amount: 2 }), SettlementFault)
+  assert.equal(check.faults, 1)
+})
+
+test(`property (svmLLM): ${SVMLLM_CASES} random in-bounds calls per integer program agree on every runtime (seed ${SEED})`, { skip: skipS }, async () => {
+  await three()
+  const x = crossRuntime(jsRuntime, crossOthers)
+  const r = rng(SEED)
+  const calls = []
+  for (let i = 0; i < SVMLLM_CASES; i++) calls.push(...integerCalls(r, i))
+  const t0 = Date.now()
+  const results = await Promise.all(calls.map(([m, input]) => x[m](input)))
+  const counts = {}
+  calls.forEach(([m, input], i) => {
+    const k = m === 'exit' ? input.program : m
+    counts[k] = counts[k] ?? { calls: 0, refusals: 0 }
+    counts[k].calls++
+    if (!results[i].ok) counts[k].refusals++
+    if (results[i].ok && results[i].transfers) assert.equal(results[i].transfers.reduce((t, y) => t + BigInt(y.delta), 0n), 0n)
+  })
+  console.log(`# svmllm property test: ${JSON.stringify(counts)}, runtimes ${JSON.stringify(x.calls)}, faults ${x.faults}, ${Date.now() - t0} ms`)
+  assert.equal(x.faults, 0)
 })
