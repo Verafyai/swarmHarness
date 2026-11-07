@@ -14,6 +14,10 @@
  *                                             client's endpoints (read only, no keys)
  *   verafy confirm solana <signature> [--config file]
  *                                             confirm a transaction landed, through the outbox
+ *   verafy harness commit-model <harness-id> <commitment> [--config file]
+ *                                             publish a prover's model commitment (64 hex, such
+ *                                             as FlashProve's commitment ID) on the harness card;
+ *                                             L2 proofs are checked against it
  *
  * The light client is off unless the config has a `lightclient` block (see
  * config/lightclient.devnet.json and packages/lightclient). When it is on,
@@ -49,6 +53,28 @@ const c = process.stdout.isTTY && !flag('--json')
   : { b: s => s, d: s => s, g: s => s, y: s => s, a: s => s }
 
 async function readJson(p) { return JSON.parse(await readFile(resolve(p), 'utf8')) }
+
+/**
+ * `verafy harness commit-model <id> <commitment>`: write the model commitment
+ * onto one pool entry, so the harness's card carries it. It never reads a key.
+ */
+async function commitModel(id, commitment) {
+  const i = args.indexOf('--config')
+  const path = i >= 0 ? resolve(args[i + 1]) : configPath(ROOT)
+  if (!id || !/^[0-9a-f]{64}$/.test(String(commitment))) {
+    console.log('usage: verafy harness commit-model <harness-id> <commitment: 64 lowercase hex> [--config file]')
+    process.exitCode = 2
+    return
+  }
+  const config = await readJson(path)
+  const entry = config.pool?.find(h => h.id === id)
+  if (!entry) { console.log(`no harness "${id}" in ${path}`); process.exitCode = 1; return }
+  const before = entry.modelCommitment ?? null
+  entry.modelCommitment = commitment
+  await writeFile(path, JSON.stringify(config, null, 2) + '\n')
+  console.log(`${id}: model commitment ${before === commitment ? 'unchanged' : before ? `changed from ${short(before)} to` : 'set to'} ${commitment}`)
+  console.log(`${path} updated. Restart the harness so its card carries the commitment; nodes check L2 proofs against it.`)
+}
 
 async function loadChain() {
   try { return await readJson(CHAIN.read) } catch { return [] }
@@ -151,6 +177,7 @@ async function main() {
     return
   }
   if (cmd === 'seal' && file && rest.length) return sealFromJurors(await readJson(file), rest)
+  if (cmd === 'harness' && file === 'commit-model') return commitModel(rest[0], rest[1])
   if (cmd !== 'run' || !file) {
     console.log('usage: verafy run <asc.json> [--live] [--json] [--config file] | verafy seal <asc.json> <juror-dir...> | verafy doctor [--live] [--config file] | verafy validate <asc.json> | verafy pin <asc.json> | verafy chain | verafy read solana <slot|genesis|account <pubkey>> --config file | verafy confirm solana <signature> --config file')
     process.exitCode = 2

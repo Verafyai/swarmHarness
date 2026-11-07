@@ -409,12 +409,13 @@ a.card.go h3{color:var(--accent)}
     <div class="tbl"><table>
       <thead><tr><th>What</th><th>Status</th></tr></thead>
       <tbody>
-        <tr><td>A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks</td><td><span class="tag m">works</span> 130 tests, <code>npm run demo</code></td></tr>
+        <tr><td>A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks</td><td><span class="tag m">works</span> 148 tests, <code>npm run demo</code></td></tr>
         <tr><td>Live rulings by five labs' models through OpenRouter</td><td><span class="tag m">measured</span> Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total</td></tr>
         <tr><td>Juror mode inside DeepSeek Harness: five processes on five labs' models, block sealed from their reveals</td><td><span class="tag m">measured</span> Nov 6, 2026: all five voted NO, 100% against an 80% bar; every tool other than the two juror tools denied</td></tr>
         <tr><td>Routing agent: keyblock, banker, API router, payment wallet</td><td><span class="tag">works with test venues</span> real venues and on-chain signing planned</td></tr>
         <tr><td>Auditors, challenges and escalation of below-bar rulings to a wider jury</td><td><span class="tag">works with scripted models</span> not yet run live</td></tr>
         <tr><td>Retry and back-off for rate-limited models</td><td><span class="tag">works with fake providers</span> not yet measured live</td></tr>
+        <tr><td>Proving (L2) end to end: commit, reveal, then a proof hash per vote before a deadline; a missing or failed proof drops the vote, re-measures agreement and records a fault against the bond</td><td><span class="tag">works with a mock prover</span> not a proof of inference; DeepProve and FlashProve adapters built, no real proof made yet</td></tr>
         <tr><td>A network of harnesses, bonds and slashing, a public testnet</td><td><span class="tag mo">planned</span> <a href="/testnet">Testnet plan</a></td></tr>
       </tbody>
     </table></div>
@@ -429,7 +430,7 @@ a.card.go h3{color:var(--accent)}
     <p class="lead">Needs Node 22 or later. The core has no dependencies. The demo uses scripted answers, so it needs no key.</p>
 <pre><code>git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 130 tests
+npm test          # 148 tests
 npm run demo      # five contracts, five rulings, five blocks</code></pre>
     <p class="lead">With real models through any OpenAI-compatible endpoint (OpenRouter by default), keep the key in your environment and never commit it:</p>
 <pre><code>export VERAFY_API_KEY=...

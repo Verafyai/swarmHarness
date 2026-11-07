@@ -16,6 +16,7 @@ import { chooseExit, buildDiff, conserves, triggers, accountFor, checkPay } from
 import { aggregateParams } from './exitprogram.js'
 import { PROOF_HASH } from './juror.js'
 import { sha256, canonical } from './hash.js'
+import { needsProofs, gateProofs, finality, checkProofCheck } from './proving.js'
 
 /**
  * Harnesses a contract may seat: bonded for the most value one vote can decide
@@ -163,17 +164,21 @@ export function rulingId(ruling) {
  *   `jury` is the seated jurors' cards (`id`, `lab`, `model`, `bond`, `publicKey`), in draw order;
  *   `sealer` is a harness id, an account such as `node:node-1`, or a card (see `accountFor`);
  *   `seed` is the parent block hash the jury was drawn with.
+ *   For an L2 contract, also `proofRecords` (proof records received before the
+ *   proof deadline) and `proofChecks` (verification results): a vote counts only
+ *   with a proof that verifies (see `proving.js`); the rest are dropped with a
+ *   `no-proof` or `bad-proof` fault, and agreement is measured without them.
  * @returns {object} the ruling, with its `round`.
  */
 export function ruleFromRecords(asc, commits, reveals, options) {
   return recordRound(asc, commits, reveals, { ...options, announce: true })
 }
 
-function recordRound(asc, commits, reveals, { jury, sealer, seed = null, onEvent = () => {}, announce }) {
+function recordRound(asc, commits, reveals, { jury, sealer, seed = null, onEvent = () => {}, announce, proofRecords = [], proofChecks = [] }) {
   if (!Array.isArray(jury) || jury.length === 0) throw new Error('ruleFromRecords needs the jury cards')
   if (sealer === undefined || sealer === null) throw new Error('ruleFromRecords needs a sealer')
   const h = ascHash(asc)
-  const cards = jury.map(j => ({ id: j.id, lab: j.lab, model: j.model, bond: j.bond, publicKey: j.publicKey }))
+  const cards = jury.map(j => ({ id: j.id, lab: j.lab, model: j.model, bond: j.bond, publicKey: j.publicKey, ...(j.modelCommitment ? { modelCommitment: j.modelCommitment } : {}) }))
   const seated = new Map(cards.map(c => [c.id, c]))
   if (announce) onEvent({ phase: 'propose', ascHash: h, jury: cards })
 
@@ -215,10 +220,19 @@ function recordRound(asc, commits, reveals, { jury, sealer, seed = null, onEvent
       faults.push({ harness: c.harness, fault: 'no-reveal' })
     }
   }
+  let proven = counted
+  let proving = null
+  if (needsProofs(asc)) {
+    const g = gateProofs(asc, h, seated, accepted, counted, proofRecords, proofChecks)
+    for (const d of g.dropped) onEvent({ phase: 'proof-failed', harness: d.harness, fault: d.fault, error: d.reason })
+    faults.push(...g.faults)
+    proven = g.proven
+    proving = { proofRecords: g.proofRecords, proofChecks: g.proofChecks }
+  }
   const order = new Map(cards.map((c, i) => [c.id, i]))
   faults.sort((a, b) => order.get(a.harness) - order.get(b.harness))
-  const round = { seed, sealer: accountFor(sealer), jury: cards, commits: accepted, reveals: counted, faults }
-  const withLabs = counted.map(r => ({ ...r, lab: seated.get(r.harness).lab, model: seated.get(r.harness).model }))
+  const round = { seed, sealer: accountFor(sealer), jury: cards, commits: accepted, reveals: counted, faults, ...(proving ?? {}) }
+  const withLabs = proven.map(r => ({ ...r, lab: seated.get(r.harness).lab, model: seated.get(r.harness).model }))
   return tally(asc, withLabs, sealer, onEvent, round)
 }
 
@@ -296,7 +310,7 @@ export function tally(asc, reveals, sealer, onEvent = () => {}, round) {
     passed,
     exit: exit.outcome,
     effect: exit.effect,
-    votes: reveals.map(r => ({ harness: r.harness, lab: r.lab, model: r.model, answer: r.vote.answer, confidence: r.vote.confidence, reasoningHash: sha256(r.vote.reasoning), proofHash: r.vote.proofHash, signature: r.signature })),
+    votes: reveals.map(r => ({ harness: r.harness, lab: r.lab, model: r.model, answer: r.vote.answer, confidence: r.vote.confidence, reasoningHash: sha256(r.vote.reasoning), proofHash: r.vote.proofHash ?? r.proofHash, signature: r.signature })),
     dissent: reveals.filter(r => isDissent(asc.question, r.vote.answer, result.answer)).map(r => ({ harness: r.harness, answer: r.vote.answer, reasoning: r.vote.reasoning })),
     diff,
     triggers: triggers(exit, passed),
@@ -355,13 +369,15 @@ export function ruleFromReveals(asc, entries, sealer, seed, onEvent = () => {}) 
  *
  * @param {object} asc - the contract.
  * @param {object} ruling - the sealed ruling. Extra envelope fields a chain adds are ignored.
- * @param {{cards?: Map<string, object> | object[], pool?: object[], seed?: string}} [options] -
+ * @param {{cards?: Map<string, object> | object[], pool?: object[], seed?: string, verifiers?: Map<string, string>}} [options] -
  *   `cards`: registered harness cards to check the jury against; `pool`: the
  *   pool the jury was drawn from, to re-run the draw; `seed`: the parent hash
  *   the verifier expects.
+ *   `verifiers`: verifier id to public key, to check the signatures on an L2
+ *   round's proof checks. An L2 ruling must also be final (`finality`).
  * @returns {{ok: boolean, problems: string[]}} the result, with every reason found.
  */
-export function verifyRuling(asc, ruling, { cards, pool, seed } = {}) {
+export function verifyRuling(asc, ruling, { cards, pool, seed, verifiers } = {}) {
   const p = []
   const done = () => ({ ok: p.length === 0, problems: p })
   const h = ascHash(asc)
@@ -390,7 +406,7 @@ export function verifyRuling(asc, ruling, { cards, pool, seed } = {}) {
     for (const c of jury) {
       const r = reg.get(c.id)
       if (!r) p.push(`juror ${c.id} is not registered`)
-      else if (r.publicKey !== c.publicKey || r.lab !== c.lab || r.model !== c.model) p.push(`juror ${c.id} card does not match its registration`)
+      else if (r.publicKey !== c.publicKey || r.lab !== c.lab || r.model !== c.model || (r.modelCommitment ?? null) !== (c.modelCommitment ?? null)) p.push(`juror ${c.id} card does not match its registration`)
     }
   }
   if (seed !== undefined && round.seed !== seed) p.push('jury seed is not the expected parent hash')
@@ -423,12 +439,18 @@ export function verifyRuling(asc, ruling, { cards, pool, seed } = {}) {
   if (asc.question.answer.type !== 'forecast') {
     for (const r of round.reveals) if (!asc.question.answer.options.includes(r.vote?.answer)) p.push(`${r.harness} voted "${r.vote?.answer}", not a declared option`)
   }
-  const q = checkQuorum(asc, round.reveals.map(r => ({ lab: byId.get(r.harness)?.lab })))
+  const countedIds = new Set((ruling.votes ?? []).map(v => v.harness))
+  const q = checkQuorum(asc, round.reveals.filter(r => !needsProofs(asc) || countedIds.has(r.harness)).map(r => ({ lab: byId.get(r.harness)?.lab })))
+  if (needsProofs(asc)) {
+    const f = finality(asc, ruling)
+    if (!f.final) p.push(...f.problems.map(x => `not final: ${x}`))
+    if (verifiers) for (const k of round.proofChecks ?? []) { const problem = checkProofCheck(k, verifiers); if (problem) p.push(`proof check for ${k.harness}: ${problem}`) }
+  } else if (round.proofRecords || round.proofChecks) p.push('a contract that needs no proofs carries proof records')
   if (ruling.passed && !q.ok) p.push(`ruling passed without a quorum: ${q.problems.join('; ')}`)
   for (const x of checkPay(asc, ruling, round.sealer)) p.push(x)
 
   try {
-    const again = ruleFromRecords(asc, round.commits, round.reveals, { jury, sealer: round.sealer, seed: round.seed })
+    const again = ruleFromRecords(asc, round.commits, round.reveals, { jury, sealer: round.sealer, seed: round.seed, proofRecords: round.proofRecords, proofChecks: round.proofChecks })
     const differs = Object.keys(again).filter(k => canonical(again[k]) !== canonical(ruling[k]))
     if (differs.length) p.push(`ruling does not match what its round computes (${differs.join(', ')})`)
   } catch (err) {

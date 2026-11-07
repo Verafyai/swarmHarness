@@ -132,10 +132,19 @@ Done when: a testnet harness runs for a week, accepting payment in at least two 
 - [ ] TinySVM as the default runtime (needs Rex)
 - [ ] Phase 2: Anza's `solana-svm` crate, and chain nodes re-running settlement when they verify a block
 
-## Milestone 6: Proofs of inference
+## Milestone 6: Proofs of inference (Part D: mock flow built, 2026-11-06)
 
-- [ ] Optional proof per vote for open models that can be proven today
-- [ ] Off-chain proof verification by auditors, with proof hashes recorded in rulings
+- [x] Timing: commit, reveal, then a signed proof record (`verafy.proof/1`, the proof hash only) before a proof deadline; proving never blocks the commit (`packages/core/src/proving.js`)
+- [x] Finality: an L2 ruling is final only when every counted vote's proof verifies; a missing or failed proof drops the vote, re-measures agreement against the bar (escalating below it), and records a `no-proof` or `bad-proof` fault against the bond (`gateProofs`, `finality`, `bondFaults`)
+- [x] `packages/prove`: Prover and Verifier interfaces; `mock` (not a proof of inference), `deepprove` and `flashprove` adapters by subprocess or HTTP, with a documented contract for the real binary; FlashProve's own `cp_verify` callable directly
+- [x] `routeInference` for L2 uses a local prover or a proving service, never a hosted API
+- [x] Prover batches up to `proverBatch`; long contracts split into chunks with `map-reduce/1`, every chunk's proof attached
+- [x] Proving as a service: `provers` entries in the API router, metered per proof; the harness verifies before it counts, holds the bond and casts the vote
+- [x] Off-chain verification with signed proof checks, proof hashes recorded in rulings; verified on the Verafy Chain devnet with the mock verifier
+- [ ] A real proof: DeepProve (GPT-2 or Gemma 3) on a large-memory CPU server. Not run: the DeepProve repo's license is the Lagrange License, which binds whoever uses the software, so it needs Rex; this Mac (Apple M4, 10 cores, 16 GB) is also far below the 504 GB reference machine
+- [ ] FlashProve `cp_verify` built and checking a stored proof (the README's route 1 needs Linux and g++ 13 or later). The adapter is tested against a stand-in only
+- [x] FlashProve proving harness runbook (`docs/proving-harness.md`, Part D3 step 3): the machine, building, Llama 4 Maverick under Meta's license, the one-time commitment, and `verafy harness commit-model`. Not run; Rex decides when to rent
+- [ ] A wrapper per real prover that meets the contract in `packages/prove/src/external.js`, including the check that FlashProve's request and reply files are our prompt and answer
 - [ ] Track proof size and verification time as they change, and move rulings from bonded to proven as they become practical
 
 Done when: a ruling with a verified proof for every counted vote is sealed.
