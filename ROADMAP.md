@@ -143,7 +143,7 @@ Done when: a testnet harness runs for a week, accepting payment in at least two 
 - [x] Off-chain verification with signed proof checks, proof hashes recorded in rulings; verified on the Verafy Chain devnet with the mock verifier
 - [ ] A real proof: DeepProve (GPT-2 or Gemma 3) on a large-memory CPU server. Not run: the DeepProve repo's license is the Lagrange License, which binds whoever uses the software, so it needs Rex; this Mac (Apple M4, 10 cores, 16 GB) is also far below the 504 GB reference machine
 - [ ] FlashProve `cp_verify` built and checking a stored proof (the README's route 1 needs Linux and g++ 13 or later). The adapter is tested against a stand-in only
-- [ ] FlashProve proving harness runbook (`docs/proving-harness.md`, Part D3 step 3)
+- [x] FlashProve proving harness runbook (`docs/proving-harness.md`, Part D3 step 3): the machine, building, Llama 4 Maverick under Meta's license, the one-time commitment, and `verafy harness commit-model`. Not run; Rex decides when to rent
 - [ ] A wrapper per real prover that meets the contract in `packages/prove/src/external.js`, including the check that FlashProve's request and reply files are our prompt and answer
 - [ ] Track proof size and verification time as they change, and move rulings from bonded to proven as they become practical
 

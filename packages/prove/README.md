@@ -22,7 +22,7 @@ Verifier { verify(proofRef, commitment, input, answer) -> bool }
 | Prover batches up to `proverBatch` (24 by default, vendor-reported, FlashProve, from `packages/economics`) | Built, tested |
 | Proving as a service: `provers` entries in the API router, metered per proof; the harness verifies before it counts | Built, tested with a fake service |
 | A real proof on real hardware, measured | Planned. Needs Rex (license, machine) |
-| FlashProve proving harness runbook (Part D3 step 3) | Planned |
+| FlashProve proving harness runbook (Part D3 step 3) | Written: [docs/proving-harness.md](../../docs/proving-harness.md). Not run |
 
 ## The flow
 
