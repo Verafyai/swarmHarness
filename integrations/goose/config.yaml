@@ -7,6 +7,6 @@ extensions:
     name: verafy
     enabled: true
     cmd: npx
-    args: ["-y", "-p", "github:Verafyai/verafyHarness", "verafy-mcp"]
+    args: ["-y", "@verafy/mcp"]
     env_keys: ["VERAFY_API_KEY"]
     timeout: 300

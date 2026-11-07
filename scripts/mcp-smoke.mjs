@@ -5,7 +5,7 @@
  * and print what comes back. Mock mode only, in a temporary workspace.
  *
  *   node scripts/mcp-smoke.mjs
- *   node scripts/mcp-smoke.mjs -- npx -y -p github:Verafyai/verafyHarness verafy-mcp
+ *   node scripts/mcp-smoke.mjs -- npx -y @verafy/mcp
  */
 import { spawn } from 'node:child_process'
 import { mkdtempSync } from 'node:fs'

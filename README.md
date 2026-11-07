@@ -125,7 +125,7 @@ Verafy Harness ships as an MCP server, `verafy-mcp` ([`packages/mcp`](packages/m
 | OpenClaw | [`integrations/openclaw`](integrations/openclaw) | config written, not run end to end |
 | Any MCP client | [`integrations/mcp`](integrations/mcp) | verified with MCP Inspector 2.14.0 |
 
-In Claude Code: `/plugin marketplace add Verafyai/verafyHarness`, then `/plugin install verafy-harness@verafyHarness`. Every config starts the server with `npx -y -p github:Verafyai/verafyHarness verafy-mcp`; from a clone it is `node bin/verafy-mcp.js`. The safety model and the spend rule are in [the guide](docs/run-a-harness.md#10-run-it-from-your-agent).
+In Claude Code: `/plugin marketplace add Verafyai/verafyHarness`, then `/plugin install verafy-harness@verafyHarness`. Every config starts the server with `npx -y @verafy/mcp`; from a clone it is `node bin/verafy-mcp.js`. The safety model and the spend rule are in [the guide](docs/run-a-harness.md#10-run-it-from-your-agent).
 
 ## Run a harness
 

@@ -5,9 +5,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "-p",
-        "github:Verafyai/verafyHarness",
-        "verafy-mcp"
+        "@verafy/mcp"
       ],
       "env": {
         "VERAFY_API_KEY": "${env:VERAFY_API_KEY}"

@@ -16,10 +16,10 @@ gemini extensions link ./verafyHarness/integrations/gemini-cli
 [`gemini-extension.json`](gemini-extension.json) starts the server with:
 
 ```
-npx -y -p github:Verafyai/verafyHarness verafy-mcp
+npx -y @verafy/mcp
 ```
 
-The first start fetches the repo from GitHub, which took 1 min 55 s here, and later starts still took about 56 s (measured on Nov 6, 2026, macOS, npm cache warm). If your agent gives up on a slow server, use the clone form below, or raise its MCP startup timeout. The npm package will start faster once it is published.
+It installs the published package from npm. A smoke test through `npx` took 1.5 s from a cached install (measured on Nov 6, 2026, macOS); the first download depends on your network.
 
 To use the clone itself, set `"command": "node"` and `"args": ["/path/to/verafyHarness/bin/verafy-mcp.js"]`:
 

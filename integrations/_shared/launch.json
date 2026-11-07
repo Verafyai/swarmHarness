@@ -1,12 +1,10 @@
 {
-  "comment": "The one place the launch command lives. scripts/sync-integrations.mjs writes it into every agent folder. Once @verafy/mcp is published to npm, change command and args here to \"npx\" and [\"-y\", \"@verafy/mcp\"] (npx -y @verafy/mcp), then run node scripts/sync-integrations.mjs.",
+  "comment": "The one place the launch command lives. scripts/sync-integrations.mjs writes it into every agent folder. The server is published to npm as @verafy/mcp (scripts/pack-mcp.mjs stages the package).",
   "server": "verafy",
   "command": "npx",
   "args": [
     "-y",
-    "-p",
-    "github:Verafyai/verafyHarness",
-    "verafy-mcp"
+    "@verafy/mcp"
   ],
   "clone": {
     "command": "node",
