@@ -69,7 +69,7 @@ Verafy Harness does two things.
 
 | | Status | Evidence |
 |---|---|---|
-| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (148 tests), `npm run demo` |
+| A full jury on one machine: contracts, pinned context, commit and reveal, agreement against the bar, exits, payouts, linked blocks | Works | `npm test` (167 tests), `npm run demo` |
 | Live rulings by five labs' models through OpenRouter | **Measured** Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total | [results/live-2026-11-06.md](results/live-2026-11-06.md) |
 | Juror mode inside DeepSeek Harness: five DSH processes on five labs' models, block sealed from their reveals | **Measured** Nov 6, 2026: all five voted NO, 100% against an 80% bar; 24 of 24 other tools denied | [docs/dsh-juror.md](docs/dsh-juror.md) |
 | Payment router: accept lists, a local payout ledger | Works; on-chain routers planned | `verafy.config.json`, `.verafy/payouts.jsonl` |
@@ -90,7 +90,7 @@ Needs Node 22 or later. The core has no dependencies.
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 148 tests
+npm test          # 167 tests
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
 ```
 
