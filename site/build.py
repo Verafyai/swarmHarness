@@ -31,10 +31,12 @@ RELEASE = '/blog/v' + VERSION.replace('.', '-')
 # One menu, grouped. The logo is home.
 MENU = [
     ('Verafy Harness', [
+        ('/launch', 'Launch a harness'),
         ('/run', 'Run a harness'),
         ('/testnet', 'Testnet'),
         ('/economics', 'Economics'),
         ('/coin-agnostic', 'Coin Agnostic'),
+        ('/learn', 'Learn'),
         ('/spec', 'Specification'),
         ('/blog', 'Release notes'),
     ]),
@@ -67,7 +69,7 @@ HEADER_CSS = r"""
 .menu nav a:hover{background:var(--paper);border-left-color:var(--rule)}
 .menu nav a[aria-current="page"]{border-left-color:var(--accent);color:var(--accent)}
 .menu nav hr{border:0;border-top:1px solid var(--rule);margin:8px 0}
-@media (max-width:420px){.menu>summary .lab{display:none}.ver{font-size:12px;padding:3px 7px}}
+@media (max-width:420px){.menu>summary .lab{display:none}.ver{font-size:12px;padding:3px 7px}.top{gap:10px}.top .brand{font-size:17px;gap:7px}.top .brand .mark{width:24px;height:24px}}
 """
 
 MENU_JS = """<script>(function(){var d=document.querySelector('.menu');if(!d)return;document.addEventListener('click',function(e){if(d.open&&!d.contains(e.target))d.open=false});document.addEventListener('keydown',function(e){if(e.key==='Escape')d.open=false})})();</script>"""
@@ -90,8 +92,35 @@ FOOT = f'''<footer class="wrap foot">
 </footer>'''
 
 
+PAGES = {}  # path -> (title, desc), for the sitemap and llms.txt
+
+
+def jsonld(title, desc, path):
+    url = HOST + path
+    if path == '/':
+        data = {'@context': 'https://schema.org', '@graph': [
+            {'@type': 'WebSite', 'name': 'Verafy Harness', 'url': HOST + '/', 'description': desc},
+            {'@type': 'SoftwareApplication', 'name': 'Verafy Harness', 'applicationCategory': 'DeveloperApplication', 'operatingSystem': 'Linux, macOS, Windows',
+             'softwareVersion': VERSION, 'license': 'https://opensource.org/licenses/MIT', 'url': HOST + '/', 'codeRepository': 'https://github.com/Verafyai/verafyHarness',
+             'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'USD'}, 'description': desc}]}
+    else:
+        crumbs = [{'@type': 'ListItem', 'position': 1, 'name': 'Verafy Harness', 'item': HOST + '/'}]
+        parts = [x for x in path.strip('/').split('/') if x]
+        for i, _ in enumerate(parts):
+            sub = '/' + '/'.join(parts[:i + 1])
+            crumbs.append({'@type': 'ListItem', 'position': i + 2, 'name': PAGES.get(sub, (parts[i].replace('-', ' ').title(),))[0] if sub != path else title, 'item': HOST + sub})
+        kind = 'BlogPosting' if path.startswith('/blog/') else 'TechArticle'
+        data = {'@context': 'https://schema.org', '@graph': [
+            {'@type': kind, 'headline': title, 'description': desc, 'url': url, 'inLanguage': 'en', 'isPartOf': {'@type': 'WebSite', 'name': 'Verafy Harness', 'url': HOST + '/'},
+             'author': {'@type': 'Organization', 'name': 'Verafy', 'url': 'https://verafy.ai'}, 'publisher': {'@type': 'Organization', 'name': 'Verafy', 'url': 'https://verafy.ai'},
+             **({'datePublished': '2026-11-06'} if kind == 'BlogPosting' else {})},
+            {'@type': 'BreadcrumbList', 'itemListElement': crumbs}]}
+    return '<script type="application/ld+json">' + _json.dumps(data, separators=(',', ':')).replace('</', '<\\/') + '</script>'
+
+
 def head(title, desc, path, css):
     url = HOST + path
+    PAGES[path] = (title, desc)
     return f'''<!doctype html>
 <html lang="en">
 <head>
@@ -111,6 +140,11 @@ def head(title, desc, path, css):
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="{HOST}/banner.png">
+<meta name="twitter:title" content="{H.escape(title)}">
+<meta name="twitter:description" content="{H.escape(desc)}">
+<link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt">
+<link rel="alternate" type="application/rss+xml" title="Verafy Harness release notes" href="/blog/feed.xml">
+{jsonld(title, desc, path)}
 {FONTS}
 <style>
 {css}
@@ -228,7 +262,7 @@ tr:last-child td{border-bottom:0}
 .foot p{margin:0}
 '''
 
-TOC_JS = '''<script>(function(){var links=[].slice.call(document.querySelectorAll('.side a'));var hs=links.map(function(a){return document.getElementById(decodeURIComponent(a.hash.slice(1)))}).filter(Boolean);function on(){var y=window.scrollY+120,cur=null;hs.forEach(function(h){if(h.offsetTop<=y)cur=h.id});links.forEach(function(a){a.classList.toggle('on',decodeURIComponent(a.hash.slice(1))===cur)})}window.addEventListener('scroll',on,{passive:true});on()})();</script>'''
+TOC_JS = '''<script>(function(){var links=[].slice.call(document.querySelectorAll('.side a[href^="#"]'));var hs=links.map(function(a){return document.getElementById(decodeURIComponent(a.hash.slice(1)))}).filter(Boolean);function on(){var y=window.scrollY+120,cur=null;hs.forEach(function(h){if(h.offsetTop<=y)cur=h.id});links.forEach(function(a){a.classList.toggle('on',decodeURIComponent(a.hash.slice(1))===cur)})}window.addEventListener('scroll',on,{passive:true});on()})();</script>'''
 
 
 def fix_links(md):
@@ -345,26 +379,35 @@ def score_svg(sc):
     return ''.join(out)
 
 
-def arch_svg():
+ARCH_V1 = dict(ethics=('GOV, planned', False), prover=('PROVE, designed', False), verifiers=('sampled, designed', False), solana=('SOL, via SIMDs', False), bsvc=('deposits, designed', False))
+ARCH_V2 = dict(ethics=('GOV, built', True), prover=('PROVE, mock prover', True), verifiers=('every proof, built', True), solana=('SOL, local validator', True), bsvc=('deposits, built', True))
+
+
+def arch_svg(L=ARCH_V2):
     B = lambda x, y, w, t, sub, solid=True: (f'<rect x="{x}" y="{y}" width="{w}" height="58" rx="3" fill="{"var(--accent-soft)" if solid else "var(--sheet)"}" stroke="var(--accent)" stroke-width="1.6" {"" if solid else "stroke-dasharray=\"5 4\""}/>'
         f'<text x="{x+12}" y="{y+24}" fill="var(--ink)" font-weight="600">{t}</text><text x="{x+12}" y="{y+44}" fill="var(--mute)" font-size="11.5">{sub}</text>')
     A = lambda x1, y1, x2, y2: f'<path d="M{x1} {y1} L{x2} {y2}" stroke="var(--mute)" stroke-width="1.5" marker-end="url(#ah)"/>'
     g = ['<figure class="chart"><svg viewBox="0 0 900 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture: contract, ethics gate, atomizer, router, settled or proven lane, packer, prover, verifiers, jury, TinySVM, record on Verafy Chain or Solana, banker and light client. Solid boxes are built; dashed are designed or planned." font-family="JetBrains Mono, ui-monospace, monospace" font-size="13">',
          '<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--mute)"/></marker></defs>']
-    g += [B(10, 20, 150, 'Contract', 'verafy.asc/1'), B(190, 20, 150, 'Ethics gate', 'GOV, planned', False), B(370, 20, 150, 'Atomizer', 'PACK, built'), B(550, 20, 150, 'Router', 'ROUTE, built'), B(730, 20, 160, 'Settled', 'screen or panel')]
+    g += [B(10, 20, 150, 'Contract', 'verafy.asc/1'), B(190, 20, 150, 'Ethics gate', *L['ethics']), B(370, 20, 150, 'Atomizer', 'PACK, built'), B(550, 20, 150, 'Router', 'ROUTE, built'), B(730, 20, 160, 'Settled', 'screen or panel')]
     g += [A(160, 49, 188, 49), A(340, 49, 368, 49), A(520, 49, 548, 49), A(700, 49, 728, 49)]
-    g += [B(550, 120, 150, 'Packer', 'PACK, built'), B(370, 120, 150, 'Prover', 'PROVE, designed', False), B(190, 120, 150, 'Verifiers', 'sampled, designed', False)]
+    g += [B(550, 120, 150, 'Packer', 'PACK, built'), B(370, 120, 150, 'Prover', *L['prover']), B(190, 120, 150, 'Verifiers', *L['verifiers'])]
     g += [A(625, 78, 625, 118), A(550, 149, 522, 149), A(370, 149, 342, 149)]
     g += ['<text x="632" y="104" fill="var(--mute)" font-size="11.5">L2 only</text>']
-    g += [B(10, 220, 200, 'Jury', 'commit, reveal, bar'), B(240, 220, 200, 'TinySVM', 'SETTLE, built'), B(470, 220, 200, 'Verafy Chain', 'CHAIN, built'), B(700, 220, 190, 'Solana', 'SOL, via SIMDs', False)]
+    g += [B(10, 220, 200, 'Jury', 'commit, reveal, bar'), B(240, 220, 200, 'TinySVM', 'SETTLE, built'), B(470, 220, 200, 'Verafy Chain', 'CHAIN, built'), B(700, 220, 190, 'Solana', *L['solana'])]
     g += [A(210, 249, 238, 249), A(440, 249, 468, 249), A(670, 249, 698, 249), A(265, 178, 110, 218), A(810, 78, 110, 218)]
-    g += [B(10, 320, 200, 'Banker', 'BANK, core built'), B(240, 320, 200, 'Keyblock, wallet', 'BANK, built'), B(470, 320, 200, 'Light client', 'LIGHT, built'), B(700, 320, 190, 'BankerService', 'deposits, designed', False)]
+    g += [B(10, 320, 200, 'Banker', 'BANK, core built'), B(240, 320, 200, 'Keyblock, wallet', 'BANK, built'), B(470, 320, 200, 'Light client', 'LIGHT, built'), B(700, 320, 190, 'BankerService', *L['bsvc'])]
     g += ['<text x="10" y="415" fill="var(--mute)" font-size="12">Solid: built and tested. Dashed: designed or planned. The record goes to Verafy Chain today, or to Solana accounts if the SIMDs are implemented.</text>']
     g.append('</svg></figure>')
     return ''.join(g)
 
 
 SPEC_CSS = r"""
+.learnnav .grp-l{display:block;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:12px 0 4px 8px}
+.learnnav>li:first-child .grp-l{margin-top:0}
+.learnnav ul{padding-left:0!important}
+@media (max-width:900px){.side:has(.learnnav){display:none}}
+.crumb{font-family:var(--mono);font-size:13px;margin:0 0 10px}
 figure.chart{margin:20px 0;background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:14px;overflow-x:auto}
 figure.chart svg{display:block;width:100%;min-width:620px;height:auto}
 figure.chart figcaption{font-size:14px;color:var(--mute);margin-top:8px}
@@ -407,23 +450,125 @@ def spec_page(sc):
     write_page('spec.html', '/spec', f'Verafy specification v{VERSION}', f'The Verafy Harness and Verafy Chain specification, v{VERSION}: every requirement with a stable ID and a status, checked against the code by a scoring pass.', 'Specification', body, toc)
 
 
-POSTS = [('v0-0-1-alpha', 'v0.0.1-alpha', '2026-11-06', 'Verafy Harness v0.0.1-alpha: the first spec, scored', 'The first versioned spec, a scoring pass that checks it against the code, multi-model routing with calibration and audits, proof packing routed, and the economics rewritten.')]
+POSTS = [('v0-0-2-alpha', 'v0.0.2-alpha', '2026-11-06', 'Verafy Harness v0.0.2-alpha: run it anywhere', 'The harness daemon, verafy up for every cloud, a testnet on one machine, a Solana ruling program, proof packing end to end, a calibration set, the Banker as a service, and a Learn section.'),
+         ('v0-0-1-alpha', 'v0.0.1-alpha', '2026-11-06', 'Verafy Harness v0.0.1-alpha: the first spec, scored', 'The first versioned spec, a scoring pass that checks it against the code, multi-model routing with calibration and audits, proof packing routed, and the economics rewritten.')]
 
 
 def blog(sc):
     items = ''.join(f'<li><a href="/blog/{slug}">{H.escape(t)}</a><div class="postmeta">{ver}, {date}</div><p>{H.escape(d)}</p></li>' for slug, ver, date, t, d in POSTS)
     body = f'<h1 id="release-notes">Release notes</h1><p>What changed in each version of Verafy Harness and its spec. The current version is <a href="{RELEASE}">v{VERSION}</a>.</p><ul class="posts">{items}</ul>'
     write_page('blog.html', '/blog', 'Release notes', 'Release notes for Verafy Harness and the Verafy spec.', 'Release notes', body, '<ul><li><a href="#release-notes">Release notes</a></li></ul>', side='Blog')
-    top = sc['gaps'][:10]
-    area_rows = '\n'.join(f"| {k}: {a['name']} | {a['count']} | {round(a['score']*100)}% |" for k, a in sc['areas'].items())
     for slug, ver, date, t, d in POSTS:
+        snap = SRC / 'blog' / f'{slug}.score.json'
+        if ver == 'v' + VERSION:
+            snap.write_text(_json.dumps({'version': sc['version'], 'overall': sc['overall'], 'areas': sc['areas'], 'rows': [{'id': r['id']} for r in sc['rows']], 'gaps': [{k: g.get(k) for k in ('id', 'status', 'title', 'rex')} for g in sc['gaps'][:10]]}, indent=1))
+        psc = _json.loads(snap.read_text()) if snap.exists() else sc
+        top = psc['gaps'][:10]
+        area_rows = '\n'.join(f"| {k}: {a['name']} | {a['count']} | {round(a['score']*100)}% |" for k, a in psc['areas'].items())
         md = (SRC / 'blog' / f'{slug}.md').read_text()
-        md = (md.replace('@@OVERALL@@', f"{round(sc['overall']*100)}%").replace('@@COUNT@@', str(len(sc['rows'])))
+        md = (md.replace('@@OVERALL@@', f"{round(psc['overall']*100)}%").replace('@@COUNT@@', str(len(psc['rows'])))
                 .replace('@@AREA_TABLE@@', '| Area | Requirements | Score |\n|---|---|---|\n' + area_rows)
                 .replace('@@GAPS@@', '\n'.join(f"{i+1}. **{g['id']}** ({g['status']}{', needs Rex' if g.get('rex') else ''}): {g['title']}." for i, g in enumerate(top))))
         body, toc = md_page(md, f'blog/{slug}.html', f'/blog/{slug}', t, d, 'Release notes')
-        body = body.replace('<p>@@SCORE_SVG@@</p>', score_svg(sc)).replace('<p>@@ARCH_SVG@@</p>', arch_svg())
+        body = body.replace('<p>@@SCORE_SVG@@</p>', score_svg(psc)).replace('<p>@@ARCH_SVG@@</p>', arch_svg(ARCH_V1 if ver == 'v0.0.1-alpha' else ARCH_V2))
         write_page(f'blog/{slug}.html', f'/blog/{slug}', t, d, 'Release notes', body, toc)
+
+
+
+LAUNCH_CSS = r"""
+.lede{font-size:19px;max-width:44em}
+.note{font-size:15px;color:var(--mute);max-width:52em}
+.launch{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:24px;align-items:start;margin-top:12px}
+@media (max-width:1000px){.launch{grid-template-columns:minmax(0,1fr)}}
+.inputs fieldset{border:1px solid var(--rule);border-radius:3px;background:var(--sheet);margin:0 0 14px;padding:10px 14px 14px}
+.inputs legend{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:0 6px}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opts label{display:flex;gap:8px;align-items:center;font-size:16px}
+.opts input{accent-color:var(--accent);width:18px;height:18px}
+.row{display:block;font-size:14.5px;color:var(--mute);margin:10px 0 4px}
+.inputs select,.inputs input:not([type=radio]){width:100%;font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--rule);border-radius:2px;background:var(--paper);color:var(--ink)}
+.outputs{background:var(--sheet);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:3px;padding:12px 18px 18px;min-width:0}
+.ohead{display:flex;justify-content:space-between;align-items:baseline}
+.ohead .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.pill{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid currentColor;padding:2px 8px;border-radius:2px}
+.outputs h3{font-size:17px;margin:18px 0 6px}
+.codebox{position:relative}
+.codebox pre{margin:0;max-height:420px;overflow:auto;padding-right:70px}
+.copy{position:absolute;top:8px;right:8px;font-family:var(--display);font-weight:600;font-size:13px;padding:5px 10px;border:1px solid var(--rule);border-radius:2px;background:var(--sheet);color:var(--ink);cursor:pointer}
+.copy:hover{border-color:var(--accent);color:var(--accent)}
+.warn{color:var(--hold);border:1px solid currentColor;padding:8px 10px;border-radius:2px;font-size:14.5px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-block;font-family:var(--display);font-weight:650;font-size:15px;padding:10px 14px;border-radius:2px;background:var(--ink);color:var(--paper);text-decoration:none}
+.btn:hover{background:var(--accent);color:#fff}
+td.v{font-family:var(--mono);font-size:14px;white-space:nowrap}
+article section{scroll-margin-top:16px}
+"""
+
+
+def launch():
+    profiles = (REPO / 'packages' / 'deploy' / 'src' / 'profiles.js').read_text()
+    cinit = (REPO / 'packages' / 'deploy' / 'src' / 'cloudinit.js').read_text()
+    lib = re.sub(r'^export ', '', profiles + ';\n' + cinit, flags=re.M)
+    js = lib + ';\n' + (SRC / 'launch.js').read_text()
+    body = (SRC / 'launch.html').read_text()
+    toc = '<ul>' + ''.join(f'<li><a href="#{a}">{t}</a></li>' for a, t in [('quick', 'The quick way'), ('try', 'A testnet for free'), ('configure', 'Configure one'), ('hardware', 'Models by machine'), ('hosted', 'Hosted harnesses'), ('safety', 'Keys and safety')]) + '</ul>'
+    page = (head('Launch a harness', 'Launch a Verafy Harness on your machine, in Docker, on DigitalOcean or Hetzner, or on any cloud. Pick a model; get the command, the first-boot script or a one-click button.', '/launch', DOC_CSS + LAUNCH_CSS)
+            + COINFREE + '\n' + header('Launch a harness')
+            + f'<div class="wrap layout"><aside class="side" aria-label="On this page"><span class="lbl">Launch</span>{toc}</aside><article class="wide">{body}</article></div>\n'
+            + FOOT + '\n' + TOC_JS + f'\n<script>\n{js}\n</script>\n</body>\n</html>\n')
+    check('launch.html', page)
+    (SITE / 'launch.html').write_text(page)
+
+
+def learn():
+    meta = _json.loads((SRC / 'learn' / 'index.json').read_text())
+    groups = {}
+    for slug, m in meta.items():
+        groups.setdefault(m['group'], []).append(slug)
+    side = ''.join(f'<li><span class="grp-l">{g}</span><ul>' + ''.join(f'<li><a href="/learn/{s}">{H.escape(meta[s]["title"])}</a></li>' for s in groups[g]) + '</ul></li>' for g in ['Basics', 'Settlement', 'Proofs', 'Routing', 'Money', 'Governance', 'Running one'] if g in groups)
+    side = f'<ul class="learnnav">{side}</ul>'
+    body, _ = md_page((SRC / 'learn' / 'index.md').read_text(), 'learn.html', '/learn', '', '', '')
+    write_page('learn.html', '/learn', 'Learn Verafy Harness', 'Every concept in Verafy Harness and Verafy Chain in plain words: Actually Smart Contracts, juries, proof packing, routing, the Banker, Solana settlement and more.', 'Learn', body, side, side='Learn')
+    for slug, m in meta.items():
+        body, _ = md_page((SRC / 'learn' / f'{slug}.md').read_text(), f'learn/{slug}.html', f'/learn/{slug}', '', '', '')
+        body = f'<p class="crumb"><a href="/learn">Learn</a> / {H.escape(m["group"])}</p>' + body
+        cur = side.replace(f'<a href="/learn/{slug}">', f'<a href="/learn/{slug}" class="on" aria-current="page">')
+        write_page(f'learn/{slug}.html', f'/learn/{slug}', f'{m["title"]}: Verafy Harness', m['desc'], 'Learn', body, cur, side='Learn')
+
+
+def machine_readable():
+    """llms.txt, llms-full.txt, sitemap.xml, robots.txt and the release-notes feed."""
+    meta = _json.loads((SRC / 'learn' / 'index.json').read_text())
+    sections = [
+        ('Start here', [('/', 'Verafy Harness'), ('/launch', None), ('/run', None), ('/testnet', None)]),
+        ('Learn', [('/learn', None)] + [(f'/learn/{s}', None) for s in meta]),
+        ('Reference', [('/spec', None), ('/economics', None), ('/coin-agnostic', None)]),
+        ('Release notes', [('/blog', None)] + [(f'/blog/{slug}', None) for slug, *_ in POSTS]),
+    ]
+    L = ['# Verafy Harness', '', f'> An AI validator anyone can run: one model in a harness that rules on contracts written in words (Actually Smart Contracts), with juries across labs, commit and reveal, exact settlement, and no token. Version {VERSION}. A prototype, not a running network.', '',
+         'Every number on this site is labeled measured, vendor-reported, modeled or illustrative. Code: https://github.com/Verafyai/verafyHarness (MIT). The concept chain: https://chain.verafy.ai.', '']
+    for name, items in sections:
+        L.append(f'## {name}')
+        L.append('')
+        for path, label in items:
+            title, desc = PAGES.get(path, (label or path, ''))
+            title = title.removesuffix(': Verafy Harness')
+            L.append(f'- [{title}]({HOST}{path}): {desc}')
+        L.append('')
+    L += ['## Optional', '', f'- [Full text of the Learn pages and the spec]({HOST}/llms-full.txt)', '- [requirements.json](https://github.com/Verafyai/verafyHarness/blob/main/docs/spec/requirements.json): every requirement with its status, machine-readable', '']
+    (SITE / 'llms.txt').write_text('\n'.join(L))
+    full = [f'# Verafy Harness, full text (v{VERSION})', '', 'The Learn pages, then the specification. Generated from the site sources.', '']
+    for s in meta:
+        full.append(re.sub(r'\]\(/', f']({HOST}/', (SRC / 'learn' / f'{s}.md').read_text()))
+        full.append(f'Source: {HOST}/learn/{s}\n')
+    full.append((REPO / 'docs' / 'spec' / 'VERAFY-SPEC.md').read_text())
+    (SITE / 'llms-full.txt').write_text('\n'.join(full))
+    urls = sorted(PAGES)
+    (SITE / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'  <url><loc>{HOST}{u}</loc><lastmod>2026-11-06</lastmod></url>\n' for u in urls) + '</urlset>\n')
+    (SITE / 'robots.txt').write_text(f'User-agent: *\nAllow: /\n\nSitemap: {HOST}/sitemap.xml\n')
+    items = ''.join(f'<item><title>{H.escape(t)}</title><link>{HOST}/blog/{slug}</link><guid>{HOST}/blog/{slug}</guid><pubDate>Fri, 06 Nov 2026 12:00:00 -0800</pubDate><description>{H.escape(d)}</description></item>' for slug, ver, date, t, d in POSTS)
+    (SITE / 'blog').mkdir(exist_ok=True)
+    (SITE / 'blog' / 'feed.xml').write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Verafy Harness release notes</title><link>{HOST}/blog</link><description>What changed in each version of Verafy Harness and its spec.</description>{items}</channel></rss>\n')
 
 
 if __name__ == '__main__':
@@ -432,10 +577,13 @@ if __name__ == '__main__':
     _sc = score_data()
     spec_page(_sc)
     blog(_sc)
+    launch()
+    learn()
     doc('run-a-harness.md', 'run.html', '/run', 'Run a harness',
         'How to run a Verafy Harness: machine requirements, models, how a model is proven, install, configure, costs and earnings.')
     doc('testnet.md', 'testnet.html', '/testnet', 'Testnet',
         'The Verafy Chain local devnet you can run now, and the plan for Testnet 0.')
     doc('coin-agnostic.md', 'coin-agnostic.html', '/coin-agnostic', 'Coin Agnostic',
         'Why there is no coin, what the money pays for, and how the Verafy Harness routing agent moves it.')
+    machine_readable()
     print('built', ', '.join(str(p.relative_to(SITE)) for p in sorted(SITE.rglob('*.html')) if 'src' not in p.parts))

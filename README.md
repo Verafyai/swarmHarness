@@ -90,8 +90,9 @@ Needs Node 22 or later. The core has no dependencies.
 ```sh
 git clone https://github.com/Verafyai/verafyHarness.git
 cd verafyHarness
-npm test          # 167 tests
+npm test          # 198 tests, plus the spec check
 npm run demo      # five contracts, five rulings, five blocks, scripted answers
+npm run testnet   # a whole testnet on this machine: a daemon per lab, juries over HTTP, sealed blocks
 ```
 
 <p align="center">
@@ -105,6 +106,19 @@ export VERAFY_API_KEY=...       # never commit it
 node bin/verafy.js doctor --live
 node bin/verafy.js run examples/market-resolution.json --live
 ```
+
+Run a harness anywhere (v0.0.2-alpha):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Verafyai/verafyHarness/main/install.sh | sh
+verafy up                    # pick a target and a model; local, Docker, DigitalOcean, Hetzner or any cloud
+verafy up --ui               # the same, as a page on 127.0.0.1
+verafy harness serve         # the daemon itself, configured by VERAFY_* variables
+verafy testnet up --solana   # local testnet, settling each ruling on a local Solana validator
+verafy packed examples/market-resolution.json examples/packed/cloture.json --plans examples/packed/plans.json
+```
+
+See [harness.verafy.ai/launch](https://harness.verafy.ai/launch) and [harness.verafy.ai/learn](https://harness.verafy.ai/learn).
 
 Other commands: `verafy doctor [--live]`, `verafy validate <file>`, `verafy pin <file>` (writes SHA-256 pins for every context entry), `verafy seal <file> <juror-dir...>` (seals a block from reveals that separate harness processes wrote, such as DSH jurors), `verafy chain`, and `--json` for machine output. Installed as a package, the command is `verafy`.
 

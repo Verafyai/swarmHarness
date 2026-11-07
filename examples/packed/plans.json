@@ -1,0 +1,108 @@
+{
+  "market-senate-bill-nov30": {
+    "kind": "verafy.atomplan/1",
+    "atoms": [
+      {
+        "id": "pass",
+        "q": "Does the snapshot record a passing Senate roll-call vote on H.R. 4410?",
+        "answer": {
+          "type": "yes-no"
+        },
+        "facts": [
+          {
+            "text": "Vote 302 (Nov 19): motion to proceed to H.R. 4410, rejected 46-53. No further votes on H.R. 4410 were recorded through November 30.",
+            "pin": "536d4a107871205583293a8daa88d1e1bf28a3ecdf7eaaa49888d4dc60698de0",
+            "loc": "p1"
+          }
+        ]
+      },
+      {
+        "id": "rec",
+        "q": "Is the official Senate roll-call record available for November 2026?",
+        "answer": {
+          "type": "yes-no"
+        },
+        "facts": [
+          {
+            "text": "Snapshot of senate.gov roll-call votes, taken Dec 1, 2026.",
+            "pin": "536d4a107871205583293a8daa88d1e1bf28a3ecdf7eaaa49888d4dc60698de0",
+            "loc": "p1"
+          }
+        ]
+      }
+    ],
+    "decide": [
+      {
+        "when": {
+          "not": {
+            "atom": "rec"
+          }
+        },
+        "outcome": "UNCLEAR"
+      },
+      {
+        "when": {
+          "atom": "pass"
+        },
+        "outcome": "YES"
+      },
+      {
+        "else": "NO"
+      }
+    ],
+    "onUnknown": "UNCLEAR"
+  },
+  "market-cloture-nov18": {
+    "kind": "verafy.atomplan/1",
+    "atoms": [
+      {
+        "id": "clo",
+        "q": "Was cloture on a nomination agreed in the Senate on November 18?",
+        "answer": {
+          "type": "yes-no"
+        },
+        "facts": [
+          {
+            "text": "Vote 301 (Nov 18): cloture on a nomination, agreed 52-47.",
+            "pin": "536d4a107871205583293a8daa88d1e1bf28a3ecdf7eaaa49888d4dc60698de0",
+            "loc": "p1"
+          }
+        ]
+      },
+      {
+        "id": "rec",
+        "q": "Is the official Senate roll-call record available for November 2026?",
+        "answer": {
+          "type": "yes-no"
+        },
+        "facts": [
+          {
+            "text": "Snapshot of senate.gov roll-call votes, taken Dec 1, 2026.",
+            "pin": "536d4a107871205583293a8daa88d1e1bf28a3ecdf7eaaa49888d4dc60698de0",
+            "loc": "p1"
+          }
+        ]
+      }
+    ],
+    "decide": [
+      {
+        "when": {
+          "not": {
+            "atom": "rec"
+          }
+        },
+        "outcome": "UNCLEAR"
+      },
+      {
+        "when": {
+          "atom": "clo"
+        },
+        "outcome": "YES"
+      },
+      {
+        "else": "NO"
+      }
+    ],
+    "onUnknown": "UNCLEAR"
+  }
+}
