@@ -35,7 +35,7 @@ export function serveConfig(file = {}, env = process.env) {
   const lab = env.VERAFY_LAB ?? h.lab
   const model = env.VERAFY_MODEL ?? h.model
   const harness = {
-    id: env.VERAFY_HARNESS_ID ?? h.id ?? (lab ? `h-${lab}-${Math.random().toString(36).slice(2, 6)}` : undefined),
+    id: env.VERAFY_HARNESS_ID ?? h.id,  // when unset, startServe makes one and keeps it in the data directory
     lab,
     model,
     bond: Number(env.VERAFY_BOND ?? h.bond ?? DEFAULTS.bond),
@@ -65,7 +65,7 @@ export function checkServeConfig(c, env = process.env) {
   if (!c.harness.model) p.push('no model: set VERAFY_MODEL or harness.model')
   if (!(c.harness.bond > 0)) p.push('bond must be a positive number')
   if (!c.mock && !env[c.provider.apiKeyEnv] && !isLocalEndpoint(c.provider.baseURL)) p.push(`no model key: set ${c.provider.apiKeyEnv} (or VERAFY_MOCK=1 to try it with scripted answers)`)
-  if (!(c.port > 0 && c.port < 65536)) p.push('port must be 1 to 65535')
+  if (!(c.port >= 0 && c.port < 65536)) p.push('port must be 0 to 65535')
   if (c.nodes.length && /127\.0\.0\.1|localhost/.test(c.publicUrl) && !c.nodes.every(n => /127\.0\.0\.1|localhost/.test(n))) p.push('publicUrl is a local address but the nodes are remote: set VERAFY_PUBLIC_URL to an address they can reach')
   return p
 }

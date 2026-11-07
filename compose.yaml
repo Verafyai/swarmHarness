@@ -1,0 +1,16 @@
+# docker compose up -d   (fill ~/.verafy/env first, or run `verafy up --target docker`)
+services:
+  harness:
+    image: ghcr.io/verafyai/verafy-harness:latest
+    build: .
+    env_file: ${HOME}/.verafy/env
+    ports: ["7200:7200"]
+    volumes: ["verafy-data:/data"]
+    restart: unless-stopped
+  # Uncomment to run open weights next to the harness; set VERAFY_BASE_URL=http://ollama:11434/v1
+  # ollama:
+  #   image: ollama/ollama
+  #   volumes: ["ollama:/root/.ollama"]
+volumes:
+  verafy-data: {}
+  # ollama: {}

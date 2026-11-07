@@ -1,0 +1,57 @@
+{
+  "screen": "simulated",
+  "model": null,
+  "set": "examples/calibration/atoms.jsonl",
+  "atoms": 1000,
+  "errors": 0,
+  "target": 0.97,
+  "measuredAt": "2026-11-07T00:43:23.866Z",
+  "wallMs": 9,
+  "label": "simulated: checks the pipeline only",
+  "accuracyByKind": {
+    "compare": 0.955,
+    "deadline": 0.97,
+    "tally": 0.965,
+    "presence": 0.985,
+    "unsettled": 0.985
+  },
+  "cutoffs": {
+    "compare": {
+      "cutoff": null,
+      "n": 0,
+      "accuracy": null,
+      "lower": null,
+      "coverage": 0
+    },
+    "deadline": {
+      "cutoff": 0.7956485271453857,
+      "n": 195,
+      "accuracy": 0.9948717948717949,
+      "lower": 0.9715276468408303,
+      "coverage": 0.975
+    },
+    "tally": {
+      "cutoff": null,
+      "n": 0,
+      "accuracy": null,
+      "lower": null,
+      "coverage": 0
+    },
+    "presence": {
+      "cutoff": 0.6963684916496277,
+      "n": 198,
+      "accuracy": 0.9949494949494949,
+      "lower": 0.9719505656258638,
+      "coverage": 0.99
+    },
+    "unsettled": {
+      "cutoff": 0.850068548321724,
+      "n": 198,
+      "accuracy": 0.9949494949494949,
+      "lower": 0.9719505656258638,
+      "coverage": 0.99
+    }
+  },
+  "records": [],
+  "note": "records omitted; rerun scripts/calibrate-screen.mjs to regenerate"
+}

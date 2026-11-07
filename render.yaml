@@ -1,0 +1,23 @@
+# "Deploy to Render" blueprint: one harness as a Docker web service with a
+# persistent disk for its key. The model key is asked for at deploy time.
+services:
+  - type: web
+    name: verafy-harness
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    disk:
+      name: verafy-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: VERAFY_LAB
+        value: anthropic
+      - key: VERAFY_MODEL
+        value: anthropic/claude-haiku-4.5
+      - key: VERAFY_API_KEY
+        sync: false
+      - key: VERAFY_NODES
+        sync: false
+      - key: VERAFY_PORT
+        value: "7200"

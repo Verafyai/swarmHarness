@@ -3,7 +3,7 @@
  * (with its key kept in the data directory), and the daemon.
  * @module @verafyharness/deploy/serve
  */
-import { mkdirSync, readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { totalmem, cpus } from 'node:os'
 import { execFileSync } from 'node:child_process'
@@ -30,6 +30,12 @@ export async function startServe(c, { env = process.env, log } = {}) {
   const problems = checkServeConfig(c, env)
   if (problems.length) throw new Error(problems.join('\n'))
   mkdirSync(c.dataDir, { recursive: true, mode: 0o700 })
+  if (!c.harness.id) {
+    // One id per data directory, kept across restarts, so the key and the record stay with it.
+    const idFile = join(c.dataDir, 'harness-id')
+    if (!existsSync(idFile)) writeFileSync(idFile, `h-${c.harness.lab}-${Math.random().toString(36).slice(2, 8)}\n`, { mode: 0o600 })
+    c = { ...c, harness: { ...c.harness, id: readFileSync(idFile, 'utf8').trim() } }
+  }
   const harness = new Harness({ ...c.harness, provider: providerFrom(c, env), identityFile: join(c.dataDir, `${c.harness.id}.identity.pem`) })
   const daemon = new HarnessDaemon({ harness, nodes: c.nodes, publicUrl: c.publicUrl, port: c.port, stateFile: join(c.dataDir, `${c.harness.id}.state.json`), ...(log ? { log } : {}) })
   await daemon.start()
