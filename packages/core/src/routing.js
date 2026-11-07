@@ -17,12 +17,21 @@
 export const ASSURANCE = ['L0', 'L1', 'L1+', 'L2', 'L3']
 
 /**
- * The highest level a route can reach.
- * @param {{kind: 'hosted' | 'open-weights', attestation?: boolean, proofs?: boolean}} route - one inference route.
+ * Route kinds that can carry a proof of inference: a model this harness runs
+ * under a local prover adapter (`open-weights` or `local-prover`), or a proving
+ * service paid through the API router (`proving-service`). A hosted model API
+ * never can: the harness cannot prove what ran on someone else's machine.
+ */
+export const PROVING_KINDS = ['open-weights', 'local-prover', 'proving-service']
+
+/**
+ * The highest level a route can reach. L2 needs `proofs` and a proving kind;
+ * a hosted API that claims proofs is still L1.
+ * @param {{kind: 'hosted' | 'open-weights' | 'local-prover' | 'proving-service', attestation?: boolean, proofs?: boolean}} route - one inference route.
  * @returns {string} an assurance level.
  */
 export function routeAssurance(route) {
-  if (route.proofs) return 'L2'
+  if (route.proofs && PROVING_KINDS.includes(route.kind)) return 'L2'
   if (route.kind === 'open-weights' || route.attestation) return 'L1+'
   return 'L1'
 }

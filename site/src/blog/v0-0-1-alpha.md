@@ -4,7 +4,7 @@
 
 This is the first versioned release of Verafy Harness and the first versioned spec for Verafy Harness and Verafy Chain together. It is an alpha for a prototype: nothing here is a running network, and there is no token. What is new is that the whole design now lives in one spec with stable requirement IDs, and a scoring pass checks every claim in that spec against the code.
 
-The short version: **@@OVERALL@@ of the spec is built, weighted by importance, across @@COUNT@@ requirements.** The core protocol is nearly done; proving, governance and Solana settlement are mostly design.
+The short version: **@@OVERALL@@ of the spec is built, weighted by importance, across @@COUNT@@ requirements.** The core protocol is nearly done. Proving now runs end to end with a mock prover, but no real proof has been made yet. Governance and Solana settlement are mostly design.
 
 @@SCORE_SVG@@
 
@@ -35,7 +35,7 @@ A Jev adapter is included. TypeSafe's API isn't public, so it takes whatever cli
 
 Anthropic's FlashProve proves at most 1,024 tokens per request. `packages/pack` breaks contracts into small questions, merges the ones contracts share and packs them into each window; this release adds `routeBlock()`, so only questions in the proven lane reach the packer.
 
-To be precise about status: the packer is a library with tests, run with mock models. It is not yet wired into a harness run or a block, the fidelity panel is not wired, and no real prover is attached. Wiring it end to end (PACK-011) and a measured proof (PROVE-006) are the next steps.
+To be precise about status: the packer is a library with tests, run with mock models. Separately, `packages/prove` now proves L2 votes after the reveal and gates finality on verification, with mock, DeepProve and FlashProve adapters, but it proves whole prompts, not packed questions, and has only run against a stand-in prover. Joining atomize, route, pack and prove into one run (PACK-011) and a measured proof on real hardware (PROVE-006) are the next steps.
 
 <img class="anim" src="/assets/proof-packing.gif" alt="Animation: six contracts become twelve small questions; a question shared by four contracts becomes one slot; nine unique questions pack into two 1,024-token requests proven once. The cost per decision falls from $0.1043 unpacked to $0.0059 atomized, modeled." width="1280" height="720" loading="lazy">
 

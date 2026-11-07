@@ -19,6 +19,14 @@
  *   price       {perCall?, perInputToken?, perOutputToken?} in the payee's token
  *   billing     "per-call" (pay as you go) or "accrue" (settle with settle())
  *
+ * A prover entry (the `provers` list, Part D4): a proving service the harness
+ * buys proofs from, in any token. Same fields as an API entry, plus
+ *   modelCommitment  the committed model the service proves
+ *   price            {perProof} in the payee's token, metered per proof returned
+ * The service returns `{ results: [{id, answer, proofRef, proofHash}] }`. The
+ * router only meters and pays; the harness verifies every proof before it
+ * counts the answer (`packages/prove`), and still holds the bond and casts the vote.
+ *
  * @module @verafyharness/core/apirouter
  */
 
@@ -29,11 +37,11 @@ export class ApiRouter {
    *   is where `secretEnv` references are read. A router with only keyless APIs
    *   needs no keyblock.
    */
-  constructor({ keyblock = null, banker = null, apis, fetch: f = globalThis.fetch, env = process.env }) {
+  constructor({ keyblock = null, banker = null, apis, provers = [], fetch: f = globalThis.fetch, env = process.env }) {
     this.env = env
     this.keyblock = keyblock
     this.banker = banker
-    this.apis = new Map(apis.map(a => [a.id, a]))
+    this.apis = new Map([...apis, ...provers.map(p => ({ ...p, kind: 'prover' }))].map(a => [a.id, a]))
     this.fetch = f
     this.owed = new Map()
     this.meter = []
@@ -74,7 +82,7 @@ export class ApiRouter {
     }
     const data = await res.json().catch(() => null)
     const cost = this.price(api, data)
-    this.meter.push({ api: apiId, kind: api.kind, purpose, status: res.status, cost })
+    this.meter.push({ api: apiId, kind: api.kind, purpose, status: res.status, cost, ...(api.kind === 'prover' ? { proofs: proofsIn(data) } : {}) })
     if (cost > 0) {
       if ((api.billing ?? 'per-call') === 'per-call') this.banker.pay(api.payee, cost, `${api.kind}: ${purpose}`)
       else this.owed.set(api.payee, (this.owed.get(api.payee) ?? 0) + cost)
@@ -91,7 +99,7 @@ export class ApiRouter {
   price(api, data) {
     const p = api.price ?? {}
     const u = data?.usage ?? {}
-    return (p.perCall ?? 0) + (p.perInputToken ?? 0) * (u.prompt_tokens ?? 0) + (p.perOutputToken ?? 0) * (u.completion_tokens ?? 0)
+    return (p.perCall ?? 0) + (p.perInputToken ?? 0) * (u.prompt_tokens ?? 0) + (p.perOutputToken ?? 0) * (u.completion_tokens ?? 0) + (p.perProof ?? 0) * proofsIn(data)
   }
 
   /**
@@ -106,4 +114,9 @@ export class ApiRouter {
     }
     return paid
   }
+}
+
+/** Proofs in a proving service's response: results that carry a proof hash. */
+function proofsIn(data) {
+  return Array.isArray(data?.results) ? data.results.filter(r => typeof r?.proofHash === 'string').length : 0
 }

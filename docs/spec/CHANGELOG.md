@@ -19,6 +19,7 @@ The first versioned spec, with a scoring pass.
 - `packages/route`: the router, the Jev screen adapter, calibration and audits (12 tests).
 - `packages/economics`: `cascade()` for tiered routing, and reasoning length in the proven-block model.
 - `scripts/score.mjs`: the scoring pass.
+- `packages/prove` and `packages/core/src/proving.js` (merged alongside, PR #16): Prover and Verifier interfaces, proofs after the reveal, finality on verification, mock, DeepProve and FlashProve adapters tested against a stand-in. PROVE-001 to 003 move to built.
 
 **Already in the code before this version, now specified**
 - Core protocol, live juries, auditors and challenges, the routing agent's four blocks, the light client, TinySVM phase 1, batching and the encrypted queue, proof packing (`packages/pack`), economics, the MCP server and agent plugins.

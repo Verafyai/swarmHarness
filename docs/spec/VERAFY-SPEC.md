@@ -3,7 +3,7 @@
 **Version 0.0.1-alpha**, November 6, 2026. Covers Verafy Harness (this repo) and Verafy Chain ([Verafyai/verafyChain](https://github.com/Verafyai/verafyChain)).
 
 <!-- score -->
-**Scored 56% overall** at v0.0.1-alpha (see [SCORECARD.md](SCORECARD.md)).
+**Scored 58% overall** at v0.0.1-alpha (see [SCORECARD.md](SCORECARD.md)).
 <!-- /score -->
 
 This is an alpha spec for a prototype. Nothing here describes a running network, and there is no token. Every number is labeled **measured** (our own runs, with a date), **vendor-reported** (by whoever built the tool), **modeled** (computed from those, in `packages/economics`) or **illustrative** (an assumption to replace).
@@ -163,7 +163,7 @@ In a test block, 60 contracts became 120 atoms, 61 after dedupe, in 4 requests a
 | PACK-008 | designed | Prompt compressor: briefs for contracts that cannot be atomized; party-agreed or checked. *Gap: Brief mode is modeled in economics, not built in the packer.* |
 | PACK-009 | designed | Long contracts split by claims with a proven combine step |
 | PACK-010 | built | Route before packing: only atoms in the proven lane reach the packer |
-| PACK-011 | planned | Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end. *Gap: The packer is a tested library; no harness run or block uses it yet, and no real prover is attached.* |
+| PACK-011 | planned | Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end. *Gap: The packer is a tested library and packages/prove can prove votes, but harness runs prove whole prompts (map-reduce/1), not packed atoms; atomize, route, pack, prove, assemble is not joined end to end.* |
 <!-- /reqs:PACK -->
 
 ## ROUTE: multi-model routing
@@ -200,12 +200,12 @@ The proven lane is set by the contract, never by difficulty. While only one mode
 <!-- reqs:PROVE -->
 | ID | Status | Requirement |
 |---|---|---|
-| PROVE-001 | partial | Proof hashes on votes; a proof itself on chain fails verification. *Gap: Hashes only; no prover is wired.* |
-| PROVE-002 | designed | Prover and Verifier interfaces with mock, DeepProve and FlashProve adapters. *Gap: packages/prove does not exist.* |
-| PROVE-003 | designed | Commit, reveal, then attach the proof before a deadline; L2 final only when every counted proof verifies |
+| PROVE-001 | built | Proof hashes on votes; a proof itself on chain fails verification |
+| PROVE-002 | built | Prover and Verifier interfaces with mock, DeepProve and FlashProve adapters. *Gap: DeepProve and FlashProve adapters tested against a stand-in prover only; the FlashProve binding check (bindsTo) is planned.* |
+| PROVE-003 | built | Commit, reveal, then attach the proof before a deadline; L2 final only when every counted proof verifies |
 | PROVE-004 | designed | Prove once, verify many while one model is provable; verifiers drawn from the block hash |
 | PROVE-005 | designed | One Merkle root per block over manifests and proof hashes; sampled verification with challenges |
-| PROVE-006 | planned (needs Rex) | Measured DeepProve run on packed questions; FlashProve proving-harness runbook. *Gap: Needs a machine; FlashProve needs Rex to rent an H100 and accept the Llama license.* |
+| PROVE-006 | partial (needs Rex) | Measured DeepProve run on packed questions; FlashProve proving-harness runbook. *Gap: Runbook written (docs/proving-harness.md), not run. No real proof made or verified; needs Rex to rent a machine and accept the Llama 4 and Lagrange licenses.* |
 | PROVE-007 | research | Recursive aggregation of many proofs into one |
 <!-- /reqs:PROVE -->
 

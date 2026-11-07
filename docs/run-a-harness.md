@@ -111,6 +111,8 @@ Plus 8 to 32 vCPU and 1 Gbps networking for any GPU host. Auditors need the same
 
 **Vendor-reported** (Anthropic's FlashProve research prototype, Nov 2026): one 80 GB GPU and about 290 GB of host memory, for Llama 4 Maverick only, with a 1,024-token context limit and greedy decoding. Proving costs about 70 to 95 times the GPU time of running the model. Proof size is about 18.78 MB, and verification takes about 17 seconds on 24 CPU threads.
 
+About 290 GB is what proving needs; the one-time commitment needs 330 GB available (FlashProve `examples/maverick/figures.txt`, vendor-reported). The setup, step by step, is in [proving-harness.md](proving-harness.md). Publish the commitment with `verafy harness commit-model <harness-id> <commitment>`.
+
 ### Node
 
 | | Minimum | Recommended |

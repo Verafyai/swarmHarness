@@ -1,0 +1,10 @@
+{
+  "name": "@verafyharness/prove",
+  "version": "0.1.0",
+  "description": "Proof of inference for L2 juries: the Prover and Verifier interfaces, and mock, DeepProve and FlashProve adapters. Optional; zero dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "exports": "./src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test test/" }
+}

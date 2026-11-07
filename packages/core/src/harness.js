@@ -19,8 +19,10 @@ export class Harness {
    *   `sourceChain` (optional, off by default) is a light-client checker such as
    *   `@verafyharness/lightclient`'s `sourceChain()`; `admit` uses it to check
    *   funding on the source chain, and `pauses` records contracts it pauses.
+   *   `modelCommitment` (L2 only) is the prover's commitment to the model's
+   *   weights, published on the card; proofs are checked against it.
    */
-  constructor({ id, lab, model, bond, provider, payments, identity, identityFile, sourceChain = null, pauses = null }) {
+  constructor({ id, lab, model, bond, provider, payments, identity, identityFile, sourceChain = null, pauses = null, modelCommitment = null }) {
     this.sourceChain = sourceChain
     this.pauses = pauses
     this.id = id
@@ -32,11 +34,14 @@ export class Harness {
     this.identity = identity ? importIdentity(identity) : identityFile ? loadIdentity(identityFile) : createIdentity()
     this.record = { votes: 0, audited: 0, faults: 0 }
     this.pending = new Map()
+    this.modelCommitment = modelCommitment
+    /** Revealed votes by contract hash, kept so an L2 harness can prove them after the reveal. */
+    this.revealed = new Map()
   }
 
   /** The public description other harnesses and sealers see. */
   get card() {
-    return { id: this.id, lab: this.lab, model: this.model, bond: this.bond, publicKey: this.identity.publicKey }
+    return { id: this.id, lab: this.lab, model: this.model, bond: this.bond, publicKey: this.identity.publicKey, ...(this.modelCommitment ? { modelCommitment: this.modelCommitment } : {}) }
   }
 
   /**
@@ -81,7 +86,7 @@ export class Harness {
     const h = ascHash(asc)
     const vote = await deliberate(asc, this.provider, this.model, { lab: this.lab })
     const { commitment, salt } = commit(h, vote)
-    this.pending.set(h, { vote, salt })
+    this.pending.set(h, { vote, salt, commitment })
     const attestation = { harness: this.id, lab: this.lab, model: this.model, ascHash: h, commitment }
     return { harness: this.id, commitment, attestation, signature: signMessage(this.identity.privateKey, attestation) }
   }
@@ -95,6 +100,7 @@ export class Harness {
     const p = this.pending.get(h)
     if (!p) throw new Error(`${this.id} has nothing committed for ${h}`)
     this.pending.delete(h)
+    this.revealed.set(h, { vote: p.vote, commitment: p.commitment })
     this.record.votes++
     const message = { harness: this.id, ascHash: h, vote: p.vote, salt: p.salt }
     return { ...message, signature: signMessage(this.identity.privateKey, message) }

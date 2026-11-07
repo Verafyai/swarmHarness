@@ -757,7 +757,7 @@
       "status": "planned",
       "title": "Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end",
       "checks": [],
-      "gap": "The packer is a tested library; no harness run or block uses it yet, and no real prover is attached"
+      "gap": "The packer is a tested library and packages/prove can prove votes, but harness runs prove whole prompts (map-reduce/1), not packed atoms; atomize, route, pack, prove, assemble is not joined end to end"
     },
     {
       "id": "ROUTE-001",
@@ -870,32 +870,59 @@
       "id": "PROVE-001",
       "area": "PROVE",
       "weight": 3,
-      "status": "partial",
+      "status": "built",
       "title": "Proof hashes on votes; a proof itself on chain fails verification",
       "checks": [
         {
           "grep": "packages/core/src/network.js",
           "re": "proofHash"
+        },
+        {
+          "grep": "packages/core/src/proving.js",
+          "re": "export function proofRecord"
         }
-      ],
-      "gap": "Hashes only; no prover is wired"
+      ]
     },
     {
       "id": "PROVE-002",
       "area": "PROVE",
       "weight": 3,
-      "status": "designed",
+      "status": "built",
       "title": "Prover and Verifier interfaces with mock, DeepProve and FlashProve adapters",
-      "checks": [],
-      "gap": "packages/prove does not exist"
+      "checks": [
+        {
+          "grep": "packages/prove/src/interface.js",
+          "re": "export function assertProver"
+        },
+        {
+          "grep": "packages/prove/src/external.js",
+          "re": "export function flashProveVerifier"
+        },
+        {
+          "test": "packages/prove/test/prove.test.js"
+        }
+      ],
+      "gap": "DeepProve and FlashProve adapters tested against a stand-in prover only; the FlashProve binding check (bindsTo) is planned"
     },
     {
       "id": "PROVE-003",
       "area": "PROVE",
       "weight": 3,
-      "status": "designed",
+      "status": "built",
       "title": "Commit, reveal, then attach the proof before a deadline; L2 final only when every counted proof verifies",
-      "checks": []
+      "checks": [
+        {
+          "grep": "packages/core/src/proving.js",
+          "re": "export function gateProofs"
+        },
+        {
+          "grep": "packages/core/src/proving.js",
+          "re": "export function finality"
+        },
+        {
+          "test": "packages/core/test/proving.test.js"
+        }
+      ]
     },
     {
       "id": "PROVE-004",
@@ -917,11 +944,15 @@
       "id": "PROVE-006",
       "area": "PROVE",
       "weight": 3,
-      "status": "planned",
+      "status": "partial",
       "title": "Measured DeepProve run on packed questions; FlashProve proving-harness runbook",
-      "checks": [],
+      "checks": [
+        {
+          "file": "docs/proving-harness.md"
+        }
+      ],
       "rex": true,
-      "gap": "Needs a machine; FlashProve needs Rex to rent an H100 and accept the Llama license"
+      "gap": "Runbook written (docs/proving-harness.md), not run. No real proof made or verified; needs Rex to rent a machine and accept the Llama 4 and Lagrange licenses"
     },
     {
       "id": "PROVE-007",
