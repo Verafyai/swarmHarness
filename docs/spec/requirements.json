@@ -1,6 +1,6 @@
 {
   "spec": "Verafy Harness and Verafy Chain",
-  "version": "0.0.1-alpha",
+  "version": "0.0.2-alpha",
   "date": "2026-11-06",
   "levels": {
     "verified": {
@@ -43,6 +43,7 @@
     "SOL": "Solana settlement through the three SIMDs",
     "ECON": "Economics and the calculator",
     "AGENT": "Agent plugins and the MCP server",
+    "DEPLOY": "Deploy and run anywhere: daemon, launcher, clouds, releases, local testnet",
     "SITE": "Sites, docs and the spec",
     "OPS": "Security and operations",
     "EXT": "External collaborations and data"
@@ -274,10 +275,17 @@
       "id": "JURY-009",
       "area": "JURY",
       "weight": 3,
-      "status": "planned",
+      "status": "built",
       "title": "Harness daemon: a long-running process that watches for funded contracts and takes seats",
-      "checks": [],
-      "gap": "Blocks the network, MCP daemon tools and paused-contract resumption"
+      "checks": [
+        {
+          "grep": "packages/daemon/src/daemon.js",
+          "re": "export class HarnessDaemon"
+        },
+        {
+          "test": "packages/daemon/test/daemon.test.js"
+        }
+      ]
     },
     {
       "id": "CHAIN-001",
@@ -555,37 +563,49 @@
       "id": "BANK-006",
       "area": "BANK",
       "weight": 3,
-      "status": "designed",
+      "status": "built",
       "title": "BankerService: deposit state machine (detect, classify, hold, quote, simulate, swap, sweep, record), idempotent by txid",
       "checks": [
         {
-          "file": "docs/spec/banker.md"
+          "grep": "packages/banker/src/service.js",
+          "re": "export class BankerService"
+        },
+        {
+          "test": "packages/banker/test/banker.test.js"
         }
-      ],
-      "gap": "No deposit watcher or state machine yet"
+      ]
     },
     {
       "id": "BANK-007",
       "area": "BANK",
       "weight": 3,
-      "status": "designed",
+      "status": "partial",
       "title": "Real venue adapters: Jupiter on Solana, an EVM aggregator, a bridge; price sanity against a reference",
       "checks": [
         {
-          "file": "docs/spec/banker.md"
+          "grep": "packages/banker/src/venues.js",
+          "re": "export function jupiterVenue"
+        },
+        {
+          "grep": "packages/banker/src/venues.js",
+          "re": "export function lifiVenue"
         }
       ],
-      "gap": "Only the fixed-rate test venue exists"
+      "gap": "Jupiter and LI.FI quote live (measured Nov 6, 2026); simulation and sending are built behind the execute switch but have not run against a funded wallet"
     },
     {
       "id": "BANK-008",
       "area": "BANK",
       "weight": 2,
-      "status": "designed",
+      "status": "built",
       "title": "Token allowlist by address; quarantine unknown tokens; dust; sanctions screen; daily caps; kill switch",
       "checks": [
         {
-          "file": "docs/spec/banker.md"
+          "grep": "packages/banker/src/service.js",
+          "re": "QUARANTINED"
+        },
+        {
+          "test": "packages/banker/test/banker.test.js"
         }
       ]
     },
@@ -593,23 +613,26 @@
       "id": "BANK-009",
       "area": "BANK",
       "weight": 2,
-      "status": "designed",
+      "status": "partial",
       "title": "Gas reserves per chain; exact approvals; simulate before send; append-only ledger with cost basis",
       "checks": [
         {
-          "file": "docs/spec/banker.md"
+          "grep": "packages/banker/src/service.js",
+          "re": "export class Ledger"
         }
-      ]
+      ],
+      "gap": "Simulate before send and the hash-chained ledger are built; per-chain gas reserves, exact approvals and cost-basis export are not"
     },
     {
       "id": "BANK-010",
       "area": "BANK",
       "weight": 1,
-      "status": "designed",
+      "status": "built",
       "title": "Banker advisor: a read-only model that reports and flags, holding no keys",
       "checks": [
         {
-          "file": "docs/spec/banker.md"
+          "grep": "packages/banker/src/advisor.js",
+          "re": "export function advise"
         }
       ]
     },
@@ -617,11 +640,12 @@
       "id": "BANK-011",
       "area": "BANK",
       "weight": 1,
-      "status": "designed",
+      "status": "built",
       "title": "Service mode (converting other people's funds) disabled in code until legal review",
       "checks": [
         {
-          "file": "docs/spec/banker.md"
+          "grep": "packages/banker/src/service.js",
+          "re": "disabled in code until a legal review"
         }
       ],
       "rex": true
@@ -706,15 +730,17 @@
       "id": "PACK-006",
       "area": "PACK",
       "weight": 3,
-      "status": "partial",
+      "status": "built",
       "title": "Fidelity check: an unproven multi-lab panel rules a plan FAITHFUL before it is used",
       "checks": [
         {
-          "grep": "packages/pack/src/atomize.js",
-          "re": "export function fidelityQuestion"
+          "grep": "packages/pack/src/pipeline.js",
+          "re": "export async function checkFidelity"
+        },
+        {
+          "test": "packages/pack/test/pipeline.test.js"
         }
-      ],
-      "gap": "The question exists; running the panel and gating packing on it is not wired"
+      ]
     },
     {
       "id": "PACK-007",
@@ -763,10 +789,22 @@
       "id": "PACK-011",
       "area": "PACK",
       "weight": 3,
-      "status": "planned",
+      "status": "partial",
       "title": "Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end",
-      "checks": [],
-      "gap": "The packer is a tested library and packages/prove can prove votes, but harness runs prove whole prompts (map-reduce/1), not packed atoms; atomize, route, pack, prove, assemble is not joined end to end"
+      "checks": [
+        {
+          "grep": "packages/pack/src/pipeline.js",
+          "re": "export async function packedBlock"
+        },
+        {
+          "test": "packages/pack/test/pipeline.test.js"
+        },
+        {
+          "grep": "bin/verafy.js",
+          "re": "packedCommand"
+        }
+      ],
+      "gap": "Built for harness runs (verafy packed, packedBlock) with the mock prover; the verafyChain node intake and the daemon do not call it yet, and no real prover is attached"
     },
     {
       "id": "ROUTE-001",
@@ -853,10 +891,20 @@
       "id": "ROUTE-007",
       "area": "ROUTE",
       "weight": 3,
-      "status": "planned",
+      "status": "partial",
       "title": "A labeled calibration set of atoms with known answers, and a Jev calibration run",
-      "checks": [],
-      "gap": "Needs Jev access; until then the screen settles nothing"
+      "checks": [
+        {
+          "file": "examples/calibration/atoms.jsonl"
+        },
+        {
+          "file": "scripts/calibrate-screen.mjs"
+        },
+        {
+          "test": "packages/route/test/calibration.test.js"
+        }
+      ],
+      "gap": "The labeled set (1,000 atoms, 200 per kind) and the runner are built; a Jev run needs Jev access (JEV_URL, JEV_API_KEY). A simulated run checks the pipeline only"
     },
     {
       "id": "ROUTE-008",
@@ -1026,7 +1074,7 @@
       "id": "GOV-001",
       "area": "GOV",
       "weight": 2,
-      "status": "designed",
+      "status": "built",
       "repo": "chain",
       "title": "Constitution Draft 0 with Article 1 (no foundation, no VC, no coin, no fundraising, no secret team, no community fund, no treasury)",
       "checks": [
@@ -1040,38 +1088,46 @@
       "id": "GOV-002",
       "area": "GOV",
       "weight": 3,
-      "status": "designed",
+      "status": "built",
       "repo": "chain",
       "title": "Ethics gate: allow, refuse or escalate at intake; doubt resolves toward refusal; no bypass",
       "checks": [
         {
           "repo": "chain",
-          "grep": "ROADMAP.md",
-          "re": "ethics gate"
+          "grep": "packages/node/src/ethics.js",
+          "re": "export function screeningContract"
+        },
+        {
+          "repo": "chain",
+          "file": "test/ethics.test.js"
         }
       ],
-      "gap": "Specified, not built"
+      "gap": "Panel sizes, bar and the screening fee are illustrative until Rex sets them; challenges to an ethics ruling are not built"
     },
     {
       "id": "GOV-003",
       "area": "GOV",
       "weight": 2,
-      "status": "designed",
+      "status": "built",
       "repo": "chain",
       "title": "Amendment process: seven stages, entrenched clauses, verafy.amendment/1",
       "checks": [
         {
+          "grep": "packages/core/src/amendment.js",
+          "re": "AMENDMENT_STAGES"
+        },
+        {
           "repo": "chain",
-          "file": "AMENDMENTS.md"
+          "file": "test/governance.test.js"
         }
       ],
-      "gap": "Specified, not built"
+      "gap": "Tested in process with 42 harnesses; not on the five-harness multi-process devnet"
     },
     {
       "id": "GOV-004",
       "area": "GOV",
       "weight": 1,
-      "status": "designed",
+      "status": "built",
       "repo": "chain",
       "title": "Eleven design principles",
       "checks": [
@@ -1103,10 +1159,24 @@
       "id": "SOL-002",
       "area": "SOL",
       "weight": 3,
-      "status": "planned",
+      "status": "partial",
       "title": "A Solana devnet program implementing commit, reveal and the Ruling account; one harness ruling settled on devnet",
-      "checks": [],
-      "gap": "The strongest proof that no new chain is needed"
+      "checks": [
+        {
+          "file": "packages/solana/program/src/lib.rs"
+        },
+        {
+          "grep": "packages/solana/src/ruling.js",
+          "re": "export async function settleRuling"
+        },
+        {
+          "test": "packages/solana/test/solana.test.js"
+        },
+        {
+          "file": "docs/solana/localnet-run.json"
+        }
+      ],
+      "gap": "Built and run on a local solana-test-validator (measured Nov 6, 2026: five harnesses commit and reveal with their own keys; five bad transactions refused). Not yet deployed to devnet: the devnet and testnet RPC faucets are closed, so it needs about 1 devnet SOL from faucet.solana.com"
     },
     {
       "id": "SOL-003",
@@ -1359,6 +1429,210 @@
       "status": "research",
       "title": "Muse experiment B: poisoned evidence with and without signed provenance manifests",
       "checks": []
+    },
+    {
+      "id": "BANK-013",
+      "area": "BANK",
+      "title": "API credits: read provider balances, project days left from spend, and say what to top up and how",
+      "status": "built",
+      "weight": 2,
+      "checks": [
+        {
+          "grep": "packages/banker/src/credits.js",
+          "re": "export async function creditPlan"
+        }
+      ],
+      "gap": "No provider tops up automatically: OpenRouter's crypto top-up API returns 410 Gone (checked Nov 6, 2026). An x402 pay-per-request slot is reserved"
+    },
+    {
+      "id": "DEPLOY-001",
+      "area": "DEPLOY",
+      "title": "verafy harness serve: one harness daemon configured by VERAFY_* variables, an env file or a config file; one id and key per data directory",
+      "status": "built",
+      "weight": 3,
+      "checks": [
+        {
+          "grep": "packages/deploy/src/serve.js",
+          "re": "export async function startServe"
+        },
+        {
+          "test": "packages/deploy/test/deploy.test.js"
+        }
+      ]
+    },
+    {
+      "id": "DEPLOY-002",
+      "area": "DEPLOY",
+      "title": "verafy up: ask a few questions, show the plan with keys masked, then run locally (Node), in Docker, on DigitalOcean or Hetzner, or print user data for any cloud",
+      "status": "built",
+      "weight": 3,
+      "checks": [
+        {
+          "grep": "packages/deploy/src/plan.js",
+          "re": "export function plan"
+        },
+        {
+          "grep": "packages/deploy/src/up.js",
+          "re": "export async function upInteractive"
+        }
+      ]
+    },
+    {
+      "id": "DEPLOY-003",
+      "area": "DEPLOY",
+      "title": "Cloud clients for DigitalOcean and Hetzner, and a first-boot script that installs, hardens and runs the daemon as a service",
+      "status": "partial",
+      "weight": 2,
+      "checks": [
+        {
+          "grep": "packages/deploy/src/clouds.js",
+          "re": "hetzner"
+        },
+        {
+          "grep": "packages/deploy/src/cloudinit.js",
+          "re": "export function cloudInit"
+        }
+      ],
+      "gap": "Tested against fake APIs; no real server has been created yet (needs an operator token)"
+    },
+    {
+      "id": "DEPLOY-004",
+      "area": "DEPLOY",
+      "title": "Hardware profiles: which open-weights model a machine can hold, by modeled memory, and its router tier",
+      "status": "built",
+      "weight": 2,
+      "checks": [
+        {
+          "grep": "packages/deploy/src/profiles.js",
+          "re": "export function recommend"
+        }
+      ]
+    },
+    {
+      "id": "DEPLOY-005",
+      "area": "DEPLOY",
+      "title": "Container image, compose file, and one-click Render and DigitalOcean App Platform buttons",
+      "status": "partial",
+      "weight": 2,
+      "checks": [
+        {
+          "file": "Dockerfile"
+        },
+        {
+          "file": "compose.yaml"
+        },
+        {
+          "file": "render.yaml"
+        },
+        {
+          "file": ".do/deploy.template.yaml"
+        }
+      ],
+      "gap": "The image has not been built here (no Docker daemon); it builds and publishes on the first tagged release"
+    },
+    {
+      "id": "DEPLOY-006",
+      "area": "DEPLOY",
+      "title": "Releases: source tarball, single-file binaries for Linux, macOS and Windows, a GHCR image, checksums, and install.sh",
+      "status": "partial",
+      "weight": 2,
+      "checks": [
+        {
+          "file": ".github/workflows/release.yml"
+        },
+        {
+          "file": "install.sh"
+        }
+      ],
+      "gap": "The workflow has not run yet; it runs on the first pushed version tag"
+    },
+    {
+      "id": "DEPLOY-007",
+      "area": "DEPLOY",
+      "title": "verafy testnet: a local testnet on one machine (a daemon per lab, juries over HTTP, sealed blocks), scripted or live, with optional Solana settlement",
+      "status": "built",
+      "weight": 3,
+      "checks": [
+        {
+          "grep": "packages/deploy/src/testnet.js",
+          "re": "export async function testnetUp"
+        },
+        {
+          "test": "packages/deploy/test/deploy.test.js"
+        }
+      ]
+    },
+    {
+      "id": "DEPLOY-008",
+      "area": "DEPLOY",
+      "title": "verafy up --ui: the launcher as a page on 127.0.0.1, with a one-time token in its URL",
+      "status": "built",
+      "weight": 1,
+      "checks": [
+        {
+          "grep": "packages/deploy/src/up.js",
+          "re": "export async function upUi"
+        }
+      ]
+    },
+    {
+      "id": "DEPLOY-009",
+      "area": "DEPLOY",
+      "title": "Launch page on harness.verafy.ai: pick a model and a target, get the command, the user data or a button",
+      "status": "built",
+      "weight": 2,
+      "checks": [
+        {
+          "file": "site/src/launch.html"
+        }
+      ]
+    },
+    {
+      "id": "DEPLOY-010",
+      "area": "DEPLOY",
+      "title": "Hosted harnesses run by Verafy for people who do not want to operate one",
+      "status": "planned",
+      "weight": 2,
+      "checks": [],
+      "rex": true,
+      "gap": "Needs Rex: billing, servers and terms"
+    },
+    {
+      "id": "DEPLOY-011",
+      "area": "DEPLOY",
+      "title": "A desktop app (installer with its own window) wrapping verafy up and the daemon",
+      "status": "planned",
+      "weight": 1,
+      "checks": []
+    },
+    {
+      "id": "SITE-004",
+      "area": "SITE",
+      "title": "Learn: one page per concept, from Actually Smart Contracts to the Banker, each with its status and related concepts",
+      "status": "built",
+      "weight": 2,
+      "checks": [
+        {
+          "file": "site/src/learn/index.md"
+        }
+      ]
+    },
+    {
+      "id": "SITE-005",
+      "area": "SITE",
+      "title": "Machine-readable site: llms.txt and llms-full.txt, sitemap.xml, robots.txt, canonical URLs, Open Graph and JSON-LD on every page",
+      "status": "built",
+      "weight": 2,
+      "checks": [
+        {
+          "grep": "site/build.py",
+          "re": "llms.txt"
+        },
+        {
+          "grep": "site/build.py",
+          "re": "sitemap.xml"
+        }
+      ]
     }
   ]
 }

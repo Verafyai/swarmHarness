@@ -32,7 +32,7 @@ test('rename: verafy.asc/1 and swarm.asc/0 both validate; any other kind does no
   assert.deepEqual(validate(asc), [])
   assert.deepEqual(validate({ ...asc, kind: LEGACY_ASC_KIND }), [])
   assert.match(validate({ ...asc, kind: 'other.asc/9' }).join('\n'), /kind must be "verafy.asc\/1"/)
-  for (const f of readdirSync(join(ROOT, 'examples')).filter(f => f !== 'mock-answers.json')) {
+  for (const f of readdirSync(join(ROOT, 'examples')).filter(f => f.endsWith('.json') && f !== 'mock-answers.json')) {
     assert.equal(read(`examples/${f}`).kind, ASC_KIND, `${f} is verafy.asc/1`)
   }
 })

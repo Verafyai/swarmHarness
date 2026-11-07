@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://harness.verafy.ai/sitemap.xml

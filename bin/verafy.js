@@ -45,7 +45,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CHAIN = chainPaths(ROOT)
 const args = process.argv.slice(2)
 const flag = f => args.includes(f)
-const positional = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--config')
+const VALUE_FLAGS = ['--config', '--env', '--plans', '--chain', '--rpc', '--program', '--payer', '--target', '--lab', '--model', '--kind', '--nodes', '--id', '--public-url', '--region', '--plan', '--ref', '--port']
+const positional = args.filter((a, i) => !a.startsWith('--') && !VALUE_FLAGS.includes(args[i - 1]))
+const value = f => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined }
 const [cmd, file, ...rest] = positional
 
 const c = process.stdout.isTTY && !flag('--json')
@@ -156,6 +158,106 @@ async function readCommand(confirm) {
   process.exitCode = r.status === 'agreed' ? 0 : 1
 }
 
+/**
+ * `verafy harness serve [--env file] [--config file] [--mock]`: run the
+ * harness daemon. Settings come from VERAFY_* variables (see
+ * packages/deploy/src/config.js), an env file, and an optional JSON config
+ * with a `harness` block; variables win.
+ */
+async function serveCommand() {
+  const { serveConfig, startServe, parseEnvFile } = await import('../packages/deploy/src/index.js')
+  const envPath = value('--env')
+  const env = { ...(envPath ? parseEnvFile(await readFile(resolve(envPath.replace(/^~(?=\/)/, process.env.HOME ?? '')), 'utf8')) : {}), ...process.env }
+  if (flag('--mock')) env.VERAFY_MOCK = '1'
+  const cfgPath = value('--config')
+  const file = cfgPath ? await readJson(cfgPath) : {}
+  const config = serveConfig(file, env)
+  try {
+    const daemon = await startServe(config, { env })
+    const stop = async () => { await daemon.stop(); process.exit(0) }
+    process.on('SIGTERM', stop)
+    process.on('SIGINT', stop)
+  } catch (err) {
+    console.error(`cannot start the harness:\n${err.message.split('\n').map(l => `  - ${l}`).join('\n')}`)
+    process.exitCode = 2
+  }
+}
+
+/**
+ * `verafy packed <asc.json...> [--plans file] [--live]`: run contracts through
+ * proof packing end to end (atomize, fidelity panel, pack, prove, verify,
+ * assemble). Scripted by default (examples/packed/answers.json answers the
+ * packed slots, the panel rules FAITHFUL). With --live, the first pool model
+ * atomizes contracts without a plan and three labs' models sit the fidelity
+ * panel and answer the packed requests. The prover is the mock prover either
+ * way: its proofs bind the answer to the request but are not proofs of inference.
+ */
+async function packedCommand() {
+  const { packedBlock } = await import('../packages/pack/src/index.js')
+  const { mockProver, mockVerifier } = await import('../packages/prove/src/index.js')
+  const files = [file, ...rest].filter(Boolean)
+  if (!files.length) { console.log('usage: verafy packed <asc.json...> [--plans file] [--live] [--json]'); process.exitCode = 2; return }
+  const contracts = await Promise.all(files.map(f => readJson(f)))
+  const plansPath = value('--plans')
+  const plans = plansPath ? await readJson(plansPath) : {}
+  const config = await loadConfig()
+  let panel, complete, atomizer
+  if (flag('--live')) {
+    const byLab = [...new Map(config.pool.map(h => [h.lab, h])).values()].slice(0, 3)
+    panel = byLab.map(h => ({ lab: h.lab, model: h.model, provider: providerFor(config, h) }))
+    const top = config.pool[0]
+    atomizer = { provider: providerFor(config, top), model: top.model }
+    const prov = providerFor(config, config.pool.find(h => h.lab === 'meta') ?? top)
+    const model = (config.pool.find(h => h.lab === 'meta') ?? top).model
+    complete = req => prov.complete({ ...req, model })
+  } else {
+    const truth = await readJson(join(ROOT, 'examples/packed/answers.json'))
+    panel = ['anthropic', 'openai', 'google'].map(lab => ({ lab, model: 'scripted', provider: { complete: async () => JSON.stringify({ answer: 'FAITHFUL', confidence: 0.9, reasoning: 'scripted', sources: ['c0'] }) } }))
+    complete = async ({ user }) => [...user.matchAll(/\[S(\d+)\] Q: (.+)/g)].map(([, n, q]) => `S${n}: ${truth[q] ?? 'UNKNOWN'}`).join('\n')
+  }
+  const r = await packedBlock(contracts, { plans, atomizer, panel, prover: mockProver({ model: 'llama-4-maverick', complete }), verifier: mockVerifier(), seed: (await loadChain()).at(-1)?.hash ?? 'genesis' })
+  if (flag('--json')) { console.log(JSON.stringify(r, null, 2)); return }
+  const s = r.stats
+  console.log(`${s.contractsIn} contracts, ${s.atoms} atoms, ${s.uniqueAtoms} unique after dedupe, ${s.requests} proven request(s) at ${Math.round(s.fill * 100)}% fill (mock prover: not a proof of inference)`)
+  for (const [id, x] of Object.entries(r.results)) console.log(x.packed ? `${c.g('packed ')} ${id}: ${x.outcome}  plan ${short(x.planHash)}  panel ${Math.round(x.fidelity.agree * 100)}%  proofs ${x.proofs.map(p => `${short(p.proofHash)}${p.verified ? ' verified' : ' FAILED'}`).join(', ')}` : `${c.y('fallback')} ${id}: ${x.stage}: ${x.reason}`)
+}
+
+/**
+ * `verafy testnet up [--live] [--solana] [--rpc url --program id --payer file] [--keep] [asc.json...]`
+ * `verafy testnet down`
+ * A whole testnet on this machine: one harness daemon per lab, a local
+ * coordinator that draws juries, runs commit and reveal over HTTP and seals
+ * blocks, and optionally settles each ruling on Solana. Scripted answers by
+ * default. `--chain <dir>` runs the verafyChain devnet instead.
+ */
+async function testnetCommand() {
+  const { testnetUp, testnetDown } = await import('../packages/deploy/src/index.js')
+  if (file === 'down') { console.log(`stopped ${testnetDown()} harness process(es)`); return }
+  if (file !== 'up') { console.log('usage: verafy testnet up [--live] [--solana] [--rpc url] [--program id] [--payer file] [--keep] [--chain dir] [asc.json...] | verafy testnet down'); process.exitCode = 2; return }
+  const chainDir = value('--chain')
+  if (chainDir) {
+    const { spawnSync } = await import('node:child_process')
+    process.exitCode = spawnSync(process.execPath, ['scripts/devnet.mjs'], { cwd: resolve(chainDir), stdio: 'inherit' }).status ?? 1
+    return
+  }
+  const solana = flag('--solana') || value('--rpc') ? { rpc: value('--rpc'), program: value('--program'), payer: value('--payer') } : null
+  const r = await testnetUp({ live: flag('--live'), contracts: rest.length ? rest.map(f => resolve(f)) : undefined, solana, keep: flag('--keep') })
+  if (flag('--keep')) { console.log('harnesses keep running; stop them with  verafy testnet down'); await new Promise(() => {}) }
+  return r
+}
+
+/** `verafy up [--ui]`: launch a harness locally, in Docker or in the cloud. */
+async function upCommand() {
+  const { upInteractive, upUi } = await import('../packages/deploy/src/index.js')
+  if (flag('--ui')) return upUi({ open: !flag('--no-open') })
+  const nodes = value('--nodes')
+  await upInteractive({
+    target: value('--target'), lab: value('--lab'), model: value('--model'), kind: value('--kind'), id: value('--id'),
+    nodes: nodes !== undefined ? nodes.split(',').filter(Boolean) : undefined, publicUrl: value('--public-url'),
+    region: value('--region'), plan: value('--plan'), ref: value('--ref'), mock: flag('--mock'), yes: flag('--yes'),
+  })
+}
+
 async function main() {
   if (cmd === 'doctor') return doctor()
   if (cmd === 'read') return readCommand(false)
@@ -178,8 +280,12 @@ async function main() {
   }
   if (cmd === 'seal' && file && rest.length) return sealFromJurors(await readJson(file), rest)
   if (cmd === 'harness' && file === 'commit-model') return commitModel(rest[0], rest[1])
+  if (cmd === 'harness' && file === 'serve') return serveCommand()
+  if (cmd === 'up') return upCommand()
+  if (cmd === 'packed') return packedCommand()
+  if (cmd === 'testnet') return testnetCommand()
   if (cmd !== 'run' || !file) {
-    console.log('usage: verafy run <asc.json> [--live] [--json] [--config file] | verafy seal <asc.json> <juror-dir...> | verafy doctor [--live] [--config file] | verafy validate <asc.json> | verafy pin <asc.json> | verafy chain | verafy read solana <slot|genesis|account <pubkey>> --config file | verafy confirm solana <signature> --config file')
+    console.log('usage: verafy up [--ui] | verafy harness serve [--env file] [--mock] | verafy run <asc.json> [--live] [--json] [--config file] | verafy seal <asc.json> <juror-dir...> | verafy doctor [--live] [--config file] | verafy validate <asc.json> | verafy pin <asc.json> | verafy chain | verafy read solana <slot|genesis|account <pubkey>> --config file | verafy confirm solana <signature> --config file')
     process.exitCode = 2
     return
   }

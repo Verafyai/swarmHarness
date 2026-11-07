@@ -46,7 +46,7 @@ test('a contract without exit programs gets the same prompt and votes as before'
 
 test('the three exit examples validate, and every example file is accounted for', () => {
   for (const name of EXITS) assert.deepEqual(validate(ex(name)), [], name)
-  const files = readdirSync(new URL('examples/', ROOT)).filter(f => f !== 'mock-answers.json').map(f => f.replace(/\.json$/, '')).sort()
+  const files = readdirSync(new URL('examples/', ROOT)).filter(f => f.endsWith('.json') && f !== 'mock-answers.json').map(f => f.replace(/\.json$/, '')).sort()
   assert.deepEqual(files, [...Object.keys(HASHES_BEFORE), ...EXITS].sort())
   assert.deepEqual(Object.keys(PROGRAM_HASHES).sort(), ['graded_payout', 'milestone_escrow', 'ranked_split'])
 })

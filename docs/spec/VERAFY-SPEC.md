@@ -1,9 +1,9 @@
 # Verafy specification
 
-**Version 0.0.1-alpha**, November 6, 2026. Covers Verafy Harness (this repo) and Verafy Chain ([Verafyai/verafyChain](https://github.com/Verafyai/verafyChain)).
+**Version 0.0.2-alpha**, November 6, 2026. Covers Verafy Harness (this repo) and Verafy Chain ([Verafyai/verafyChain](https://github.com/Verafyai/verafyChain)).
 
 <!-- score -->
-**Scored 58% overall** at v0.0.1-alpha (see [SCORECARD.md](SCORECARD.md)).
+**Scored 66% overall** at v0.0.2-alpha (see [SCORECARD.md](SCORECARD.md)).
 <!-- /score -->
 
 This is an alpha spec for a prototype. Nothing here describes a running network, and there is no token. Every number is labeled **measured** (our own runs, with a date), **vendor-reported** (by whoever built the tool), **modeled** (computed from those, in `packages/economics`) or **illustrative** (an assumption to replace).
@@ -71,7 +71,7 @@ Juries span labs and are drawn from the parent block hash. Auditors from other l
 | JURY-006 | planned | Challenge bonds: lock on open, return on overturn, forfeit on affirm. *Gap: Not built; needed before challenges can run on a network.* |
 | JURY-007 | planned | Track record: agreement with final rulings and forecast scores per harness. *Gap: No per-harness history yet; needed for bonds and for routing weights.* |
 | JURY-008 | partial | 100 live rulings across the four market types, with audits and costs published. *Gap: Only the first five live rulings are published.* |
-| JURY-009 | planned | Harness daemon: a long-running process that watches for funded contracts and takes seats. *Gap: Blocks the network, MCP daemon tools and paused-contract resumption.* |
+| JURY-009 | built | Harness daemon: a long-running process that watches for funded contracts and takes seats |
 <!-- /reqs:JURY -->
 
 ## CHAIN: the Verafy Chain node
@@ -129,13 +129,14 @@ Four blocks: the keyblock (keys encrypted, scoped keys out), the banker (accept 
 | BANK-003 | built | Banker core: accept allowed tokens, best quote across approved venues, slippage limit, ensure and pay |
 | BANK-004 | built | API router: keyed calls, metering, per-call or accrued billing |
 | BANK-005 | built | Inference routing by assurance level, L0 to L2; L2 never to a hosted API |
-| BANK-006 | designed | BankerService: deposit state machine (detect, classify, hold, quote, simulate, swap, sweep, record), idempotent by txid. *Gap: No deposit watcher or state machine yet.* |
-| BANK-007 | designed | Real venue adapters: Jupiter on Solana, an EVM aggregator, a bridge; price sanity against a reference. *Gap: Only the fixed-rate test venue exists.* |
-| BANK-008 | designed | Token allowlist by address; quarantine unknown tokens; dust; sanctions screen; daily caps; kill switch |
-| BANK-009 | designed | Gas reserves per chain; exact approvals; simulate before send; append-only ledger with cost basis |
-| BANK-010 | designed | Banker advisor: a read-only model that reports and flags, holding no keys |
-| BANK-011 | designed (needs Rex) | Service mode (converting other people's funds) disabled in code until legal review |
+| BANK-006 | built | BankerService: deposit state machine (detect, classify, hold, quote, simulate, swap, sweep, record), idempotent by txid |
+| BANK-007 | partial | Real venue adapters: Jupiter on Solana, an EVM aggregator, a bridge; price sanity against a reference. *Gap: Jupiter and LI.FI quote live (measured Nov 6, 2026); simulation and sending are built behind the execute switch but have not run against a funded wallet.* |
+| BANK-008 | built | Token allowlist by address; quarantine unknown tokens; dust; sanctions screen; daily caps; kill switch |
+| BANK-009 | partial | Gas reserves per chain; exact approvals; simulate before send; append-only ledger with cost basis. *Gap: Simulate before send and the hash-chained ledger are built; per-chain gas reserves, exact approvals and cost-basis export are not.* |
+| BANK-010 | built | Banker advisor: a read-only model that reports and flags, holding no keys |
+| BANK-011 | built (needs Rex) | Service mode (converting other people's funds) disabled in code until legal review |
 | BANK-012 | planned | Rent GPU and VM hosts on demand for open-weights and proving routes |
+| BANK-013 | built | API credits: read provider balances, project days left from spend, and say what to top up and how. *Gap: No provider tops up automatically: OpenRouter's crypto top-up API returns 410 Gone (checked Nov 6, 2026). An x402 pay-per-request slot is reserved.* |
 <!-- /reqs:BANK -->
 
 ## PACK: proof packing and the prompt compressor
@@ -158,12 +159,12 @@ In a test block, 60 contracts became 120 atoms, 61 after dedupe, in 4 requests a
 | PACK-003 | built | Dedupe across contracts by atom hash; first-fit packing into 1,024-token requests; block-hash slot order (library, tested with mocks) |
 | PACK-004 | built | Strict reply reading: every slot exactly once, typed answers, nothing else |
 | PACK-005 | built | Atomizer: drafts a plan with any model and checks every cited pin is real |
-| PACK-006 | partial | Fidelity check: an unproven multi-lab panel rules a plan FAITHFUL before it is used. *Gap: The question exists; running the panel and gating packing on it is not wired.* |
+| PACK-006 | built | Fidelity check: an unproven multi-lab panel rules a plan FAITHFUL before it is used |
 | PACK-007 | planned | Real token counts with the target model's tokenizer. *Gap: The packer estimates about four characters per token.* |
 | PACK-008 | designed | Prompt compressor: briefs for contracts that cannot be atomized; party-agreed or checked. *Gap: Brief mode is modeled in economics, not built in the packer.* |
 | PACK-009 | designed | Long contracts split by claims with a proven combine step |
 | PACK-010 | built | Route before packing: only atoms in the proven lane reach the packer |
-| PACK-011 | planned | Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end. *Gap: The packer is a tested library and packages/prove can prove votes, but harness runs prove whole prompts (map-reduce/1), not packed atoms; atomize, route, pack, prove, assemble is not joined end to end.* |
+| PACK-011 | partial | Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end. *Gap: Built for harness runs (verafy packed, packedBlock) with the mock prover; the verafyChain node intake and the daemon do not call it yet, and no real prover is attached.* |
 <!-- /reqs:PACK -->
 
 ## ROUTE: multi-model routing
@@ -188,7 +189,7 @@ What a screen is worth is not known yet. Jev's figures are its maker's (70 to 50
 | ROUTE-004 | built | Calibration: per-type cutoffs from the Wilson lower bound; recheck withdraws a cutoff when live accuracy drops |
 | ROUTE-005 | built | Audits drawn from the block hash re-check settled answers at the top tier |
 | ROUTE-006 | built | Screen adapters: a Jev adapter taking any client call, and a scripted screen |
-| ROUTE-007 | planned | A labeled calibration set of atoms with known answers, and a Jev calibration run. *Gap: Needs Jev access; until then the screen settles nothing.* |
+| ROUTE-007 | partial | A labeled calibration set of atoms with known answers, and a Jev calibration run. *Gap: The labeled set (1,000 atoms, 200 per kind) and the runner are built; a Jev run needs Jev access (JEV_URL, JEV_API_KEY). A simulated run checks the pipeline only.* |
 | ROUTE-008 | planned | Wire the router into the harness and the chain intake, with per-contract allowScreen, stakes and floors in the contract format. *Gap: The router is a library; contracts cannot declare allowScreen or floorTier yet.* |
 | ROUTE-009 | planned | Skip tiers when stakes or question type make escalation likely |
 <!-- /reqs:ROUTE -->
@@ -230,10 +231,10 @@ Block 0 is a draft Constitution with Embedded Ethics, to be ratified by the firs
 <!-- reqs:GOV -->
 | ID | Status | Requirement |
 |---|---|---|
-| GOV-001 | designed | Constitution Draft 0 with Article 1 (no foundation, no VC, no coin, no fundraising, no secret team, no community fund, no treasury) |
-| GOV-002 | designed | Ethics gate: allow, refuse or escalate at intake; doubt resolves toward refusal; no bypass. *Gap: Specified, not built.* |
-| GOV-003 | designed | Amendment process: seven stages, entrenched clauses, verafy.amendment/1. *Gap: Specified, not built.* |
-| GOV-004 | designed | Eleven design principles |
+| GOV-001 | built | Constitution Draft 0 with Article 1 (no foundation, no VC, no coin, no fundraising, no secret team, no community fund, no treasury) |
+| GOV-002 | built | Ethics gate: allow, refuse or escalate at intake; doubt resolves toward refusal; no bypass. *Gap: Panel sizes, bar and the screening fee are illustrative until Rex sets them; challenges to an ethics ruling are not built.* |
+| GOV-003 | built | Amendment process: seven stages, entrenched clauses, verafy.amendment/1. *Gap: Tested in process with 42 harnesses; not on the five-harness multi-process devnet.* |
+| GOV-004 | built | Eleven design principles |
 <!-- /reqs:GOV -->
 
 ## SOL: settling on Solana
@@ -244,7 +245,7 @@ In theory, no separate chain is needed: the three draft SIMDs describe every par
 | ID | Status | Requirement |
 |---|---|---|
 | SOL-001 | designed | Three draft SIMDs: inference programs, attestations, rulings; no validator changes |
-| SOL-002 | planned | A Solana devnet program implementing commit, reveal and the Ruling account; one harness ruling settled on devnet. *Gap: The strongest proof that no new chain is needed.* |
+| SOL-002 | partial | A Solana devnet program implementing commit, reveal and the Ruling account; one harness ruling settled on devnet. *Gap: Built and run on a local solana-test-validator (measured Nov 6, 2026: five harnesses commit and reveal with their own keys; five bad transactions refused). Not yet deployed to devnet: the devnet and testnet RPC faucets are closed, so it needs about 1 devnet SOL from faucet.solana.com.* |
 | SOL-003 | designed | SIMD amendment: packed proofs shared by many attestations (proof hash, slot and manifest hash). *Gap: Text not yet drafted into the attestations SIMD.* |
 | SOL-004 | planned | Fair juror draws on Solana (commit-reveal randomness or a VRF), since slot data can be nudged |
 | SOL-005 | planned | Availability for off-chain refs on Solana through the challenge window |
@@ -285,6 +286,30 @@ Your agent is a client, never a juror: the MCP server has no vote, key or funds 
 | AGENT-004 | planned | MCP tools for routing (verafy_route) and packing (verafy_pack) |
 <!-- /reqs:AGENT -->
 
+## DEPLOY: deploy and run anywhere
+
+A harness is one long-running process: `verafy harness serve`. It registers with nodes, watches their mempools, and serves commit, reveal and proof. It refuses a commit on any contract no watched node holds, so nobody can spend its model budget from outside. Open commitments are written to disk before they leave, so a restart can still reveal.
+
+`verafy up` gets that process running wherever the operator wants it: on this machine with Node or Docker, on a DigitalOcean or Hetzner server it creates, or on any cloud from a first-boot script. The model key goes to a mode-600 file or the server's user data; a cloud token is used once and never stored. Hardware profiles pick an open-weights model the machine can hold (modeled memory). `verafy testnet up` runs a whole testnet on one machine, scripted by default so it costs nothing, and can settle every ruling on a local Solana validator.
+
+Releases ship as a source tarball, single-file binaries, a container image and an install script, all from one workflow on a version tag.
+
+<!-- reqs:DEPLOY -->
+| ID | Status | Requirement |
+|---|---|---|
+| DEPLOY-001 | built | verafy harness serve: one harness daemon configured by VERAFY_* variables, an env file or a config file; one id and key per data directory |
+| DEPLOY-002 | built | verafy up: ask a few questions, show the plan with keys masked, then run locally (Node), in Docker, on DigitalOcean or Hetzner, or print user data for any cloud |
+| DEPLOY-003 | partial | Cloud clients for DigitalOcean and Hetzner, and a first-boot script that installs, hardens and runs the daemon as a service. *Gap: Tested against fake APIs; no real server has been created yet (needs an operator token).* |
+| DEPLOY-004 | built | Hardware profiles: which open-weights model a machine can hold, by modeled memory, and its router tier |
+| DEPLOY-005 | partial | Container image, compose file, and one-click Render and DigitalOcean App Platform buttons. *Gap: The image has not been built here (no Docker daemon); it builds and publishes on the first tagged release.* |
+| DEPLOY-006 | partial | Releases: source tarball, single-file binaries for Linux, macOS and Windows, a GHCR image, checksums, and install.sh. *Gap: The workflow has not run yet; it runs on the first pushed version tag.* |
+| DEPLOY-007 | built | verafy testnet: a local testnet on one machine (a daemon per lab, juries over HTTP, sealed blocks), scripted or live, with optional Solana settlement |
+| DEPLOY-008 | built | verafy up --ui: the launcher as a page on 127.0.0.1, with a one-time token in its URL |
+| DEPLOY-009 | built | Launch page on harness.verafy.ai: pick a model and a target, get the command, the user data or a button |
+| DEPLOY-010 | planned (needs Rex) | Hosted harnesses run by Verafy for people who do not want to operate one. *Gap: Needs Rex: billing, servers and terms.* |
+| DEPLOY-011 | planned | A desktop app (installer with its own window) wrapping verafy up and the daemon |
+<!-- /reqs:DEPLOY -->
+
 ## SITE: sites and docs
 
 <!-- reqs:SITE -->
@@ -293,6 +318,8 @@ Your agent is a client, never a juror: the MCP server has no vote, key or funds 
 | SITE-001 | built | harness.verafy.ai: landing, run, testnet, coin agnostic, economics |
 | SITE-002 | built | Versioned spec with stable requirement IDs, a changelog and a generated scorecard |
 | SITE-003 | built | Spec page and release-notes blog on harness.verafy.ai |
+| SITE-004 | built | Learn: one page per concept, from Actually Smart Contracts to the Banker, each with its status and related concepts |
+| SITE-005 | built | Machine-readable site: llms.txt and llms-full.txt, sitemap.xml, robots.txt, canonical URLs, Open Graph and JSON-LD on every page |
 <!-- /reqs:SITE -->
 
 ## OPS: security and operations
@@ -319,4 +346,4 @@ Muse (semantic version control) proposed two small experiments: targeted certifi
 
 ## Decisions waiting on Rex
 
-Requirements marked *needs Rex* in the tables, plus: the block-close defaults, prove-once for L2, packing defaults, allowed brief modes, the Banker's target token, treasury, chains, caps and screening, whether to rent a FlashProve machine, and whether to publish the MCP server.
+Requirements marked *needs Rex* in the tables, plus: the block-close defaults, prove-once for L2, packing defaults, allowed brief modes, the Banker's target token, treasury, chains, caps and screening, whether to rent a FlashProve machine, and whether to publish the MCP server. From v0.0.2-alpha: whether Verafy runs hosted harnesses (DEPLOY-010), devnet SOL for the Solana program (SOL-002), Jev access for the calibration run (ROUTE-007), turning on Banker execution with a funded scoped wallet, and the illustrative defaults: block close (10% warm-up, 1-hour maximum wait), the 600-second proof deadline, the ethics panel sizes, bar and screening fee, and the amendment escrow shares.

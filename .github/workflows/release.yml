@@ -1,0 +1,81 @@
+# On a version tag: test, then publish a release with
+#   - verafy-harness-<tag>.tar.gz   the source, for install.sh
+#   - verafy-<os>-<arch>            single-file binaries (Node single executable applications)
+#   - ghcr.io/verafyai/verafy-harness:<tag> and :latest
+# The release body is site/src/blog/<tag with dots as dashes>.md if present.
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+  packages: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm test
+  binaries:
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-latest, name: linux-x64 }
+          - { os: macos-latest, name: macos-arm64 }
+          - { os: windows-latest, name: windows-x64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Bundle
+        shell: bash
+        run: npx --yes esbuild@0.24.0 bin/verafy.js --bundle --platform=node --format=cjs --target=node22 --outfile=dist/verafy.cjs --define:import.meta.url=__import_meta_url --banner:js="const __import_meta_url=require('url').pathToFileURL(__filename).href;"
+      - name: Single executable
+        shell: bash
+        run: |
+          echo '{"main":"dist/verafy.cjs","output":"dist/sea.blob","disableExperimentalSEAWarning":true}' > sea.json
+          node --experimental-sea-config sea.json
+          ext=""; [ "${{ runner.os }}" = "Windows" ] && ext=".exe"
+          cp "$(command -v node)" "dist/verafy-${{ matrix.name }}$ext"
+          [ "${{ runner.os }}" = "macOS" ] && codesign --remove-signature "dist/verafy-${{ matrix.name }}"
+          npx --yes postject@1.0.0-alpha.6 "dist/verafy-${{ matrix.name }}$ext" NODE_SEA_BLOB dist/sea.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 $([ "${{ runner.os }}" = "macOS" ] && echo --macho-segment-name NODE_SEA)
+          [ "${{ runner.os }}" = "macOS" ] && codesign --sign - "dist/verafy-${{ matrix.name }}" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.name }}
+          path: dist/verafy-${{ matrix.name }}*
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ghcr.io/verafyai/verafy-harness:${{ github.ref_name }},ghcr.io/verafyai/verafy-harness:latest
+  release:
+    needs: [binaries, image]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - name: Source tarball and notes
+        run: |
+          tag=${GITHUB_REF_NAME}
+          git archive --format=tar.gz --prefix=verafy-harness-$tag/ -o dist/verafy-harness-$tag.tar.gz HEAD
+          notes=site/src/blog/$(echo "$tag" | tr '.' '-').md
+          [ -f "$notes" ] || notes=docs/spec/CHANGELOG.md
+          sed "s#](/#](https://harness.verafy.ai/#g" "$notes" > dist/notes.md
+          (cd dist && sha256sum verafy-* > SHA256SUMS)
+      - env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+        run: gh release create "$GITHUB_REF_NAME" dist/verafy-* dist/SHA256SUMS --title "$GITHUB_REF_NAME" --notes-file dist/notes.md --prerelease

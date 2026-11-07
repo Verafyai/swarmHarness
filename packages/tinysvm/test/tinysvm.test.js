@@ -14,7 +14,7 @@ const ROOT = new URL('../../../', import.meta.url)
 const ex = name => JSON.parse(readFileSync(new URL(`examples/${name}.json`, ROOT), 'utf8'))
 const mock = ex('mock-answers')
 const config = JSON.parse(readFileSync(new URL('verafy.config.json', ROOT), 'utf8'))
-const EXAMPLES = readdirSync(new URL('examples/', ROOT)).filter(f => f !== 'mock-answers.json').map(f => f.replace(/\.json$/, '')).sort()
+const EXAMPLES = readdirSync(new URL('examples/', ROOT)).filter(f => f.endsWith('.json') && f !== 'mock-answers.json').map(f => f.replace(/\.json$/, '')).sort()
 const CASES = Number(process.env.TINYSVM_CASES ?? 300)
 const SEED = Number(process.env.TINYSVM_SEED ?? 20261106)
 

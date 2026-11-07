@@ -1,0 +1,26 @@
+# "Deploy to DigitalOcean" button: App Platform builds the Dockerfile and runs
+# one harness. Set the model key as an encrypted secret in the form.
+spec:
+  name: verafy-harness
+  services:
+    - name: harness
+      dockerfile_path: Dockerfile
+      git:
+        repo_clone_url: https://github.com/Verafyai/verafyHarness.git
+        branch: main
+      http_port: 7200
+      health_check:
+        http_path: /health
+      instance_size_slug: apps-s-1vcpu-1gb
+      instance_count: 1
+      envs:
+        - key: VERAFY_LAB
+          value: anthropic
+        - key: VERAFY_MODEL
+          value: anthropic/claude-haiku-4.5
+        - key: VERAFY_API_KEY
+          type: SECRET
+        - key: VERAFY_NODES
+          value: ""
+        - key: VERAFY_PUBLIC_URL
+          value: ${APP_URL}
