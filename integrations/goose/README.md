@@ -7,16 +7,16 @@ A goose command-line extension and a recipe, so goose can draft, check, pin and 
 Either run `goose configure`, choose **Add Extension**, then **Command-line Extension**, name it `verafy`, and give it the command:
 
 ```
-npx -y -p github:Verafyai/verafyHarness verafy-mcp
+npx -y @verafy/mcp
 ```
 
-The first start fetches the repo from GitHub, which took 1 min 55 s here, and later starts still took about 56 s (measured on Nov 6, 2026, macOS, npm cache warm). If your agent gives up on a slow server, use the clone form below, or raise its MCP startup timeout. The npm package will start faster once it is published.
+It installs the published package from npm. A smoke test through `npx` took 1.5 s from a cached install (measured on Nov 6, 2026, macOS); the first download depends on your network.
 
 Add `VERAFY_API_KEY` when it asks about environment variables, only if you want live runs.
 
 Or paste the `verafy` entry from [`config.yaml`](config.yaml) under `extensions:` in `~/.config/goose/config.yaml`.
 
-For one session only: `goose session --with-extension "npx -y -p github:Verafyai/verafyHarness verafy-mcp"`.
+For one session only: `goose session --with-extension "npx -y @verafy/mcp"`.
 
 From a clone, the command is:
 

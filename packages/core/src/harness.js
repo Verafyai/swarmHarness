@@ -8,6 +8,7 @@ import { loadContext, deliberate } from './juror.js'
 import { createIdentity, importIdentity, loadIdentity, commit, signMessage } from './signer.js'
 import { acceptsPayment } from './payments.js'
 import { fundingCheck } from './sourcechain.js'
+import { DECLINE_KIND } from './network.js'
 
 export class Harness {
   /**
@@ -21,8 +22,12 @@ export class Harness {
    *   funding on the source chain, and `pauses` records contracts it pauses.
    *   `modelCommitment` (L2 only) is the prover's commitment to the model's
    *   weights, published on the card; proofs are checked against it.
+   *   `declines` (optional) is this harness's own ethics policy: a function of
+   *   the contract that returns a reason to decline the seat, or null to sit.
+   *   A decline on ethics grounds is never a fault (Constitution Article 3.4).
    */
-  constructor({ id, lab, model, bond, provider, payments, identity, identityFile, sourceChain = null, pauses = null, modelCommitment = null }) {
+  constructor({ id, lab, model, bond, provider, payments, identity, identityFile, sourceChain = null, pauses = null, modelCommitment = null, declines = null }) {
+    this.declines = declines
     this.sourceChain = sourceChain
     this.pauses = pauses
     this.id = id
@@ -75,10 +80,14 @@ export class Harness {
 
   /**
    * Commit phase: load and check context, deliberate, then publish only a commitment.
+   * A harness whose own ethics policy (`declines`) refuses the contract returns a
+   * signed decline instead, and never deliberates.
    * @param {object} asc - the contract.
    * @returns {Promise<{harness: string, commitment: string, attestation: object, signature: string}>} the commitment.
    */
   async commit(asc) {
+    const reason = this.declines?.(asc)
+    if (reason) return this.decline(asc, reason)
     const refused = this.intake(asc)
     if (refused.length) throw new Error(`${this.id} refused: ${refused.join('; ')}`)
     const loaded = loadContext(asc)
@@ -89,6 +98,18 @@ export class Harness {
     this.pending.set(h, { vote, salt, commitment })
     const attestation = { harness: this.id, lab: this.lab, model: this.model, ascHash: h, commitment }
     return { harness: this.id, commitment, attestation, signature: signMessage(this.identity.privateKey, attestation) }
+  }
+
+  /**
+   * Decline a seat on ethics grounds (Article 3.4): a signed record in place of
+   * a commitment. The seat is not counted, and it is never a fault.
+   * @param {object} asc - the contract.
+   * @param {string} reason - why this harness will not sit.
+   * @returns {{kind: string, harness: string, ascHash: string, grounds: 'ethics', reason: string, signature: string}} the decline.
+   */
+  decline(asc, reason) {
+    const message = { kind: DECLINE_KIND, harness: this.id, ascHash: ascHash(asc), grounds: 'ethics', reason: String(reason) }
+    return { ...message, signature: signMessage(this.identity.privateKey, message) }
   }
 
   /**
