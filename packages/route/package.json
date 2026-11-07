@@ -1,0 +1,10 @@
+{
+  "name": "@verafyharness/route",
+  "version": "0.0.1-alpha",
+  "description": "Multi-model routing for Verafy Harness: a fast System 1 screen, tiered panels that escalate on disagreement, calibrated cutoffs, audits and shadow mode. Zero dependencies beyond the core.",
+  "type": "module",
+  "license": "MIT",
+  "exports": "./src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}

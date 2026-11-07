@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { estimate, curve, DEFAULTS, PRESETS } from '../src/index.js'
+import { estimate, curve, DEFAULTS, PRESETS, cascade, CASCADE_EXAMPLE } from '../src/index.js'
 
 const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 0.00005, `${msg}: ${a} vs ${b}`)
 
@@ -86,4 +86,26 @@ test('every default is labeled', () => {
     assert.ok(d.label && d.source, k)
     if (['vendor-reported', 'measured', 'modeled'].includes(d.label)) assert.ok(d.url && d.date, `${k} needs url and date`)
   }
+})
+
+test('cascade vectors (illustrative shares)', () => {
+  const c = cascade(CASCADE_EXAMPLE)
+  near(c.avgUsd, 0.0068, 'average cost')
+  assert.ok(Math.abs(c.avgSeconds - 10.45) < 0.01, `average seconds ${c.avgSeconds}`)
+  assert.equal(c.medianSeconds, 2.3)
+  near(c.worstUsd, 0.0347, 'a hard question pays every tier')
+  assert.ok(Math.abs(c.worstSeconds - 47.3) < 1e-9)
+  assert.ok(Math.abs(c.cheaper - 4.44) < 0.01)
+  assert.throws(() => cascade([{ id: 'x', usd: 1, seconds: 1, stopShare: 0.5 }]), /sum to 1/)
+})
+
+test('reasoning length uses the proof window (modeled, 1,000 contracts)', () => {
+  const b = { ...PRESETS.atomized.values, contracts: 1000 }
+  const r = t => estimate({ ...b, reasoningTokens: t })
+  assert.equal(r(0).atomsPerRequest, 16)
+  assert.equal(r(40).atomsPerRequest, 9)
+  near(r(40).perContractUsd, 0.0089, 'short reasons')
+  assert.equal(r(150).atomsPerRequest, 4)
+  near(r(150).perContractUsd, 0.0147, 'full reasoning')
+  near(r(400).perContractUsd, 0.0251, 'long reasoning')
 })

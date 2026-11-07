@@ -1,0 +1,1737 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Verafy specification v0.0.1-alpha</title>
+<meta name="description" content="The Verafy Harness and Verafy Chain specification, v0.0.1-alpha: every requirement with a stable ID and a status, checked against the code by a scoring pass.">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="canonical" href="https://harness.verafy.ai/spec">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Verafy Harness">
+<meta property="og:title" content="Verafy specification v0.0.1-alpha">
+<meta property="og:description" content="The Verafy Harness and Verafy Chain specification, v0.0.1-alpha: every requirement with a stable ID and a status, checked against the code by a scoring pass.">
+<meta property="og:url" content="https://harness.verafy.ai/spec">
+<meta property="og:image" content="https://harness.verafy.ai/banner.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://harness.verafy.ai/banner.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--paper:#EDF0F3;--sheet:#FFFFFF;--ink:#16212C;--mute:#566473;--rule:#CDD5DD;--accent:#3640C9;--accent-soft:#DADDF7;--allow:#1C7A4E;--hold:#A0561A;--code:#F4F6F8;
+--display:"Archivo","Helvetica Neue",Arial,sans-serif;--body:"Source Serif 4",Georgia,serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#0F151B;--sheet:#161E26;--ink:#E4EAF0;--mute:#93A1AF;--rule:#2A3541;--accent:#8A92FF;--accent-soft:#252A55;--allow:#5CC995;--hold:#E0A060;--code:#1B242E;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0F151B;--sheet:#161E26;--ink:#E4EAF0;--mute:#93A1AF;--rule:#2A3541;--accent:#8A92FF;--accent-soft:#252A55;--allow:#5CC995;--hold:#E0A060;--code:#1B242E;color-scheme:dark}
+*{box-sizing:border-box}body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17.5px;line-height:1.6;margin:0}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+img{max-width:100%;height:auto}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.coinfree{background:var(--sheet);border-top:3px solid var(--accent);border-bottom:1px solid var(--rule)}
+.coinfree .wrap{padding-block:18px 20px;display:flex;flex-direction:column;gap:6px}
+.coinfree h2{font-family:var(--display);font-weight:750;font-size:clamp(22px,2.4vw,28px);margin:0}
+.coinfree p{max-width:46em;margin:0;overflow-wrap:break-word}
+.top{display:flex;align-items:center;gap:16px;padding-block:20px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;font-stretch:110%;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:10px}
+.brand .mark{color:var(--ink);flex:none}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-right:auto;margin-left:12px}
+.tabs a{font-family:var(--display);font-weight:600;font-size:15px;color:var(--mute);text-decoration:none;padding:6px 10px;border-radius:2px;border:1px solid transparent}
+.tabs a:hover{color:var(--ink);border-color:var(--rule)}.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--ink)}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--hold);border:1px solid currentColor;padding:4px 10px;border-radius:2px}
+.tabs{order:3;width:100%;margin:0 0 0 -10px}
+.top .status{margin-left:auto}
+@media (max-width:560px){.top .status{margin-left:0}}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:48px;padding-block:40px 80px}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.side{position:static!important;max-height:none!important}}
+.side{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;font-size:15px}
+.side .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:8px}
+.side ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.side ul ul{padding-left:14px;margin:2px 0 6px}
+.side a{color:var(--mute);text-decoration:none;display:block;padding:3px 8px;border-left:2px solid transparent}
+.side a:hover{color:var(--ink)}.side a.on{color:var(--ink);border-left-color:var(--accent)}
+article{min-width:0;max-width:52rem}
+article h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,4.6vw,52px);line-height:1.05;letter-spacing:-.015em;margin:0 0 18px}
+article h2{font-family:var(--display);font-weight:750;font-size:28px;line-height:1.15;margin:48px 0 14px;padding-top:18px;border-top:1px solid var(--rule)}
+article h3{font-family:var(--display);font-weight:700;font-size:20px;margin:28px 0 10px}
+article p,article li{max-width:44em}
+article img{display:block;border:1px solid var(--rule);border-radius:3px;background:#fff}
+article blockquote{margin:18px 0;padding:14px 18px;background:var(--sheet);border:1px solid var(--hold);border-radius:2px;color:var(--ink)}
+article blockquote p{margin:0}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);padding:1px 5px;border-radius:2px}
+pre{background:var(--code);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;overflow-x:auto;font-size:14px;line-height:1.5}
+pre code{background:none;padding:0;font-size:inherit}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--sheet);margin:16px 0}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:400}
+tr:last-child td{border-bottom:0}
+.foot{padding-block:24px 48px;border-top:1px solid var(--rule);font-size:15px;color:var(--mute);display:flex;flex-direction:column;gap:6px}
+.foot p{margin:0}
+
+figure.chart{margin:20px 0;background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:14px;overflow-x:auto}
+figure.chart svg{display:block;width:100%;min-width:620px;height:auto}
+figure.chart figcaption{font-size:14px;color:var(--mute);margin-top:8px}
+img.anim{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:3px;margin:18px 0}
+.postmeta{font-family:var(--mono);font-size:13px;color:var(--mute)}
+.posts{list-style:none;padding:0;margin:20px 0;display:flex;flex-direction:column;gap:16px}
+.posts li{background:var(--sheet);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:3px;padding:16px 18px}
+.posts a{font-family:var(--display);font-weight:750;font-size:22px;text-decoration:none}
+.posts p{margin:6px 0 0;color:var(--mute)}
+
+
+.top{display:flex;align-items:center;gap:14px;padding-block:18px;border-bottom:1px solid var(--rule);position:relative;flex-wrap:nowrap}
+.top .brand{margin-right:auto;white-space:nowrap}
+.ver{font-family:var(--mono);font-size:13px;color:var(--accent);border:1px solid currentColor;padding:4px 9px;border-radius:2px;text-decoration:none;white-space:nowrap}
+.ver:hover{background:var(--accent-soft)}
+.menu{position:relative}
+.menu>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:600;font-size:15px;color:var(--ink);border:1px solid var(--rule);border-radius:2px;padding:7px 11px;background:var(--sheet);user-select:none}
+.menu>summary::-webkit-details-marker{display:none}
+.menu>summary:hover,.menu[open]>summary{border-color:var(--ink)}
+.burger{display:inline-flex;flex-direction:column;gap:3.5px}.burger i{display:block;width:17px;height:2px;background:currentColor;border-radius:1px}
+.menu[open] .burger i:nth-child(1){transform:translateY(5.5px) rotate(45deg)}.menu[open] .burger i:nth-child(2){opacity:0}.menu[open] .burger i:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+.menu nav{position:absolute;right:0;top:calc(100% + 8px);z-index:50;width:min(300px,calc(100vw - 32px));background:var(--sheet);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:3px;padding:10px 0;box-shadow:0 12px 32px rgba(15,21,27,.18)}
+.menu nav .grp{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:10px 18px 4px}
+.menu nav a{display:block;padding:8px 18px;font-family:var(--display);font-weight:600;font-size:15.5px;color:var(--ink);text-decoration:none;border-left:3px solid transparent}
+.menu nav a:hover{background:var(--paper);border-left-color:var(--rule)}
+.menu nav a[aria-current="page"]{border-left-color:var(--accent);color:var(--accent)}
+.menu nav hr{border:0;border-top:1px solid var(--rule);margin:8px 0}
+@media (max-width:420px){.menu>summary .lab{display:none}.ver{font-size:12px;padding:3px 7px}}
+
+</style>
+</head>
+<body>
+<section class="coinfree" aria-labelledby="coinfreeH">
+  <div class="wrap">
+    <h2 id="coinfreeH">Coin-free guarantee.</h2>
+    <p>There is no coin, and Verafy Harness will never need one. A harness is paid in whatever token a contract offers and pays its own AI and hosting bills from that. No presale, no airdrop, no points, no treasury. <a href="/coin-agnostic">How payment works</a></p>
+  </div>
+</section>
+<header class="wrap top">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 64 64" width="28" height="28" aria-hidden="true"><path d="M6 20V6h14M44 6h14v14M58 44v14H44M20 58H6V44" stroke="currentColor" stroke-width="5" stroke-linecap="square" fill="none"/><path d="M32 13v7M32 44v7M13 32h7M44 32h7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="32" r="11" fill="var(--accent)"/><circle cx="32" cy="32" r="4" fill="var(--paper)"/></svg>Verafy Harness</a>
+  <a class="ver" href="/blog/v0-0-1-alpha" title="Release notes for v0.0.1-alpha">v0.0.1-alpha</a>
+  <details class="menu">
+    <summary aria-label="Menu"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span><span class="lab">Menu</span></summary>
+    <nav aria-label="Site"><div class="grp">Verafy Harness</div><a href="/run">Run a harness</a><a href="/testnet">Testnet</a><a href="/economics">Economics</a><a href="/coin-agnostic">Coin Agnostic</a><a href="/spec" aria-current="page">Specification</a><a href="/blog">Release notes</a><hr><div class="grp">Verafy Chain</div><a href="https://chain.verafy.ai">Verafy Chain</a><a href="https://chain.verafy.ai/constitution">Constitution</a><a href="https://chain.verafy.ai/#roadmap">Roadmap</a><hr><div class="grp">More</div><a href="https://asc.verafy.ai">Actually Smart Contracts</a><a href="https://github.com/Verafyai/verafyHarness">GitHub</a></nav>
+  </details>
+</header>
+<script>(function(){var d=document.querySelector('.menu');if(!d)return;document.addEventListener('click',function(e){if(d.open&&!d.contains(e.target))d.open=false});document.addEventListener('keydown',function(e){if(e.key==='Escape')d.open=false})})();</script>
+<div class="wrap layout"><aside class="side" aria-label="On this page"><span class="lbl">On this page</span><div class="toc">
+<ul>
+<li><a href="#how-to-read-this-spec">How to read this spec</a></li>
+<li><a href="#the-system-in-one-picture">The system in one picture</a></li>
+<li><a href="#principles-that-bind-every-part">Principles that bind every part</a></li>
+<li><a href="#core-the-protocol">CORE: the protocol</a></li>
+<li><a href="#jury-juries-live-runs-audits-and-challenges">JURY: juries, live runs, audits and challenges</a></li>
+<li><a href="#chain-the-verafy-chain-node">CHAIN: the Verafy Chain node</a></li>
+<li><a href="#settle-tinysvm">SETTLE: TinySVM</a></li>
+<li><a href="#light-reading-source-chains">LIGHT: reading source chains</a></li>
+<li><a href="#bank-the-routing-agent">BANK: the routing agent</a></li>
+<li><a href="#pack-proof-packing-and-the-prompt-compressor">PACK: proof packing and the prompt compressor</a></li>
+<li><a href="#route-multi-model-routing">ROUTE: multi-model routing</a></li>
+<li><a href="#prove-proofs-of-inference">PROVE: proofs of inference</a></li>
+<li><a href="#cot-disclosed-reasoning">COT: disclosed reasoning</a></li>
+<li><a href="#gov-constitution-ethics-and-amendments">GOV: constitution, ethics and amendments</a></li>
+<li><a href="#sol-settling-on-solana">SOL: settling on Solana</a></li>
+<li><a href="#econ-economics">ECON: economics</a></li>
+<li><a href="#agent-plugins">AGENT: plugins</a></li>
+<li><a href="#site-sites-and-docs">SITE: sites and docs</a></li>
+<li><a href="#ops-security-and-operations">OPS: security and operations</a></li>
+<li><a href="#ext-collaborations-and-data">EXT: collaborations and data</a></li>
+<li><a href="#decisions-waiting-on-rex">Decisions waiting on Rex</a></li>
+<li><a href="#scorecard">Scorecard</a></li>
+<li><a href="#gaps-by-impact">Gaps, by impact</a></li>
+</ul>
+</div>
+</aside><article><h1 id="verafy-specification">Verafy specification</h1>
+<p><strong>Version 0.0.1-alpha</strong>, November 6, 2026. Covers Verafy Harness (this repo) and Verafy Chain (<a href="https://github.com/Verafyai/verafyChain">Verafyai/verafyChain</a>).</p>
+<!-- score -->
+
+<figure class="chart"><svg viewBox="0 0 760 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scorecard by area, v0.0.1-alpha: overall 56 percent" font-family="JetBrains Mono, ui-monospace, monospace" font-size="13"><text x="0" y="35" fill="var(--ink)">CORE</text><text x="70" y="35" fill="var(--mute)" font-size="11.5">Core protocol: contracts, </text><rect x="250" y="23" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="23" width="409.4" height="16" fill="var(--accent)"/><text x="700" y="36" fill="var(--ink)">93%</text><text x="0" y="65" fill="var(--ink)">JURY</text><text x="70" y="65" fill="var(--mute)" font-size="11.5">Juries, live runs, audits </text><rect x="250" y="53" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="53" width="260.0" height="16" fill="var(--accent)"/><text x="700" y="66" fill="var(--ink)">59%</text><text x="0" y="95" fill="var(--ink)">CHAIN</text><text x="70" y="95" fill="var(--mute)" font-size="11.5">Verafy Chain node (verafyC</text><rect x="250" y="83" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="83" width="253.0" height="16" fill="var(--accent)"/><text x="700" y="96" fill="var(--ink)">57%</text><text x="0" y="125" fill="var(--ink)">SETTLE</text><text x="70" y="125" fill="var(--mute)" font-size="11.5">TinySVM: exact settlement </text><rect x="250" y="113" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="113" width="253.8" height="16" fill="var(--accent)"/><text x="700" y="126" fill="var(--ink)">58%</text><text x="0" y="155" fill="var(--ink)">LIGHT</text><text x="70" y="155" fill="var(--mute)" font-size="11.5">Light client: reading sour</text><rect x="250" y="143" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="143" width="366.7" height="16" fill="var(--accent)"/><text x="700" y="156" fill="var(--ink)">83%</text><text x="0" y="185" fill="var(--ink)">BANK</text><text x="70" y="185" fill="var(--mute)" font-size="11.5">Routing agent: keyblock, b</text><rect x="250" y="173" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="173" width="216.6" height="16" fill="var(--accent)"/><text x="700" y="186" fill="var(--ink)">49%</text><text x="0" y="215" fill="var(--ink)">PACK</text><text x="70" y="215" fill="var(--mute)" font-size="11.5">Proof packing and the prom</text><rect x="250" y="203" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="203" width="249.6" height="16" fill="var(--accent)"/><text x="700" y="216" fill="var(--ink)">57%</text><text x="0" y="245" fill="var(--ink)">ROUTE</text><text x="70" y="245" fill="var(--mute)" font-size="11.5">Multi-model routing: scree</text><rect x="250" y="233" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="233" width="268.0" height="16" fill="var(--accent)"/><text x="700" y="246" fill="var(--ink)">61%</text><text x="0" y="275" fill="var(--ink)">PROVE</text><text x="70" y="275" fill="var(--mute)" font-size="11.5">Proofs of inference</text><rect x="250" y="263" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="263" width="111.2" height="16" fill="var(--accent)"/><text x="700" y="276" fill="var(--ink)">25%</text><text x="0" y="305" fill="var(--ink)">COT</text><text x="70" y="305" fill="var(--mute)" font-size="11.5">Disclosed reasoning</text><rect x="250" y="293" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="293" width="217.2" height="16" fill="var(--accent)"/><text x="700" y="306" fill="var(--ink)">49%</text><text x="0" y="335" fill="var(--ink)">GOV</text><text x="70" y="335" fill="var(--mute)" font-size="11.5">Constitution, Embedded Eth</text><rect x="250" y="323" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="323" width="110.0" height="16" fill="var(--accent)"/><text x="700" y="336" fill="var(--ink)">25%</text><text x="0" y="365" fill="var(--ink)">SOL</text><text x="70" y="365" fill="var(--mute)" font-size="11.5">Solana settlement through </text><rect x="250" y="353" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="353" width="74.0" height="16" fill="var(--accent)"/><text x="700" y="366" fill="var(--ink)">17%</text><text x="0" y="395" fill="var(--ink)">ECON</text><text x="70" y="395" fill="var(--mute)" font-size="11.5">Economics and the calculat</text><rect x="250" y="383" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="383" width="352.0" height="16" fill="var(--accent)"/><text x="700" y="396" fill="var(--ink)">80%</text><text x="0" y="425" fill="var(--ink)">AGENT</text><text x="70" y="425" fill="var(--mute)" font-size="11.5">Agent plugins and the MCP </text><rect x="250" y="413" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="413" width="249.3" height="16" fill="var(--accent)"/><text x="700" y="426" fill="var(--ink)">57%</text><text x="0" y="455" fill="var(--ink)">SITE</text><text x="70" y="455" fill="var(--mute)" font-size="11.5">Sites, docs and the spec</text><rect x="250" y="443" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="443" width="352.0" height="16" fill="var(--accent)"/><text x="700" y="456" fill="var(--ink)">80%</text><text x="0" y="485" fill="var(--ink)">OPS</text><text x="70" y="485" fill="var(--mute)" font-size="11.5">Security and operations</text><rect x="250" y="473" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="473" width="215.1" height="16" fill="var(--accent)"/><text x="700" y="486" fill="var(--ink)">49%</text><text x="0" y="515" fill="var(--ink)">EXT</text><text x="70" y="515" fill="var(--mute)" font-size="11.5">External collaborations an</text><rect x="250" y="503" width="440" height="16" fill="var(--paper)" stroke="var(--rule)"/><rect x="250" y="503" width="0.0" height="16" fill="var(--accent)"/><text x="700" y="516" fill="var(--ink)">0%</text></svg><figcaption>Scored by <code>npm run score</code> at v0.0.1-alpha: 56% overall, weighted. Built means tested with mocks or scripted models; verified means run live or on a devnet.</figcaption></figure>
+<p><strong>Scored 56% overall</strong> at v0.0.1-alpha (see <a href="#scorecard">SCORECARD.md</a>).</p>
+<!-- /score -->
+
+<p>This is an alpha spec for a prototype. Nothing here describes a running network, and there is no token. Every number is labeled <strong>measured</strong> (our own runs, with a date), <strong>vendor-reported</strong> (by whoever built the tool), <strong>modeled</strong> (computed from those, in <code>packages/economics</code>) or <strong>illustrative</strong> (an assumption to replace).</p>
+<h2 id="how-to-read-this-spec">How to read this spec</h2>
+<ul>
+<li><strong>Requirement IDs are stable.</strong> <code>AREA-NNN</code> never changes meaning; a dropped requirement keeps its ID, marked removed in the changelog.</li>
+<li><strong>Status</strong> is one of verified, built, partial, designed, planned or research (defined in <a href="https://github.com/Verafyai/verafyHarness/blob/main/docs/spec/requirements.json">requirements.json</a>). The tables below are generated from that file by <code>npm run score -- --write</code>, so the status here always matches what the scoring pass checks.</li>
+<li><strong>The scoring pass</strong> (<code>npm run score</code>) checks each claim against the code: a file, a function, or a test in <code>npm test</code>. A claim whose check fails scores zero. See <a href="#scorecard">SCORECARD.md</a>.</li>
+<li><strong>Versioning.</strong> Semantic versions with a pre-release tag. Alpha means the shape can still change. A change of status, a new requirement or a reworded one bumps the patch number; a change of architecture bumps the minor number. Every version is a git tag and a GitHub release, with notes in <a href="https://github.com/Verafyai/verafyHarness/blob/main/docs/spec/CHANGELOG.md">CHANGELOG.md</a>.</li>
+</ul>
+<h2 id="the-system-in-one-picture">The system in one picture</h2>
+<pre><code> contract in words ──▶ ethics gate ──▶ atomizer ──▶ router ───────────────┬──▶ settled (screen or panel)
+ (verafy.asc/1)        (planned)        PACK         ROUTE                 │
+                                                       │ L2 only           │
+                                                       ▼                   │
+                                       packer ──▶ prover, proven once ──▶ verifiers (sampled)
+                                       PACK       PROVE                    │
+                                                                           ▼
+                        jury rules: commit, reveal, agreement against the bar (CORE, JURY)
+                                                                           │
+                                     TinySVM settles the exit exactly (SETTLE)
+                                                                           │
+                    record: Verafy Chain block (CHAIN) or Solana accounts per the SIMDs (SOL)
+                                                                           │
+                 banker pays and gets paid in existing tokens; light client watches escrow (BANK, LIGHT)
+</code></pre>
+<h2 id="principles-that-bind-every-part">Principles that bind every part</h2>
+<p>From <a href="https://github.com/Verafyai/verafyChain/blob/main/PRINCIPLES.md">PRINCIPLES.md</a>: payment agnostic (no token, ever); natural language first; embedded ethics; checkable and verifiable; agent friendly; context is evidence; no single model or lab; nothing is erased; legible to people; open and forkable; honest about what runs. A design that conflicts with a principle loses, or goes through the amendment process.</p>
+<h2 id="core-the-protocol">CORE: the protocol</h2>
+<p>A contract is a compressed intention: instructions, pinned context, a question with a closed answer type, a bar, payment and declared exits. Jurors commit to a hashed vote, then reveal it; agreement is measured against the bar; a below-bar ruling never pays jurors; the exit's diff must conserve totals.</p>
+<!-- reqs:CORE -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CORE-001</td>
+<td>verified</td>
+<td>Contract format verafy.asc/1 with validation; swarm.asc/0 still validates and keeps its hash</td>
+</tr>
+<tr>
+<td>CORE-002</td>
+<td>verified</td>
+<td>Pinned context: every context entry checked by SHA-256 before a model reads it</td>
+</tr>
+<tr>
+<td>CORE-003</td>
+<td>verified</td>
+<td>Commit then reveal with Ed25519 signatures and attestations</td>
+</tr>
+<tr>
+<td>CORE-004</td>
+<td>verified</td>
+<td>Agreement against the bar: verdict, forecast and graded; below-bar exits never pay jurors</td>
+</tr>
+<tr>
+<td>CORE-005</td>
+<td>verified</td>
+<td>Exits and diffs conserve totals; declared exits only</td>
+</tr>
+<tr>
+<td>CORE-006</td>
+<td>built</td>
+<td>Rulings re-verifiable from their round record (ruleFromRecords, verifyRuling)</td>
+</tr>
+<tr>
+<td>CORE-007</td>
+<td>built</td>
+<td>Quorum-signed triggers verafy.trigger/1 for calls to other chains</td>
+</tr>
+<tr>
+<td>CORE-008</td>
+<td>built</td>
+<td>Batching fields minBatch and maxWaitSeconds, without changing existing hashes</td>
+</tr>
+<tr>
+<td>CORE-009</td>
+<td>built</td>
+<td>Exit programs with bounded params, aggregated from votes</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:CORE -->
+
+<h2 id="jury-juries-live-runs-audits-and-challenges">JURY: juries, live runs, audits and challenges</h2>
+<p>Juries span labs and are drawn from the parent block hash. Auditors from other labs re-check sealed rulings; challenges append, never erase; a below-bar ruling's escrow funds a wider jury.</p>
+<!-- reqs:JURY -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JURY-001</td>
+<td>verified</td>
+<td>Live juries across five labs; measured Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total</td>
+</tr>
+<tr>
+<td>JURY-002</td>
+<td>verified</td>
+<td>Juror mode inside DeepSeek Harness: five labs sealed a block from their reveals</td>
+</tr>
+<tr>
+<td>JURY-003</td>
+<td>built</td>
+<td>Retry and back-off for rate-limited models</td>
+</tr>
+<tr>
+<td>JURY-004</td>
+<td>built</td>
+<td>Auditors from other labs re-check sealed rulings</td>
+</tr>
+<tr>
+<td>JURY-005</td>
+<td>built</td>
+<td>Challenges append affirm, overturn or supersede; escalation funds a wider jury</td>
+</tr>
+<tr>
+<td>JURY-006</td>
+<td>planned</td>
+<td>Challenge bonds: lock on open, return on overturn, forfeit on affirm. <em>Gap: Not built; needed before challenges can run on a network.</em></td>
+</tr>
+<tr>
+<td>JURY-007</td>
+<td>planned</td>
+<td>Track record: agreement with final rulings and forecast scores per harness. <em>Gap: No per-harness history yet; needed for bonds and for routing weights.</em></td>
+</tr>
+<tr>
+<td>JURY-008</td>
+<td>partial</td>
+<td>100 live rulings across the four market types, with audits and costs published. <em>Gap: Only the first five live rulings are published.</em></td>
+</tr>
+<tr>
+<td>JURY-009</td>
+<td>planned</td>
+<td>Harness daemon: a long-running process that watches for funded contracts and takes seats. <em>Gap: Blocks the network, MCP daemon tools and paused-contract resumption.</em></td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:JURY -->
+
+<h2 id="chain-the-verafy-chain-node">CHAIN: the Verafy Chain node</h2>
+<p>A block exists only when a jury rules. The node keeps a mempool of funded contracts, coordinates juries, gossips commitments and reveals, rotates sealers and verifies every block. Batching closes an L2 block by value or by time; the encrypted queue keeps contracts sealed until the jury is drawn.</p>
+<!-- reqs:CHAIN -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CHAIN-001</td>
+<td>built</td>
+<td>Node: mempool, jury coordination, gossip, sealer rotation, block store, verification</td>
+</tr>
+<tr>
+<td>CHAIN-002</td>
+<td>built</td>
+<td>Availability layer: context served by hash through the challenge window</td>
+</tr>
+<tr>
+<td>CHAIN-003</td>
+<td>built</td>
+<td>Batching: blocks close by value or by time, with a pro rata cost split</td>
+</tr>
+<tr>
+<td>CHAIN-004</td>
+<td>partial</td>
+<td>Encrypted queue: contracts sealed t of n until the jury is drawn. <em>Gap: Prototype: each author deals the shares; real distributed key generation and verifiable shares are planned.</em></td>
+</tr>
+<tr>
+<td>CHAIN-005</td>
+<td>planned</td>
+<td>Registry on chain, sealer liveness, bonds and slashing, libp2p gossip. <em>Gap: Needed for a network of independently operated harnesses.</em></td>
+</tr>
+<tr>
+<td>CHAIN-006</td>
+<td>planned</td>
+<td>Escalated juries accepted by the chain; challenge juries that share no lab</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:CHAIN -->
+
+<h2 id="settle-tinysvm">SETTLE: TinySVM</h2>
+<p>The AI judges and TinySVM settles: a restricted LiteSVM sidecar that runs only pinned programs (escrow, bond, ledger and exit programs) under a compute cap. It runs side by side with <code>runtime.js</code>, and any disagreement is a fault. TinySVM decides nothing.</p>
+<!-- reqs:SETTLE -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SETTLE-001</td>
+<td>built</td>
+<td>TinySVM phase 1: LiteSVM sidecar restricted to pinned programs and a compute cap</td>
+</tr>
+<tr>
+<td>SETTLE-002</td>
+<td>built</td>
+<td>Built-in programs escrow, bond and ledger; exit programs graded_payout, ranked_split, milestone_escrow</td>
+</tr>
+<tr>
+<td>SETTLE-003</td>
+<td>built</td>
+<td>runtime.js and TinySVM side by side; any disagreement is a fault</td>
+</tr>
+<tr>
+<td>SETTLE-004</td>
+<td>planned (needs Rex)</td>
+<td>Integer micro-units in runtime.js; TinySVM as the default runtime. <em>Gap: Needs Rex: changes some future diffs by one micro-unit.</em></td>
+</tr>
+<tr>
+<td>SETTLE-005</td>
+<td>planned</td>
+<td>Phase 2: Anza's solana-svm crate; nodes re-run settlement when they verify a block</td>
+</tr>
+<tr>
+<td>SETTLE-006</td>
+<td>research</td>
+<td>Settlement core compiled into weights (svmLLM), proven with the judgment</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:SETTLE -->
+
+<h2 id="light-reading-source-chains">LIGHT: reading source chains</h2>
+<p>Escrow stays on its own chain. The harness reads it from several independent RPC providers and treats disagreement as unknown, never a guess. Intake checks funding before a jury is drawn; the outbox confirms a trigger landed.</p>
+<!-- reqs:LIGHT -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LIGHT-001</td>
+<td>verified</td>
+<td>Solana multi-RPC reader; one read-only devnet run measured Nov 6, 2026</td>
+</tr>
+<tr>
+<td>LIGHT-002</td>
+<td>built</td>
+<td>EVM multi-RPC reader for any chain id</td>
+</tr>
+<tr>
+<td>LIGHT-003</td>
+<td>built</td>
+<td>Intake checks escrow funding; outbox confirms triggers; disagreement pauses, never guesses</td>
+</tr>
+<tr>
+<td>LIGHT-004</td>
+<td>partial</td>
+<td>Ethereum sync-committee verification through Helios. <em>Gap: Adapter only, tested with Helios absent.</em></td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:LIGHT -->
+
+<h2 id="bank-the-routing-agent">BANK: the routing agent</h2>
+<p>Four blocks: the keyblock (keys encrypted, scoped keys out), the banker (accept any allowed token, convert at the best checked quote), the API router (pay AI APIs, provers and hosts, metered) and the payment wallet (caps, allowlist, never the bond). The Banker is a deterministic service, not an AI agent; a read-only advisor may report and flag but holds no keys. Full design in <a href="https://github.com/Verafyai/verafyHarness/blob/main/docs/spec/banker.md">banker.md</a>.</p>
+<!-- reqs:BANK -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BANK-001</td>
+<td>built</td>
+<td>Keyblock: keys encrypted at rest; scoped keys with expiry, use limits and revocation</td>
+</tr>
+<tr>
+<td>BANK-002</td>
+<td>built</td>
+<td>Payment wallet: allowlisted payees, caps, approval threshold, bond reserve never spent</td>
+</tr>
+<tr>
+<td>BANK-003</td>
+<td>built</td>
+<td>Banker core: accept allowed tokens, best quote across approved venues, slippage limit, ensure and pay</td>
+</tr>
+<tr>
+<td>BANK-004</td>
+<td>built</td>
+<td>API router: keyed calls, metering, per-call or accrued billing</td>
+</tr>
+<tr>
+<td>BANK-005</td>
+<td>built</td>
+<td>Inference routing by assurance level, L0 to L2; L2 never to a hosted API</td>
+</tr>
+<tr>
+<td>BANK-006</td>
+<td>designed</td>
+<td>BankerService: deposit state machine (detect, classify, hold, quote, simulate, swap, sweep, record), idempotent by txid. <em>Gap: No deposit watcher or state machine yet.</em></td>
+</tr>
+<tr>
+<td>BANK-007</td>
+<td>designed</td>
+<td>Real venue adapters: Jupiter on Solana, an EVM aggregator, a bridge; price sanity against a reference. <em>Gap: Only the fixed-rate test venue exists.</em></td>
+</tr>
+<tr>
+<td>BANK-008</td>
+<td>designed</td>
+<td>Token allowlist by address; quarantine unknown tokens; dust; sanctions screen; daily caps; kill switch</td>
+</tr>
+<tr>
+<td>BANK-009</td>
+<td>designed</td>
+<td>Gas reserves per chain; exact approvals; simulate before send; append-only ledger with cost basis</td>
+</tr>
+<tr>
+<td>BANK-010</td>
+<td>designed</td>
+<td>Banker advisor: a read-only model that reports and flags, holding no keys</td>
+</tr>
+<tr>
+<td>BANK-011</td>
+<td>designed (needs Rex)</td>
+<td>Service mode (converting other people's funds) disabled in code until legal review</td>
+</tr>
+<tr>
+<td>BANK-012</td>
+<td>planned</td>
+<td>Rent GPU and VM hosts on demand for open-weights and proving routes</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:BANK -->
+
+<h2 id="pack-proof-packing-and-the-prompt-compressor">PACK: proof packing and the prompt compressor</h2>
+<p>FlashProve proves at most 1,024 tokens, about 750 words, per request; each proof takes about 9 s of H100 time, produces 18.78 MB and takes 17 s to verify (vendor-reported). Proving one request per proof wastes the window and pays for every proof in full. So requests are compiled before any model sees them:</p>
+<ol>
+<li><strong>Atomize.</strong> Each contract becomes atoms: one question each, a closed answer type, only the deciding facts, every fact pinned. An exact composition rule, written as code with integer math, turns atom answers into the contract's outcome. UNKNOWN goes to the contract's declared fallback, never a guess.</li>
+<li><strong>Dedupe.</strong> The same question over the same evidence has the same hash, so contracts that share a question share one slot and one proof.</li>
+<li><strong>Pack.</strong> Atoms fill 1,024-token requests first-fit, about 16 to 18 per request in tests; slot order is shuffled by the block hash; a reply that misses or mangles any slot is rejected whole.</li>
+<li><strong>Compress what can't be atomized.</strong> A brief (the question, the exits and only the deciding facts, each cited) stands in for a long contract. Plain dense English, never invented shorthand: models read English tokens best.</li>
+<li><strong>Check fidelity.</strong> A proof covers the atoms, not whether they capture the contract. Every plan or brief is agreed by the parties or ruled FAITHFUL by an unproven panel from several labs before it is used.</li>
+</ol>
+<p>In a test block, 60 contracts became 120 atoms, 61 after dedupe, in 4 requests at 85% fill (measured on the packer with mock models).</p>
+<!-- reqs:PACK -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PACK-001</td>
+<td>built</td>
+<td>Atoms: one question, closed answer type, only deciding facts, each with a pin</td>
+</tr>
+<tr>
+<td>PACK-002</td>
+<td>built</td>
+<td>Atom plans with an exact composition rule; UNKNOWN goes to the declared fallback</td>
+</tr>
+<tr>
+<td>PACK-003</td>
+<td>built</td>
+<td>Dedupe across contracts by atom hash; first-fit packing into 1,024-token requests; block-hash slot order (library, tested with mocks)</td>
+</tr>
+<tr>
+<td>PACK-004</td>
+<td>built</td>
+<td>Strict reply reading: every slot exactly once, typed answers, nothing else</td>
+</tr>
+<tr>
+<td>PACK-005</td>
+<td>built</td>
+<td>Atomizer: drafts a plan with any model and checks every cited pin is real</td>
+</tr>
+<tr>
+<td>PACK-006</td>
+<td>partial</td>
+<td>Fidelity check: an unproven multi-lab panel rules a plan FAITHFUL before it is used. <em>Gap: The question exists; running the panel and gating packing on it is not wired.</em></td>
+</tr>
+<tr>
+<td>PACK-007</td>
+<td>planned</td>
+<td>Real token counts with the target model's tokenizer. <em>Gap: The packer estimates about four characters per token.</em></td>
+</tr>
+<tr>
+<td>PACK-008</td>
+<td>designed</td>
+<td>Prompt compressor: briefs for contracts that cannot be atomized; party-agreed or checked. <em>Gap: Brief mode is modeled in economics, not built in the packer.</em></td>
+</tr>
+<tr>
+<td>PACK-009</td>
+<td>designed</td>
+<td>Long contracts split by claims with a proven combine step</td>
+</tr>
+<tr>
+<td>PACK-010</td>
+<td>built</td>
+<td>Route before packing: only atoms in the proven lane reach the packer</td>
+</tr>
+<tr>
+<td>PACK-011</td>
+<td>planned</td>
+<td>Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end. <em>Gap: The packer is a tested library; no harness run or block uses it yet, and no real prover is attached.</em></td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:PACK -->
+
+<h2 id="route-multi-model-routing">ROUTE: multi-model routing</h2>
+<p>Every question starts at the cheapest tier that can answer it safely: a fast System 1 screen (such as Jev), then panels of small, mid-size and frontier models, each spanning labs. A unanimous panel stops; a split one moves up. Three signals decide where a question goes: the screen's probability, juror disagreement, and the question itself (its stakes, type and the contract's floor). The router is plain code; no model decides routing.</p>
+<p>Guardrails:</p>
+<ul>
+<li><strong>Shadow mode by default.</strong> The screen sizes juries and logs what it would have settled. It settles nothing until its cutoffs are calibrated and an operator turns settling on.</li>
+<li><strong>Calibrated cutoffs.</strong> Per question type, the lowest probability at which the screen's accuracy, as a Wilson lower bound on labeled examples, matches the jury it replaces. Too few examples means no cutoff. Live audits withdraw a cutoff whose accuracy drops.</li>
+<li><strong>The contract's floor is never lowered.</strong> The screen can only add scrutiny. L2 questions never take a screen's answer, because a closed model cannot carry a proof.</li>
+<li><strong>Audits.</strong> A share of settled answers, drawn from the block hash, is re-checked at the top tier.</li>
+</ul>
+<p>What a screen is worth is not known yet. Jev's figures are its maker's (70 to 500 ms, about $0.0004 a decision, 67.8% on its benchmark against 73 to 74% for frontier models); its coverage on our questions needs a calibration run.</p>
+<!-- reqs:ROUTE -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROUTE-001</td>
+<td>built</td>
+<td>Tiered router: screen, then panels from small to frontier; a unanimous panel stops, a split one escalates</td>
+</tr>
+<tr>
+<td>ROUTE-002</td>
+<td>built</td>
+<td>The contract's floor is never lowered; L2 never uses a screen's answer; stakes cap screen settlement</td>
+</tr>
+<tr>
+<td>ROUTE-003</td>
+<td>built</td>
+<td>Shadow mode by default: the screen sizes juries and logs what it would settle</td>
+</tr>
+<tr>
+<td>ROUTE-004</td>
+<td>built</td>
+<td>Calibration: per-type cutoffs from the Wilson lower bound; recheck withdraws a cutoff when live accuracy drops</td>
+</tr>
+<tr>
+<td>ROUTE-005</td>
+<td>built</td>
+<td>Audits drawn from the block hash re-check settled answers at the top tier</td>
+</tr>
+<tr>
+<td>ROUTE-006</td>
+<td>built</td>
+<td>Screen adapters: a Jev adapter taking any client call, and a scripted screen</td>
+</tr>
+<tr>
+<td>ROUTE-007</td>
+<td>planned</td>
+<td>A labeled calibration set of atoms with known answers, and a Jev calibration run. <em>Gap: Needs Jev access; until then the screen settles nothing.</em></td>
+</tr>
+<tr>
+<td>ROUTE-008</td>
+<td>planned</td>
+<td>Wire the router into the harness and the chain intake, with per-contract allowScreen, stakes and floors in the contract format. <em>Gap: The router is a library; contracts cannot declare allowScreen or floorTier yet.</em></td>
+</tr>
+<tr>
+<td>ROUTE-009</td>
+<td>planned</td>
+<td>Skip tiers when stakes or question type make escalation likely</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:ROUTE -->
+
+<h2 id="prove-proofs-of-inference">PROVE: proofs of inference</h2>
+<p>The proven lane is set by the contract, never by difficulty. While only one model is provable, each packed request is proven once by a prover drawn from the block hash, and other jurors verify; lab diversity returns when a second model is provable. Proofs are attached after the reveal; an L2 ruling is final only when every counted proof verifies; a missing or failed proof drops the vote and records a fault. Proofs and their data stay off chain; a block carries one Merkle root over them.</p>
+<!-- reqs:PROVE -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PROVE-001</td>
+<td>partial</td>
+<td>Proof hashes on votes; a proof itself on chain fails verification. <em>Gap: Hashes only; no prover is wired.</em></td>
+</tr>
+<tr>
+<td>PROVE-002</td>
+<td>designed</td>
+<td>Prover and Verifier interfaces with mock, DeepProve and FlashProve adapters. <em>Gap: packages/prove does not exist.</em></td>
+</tr>
+<tr>
+<td>PROVE-003</td>
+<td>designed</td>
+<td>Commit, reveal, then attach the proof before a deadline; L2 final only when every counted proof verifies</td>
+</tr>
+<tr>
+<td>PROVE-004</td>
+<td>designed</td>
+<td>Prove once, verify many while one model is provable; verifiers drawn from the block hash</td>
+</tr>
+<tr>
+<td>PROVE-005</td>
+<td>designed</td>
+<td>One Merkle root per block over manifests and proof hashes; sampled verification with challenges</td>
+</tr>
+<tr>
+<td>PROVE-006</td>
+<td>planned (needs Rex)</td>
+<td>Measured DeepProve run on packed questions; FlashProve proving-harness runbook. <em>Gap: Needs a machine; FlashProve needs Rex to rent an H100 and accept the Llama license.</em></td>
+</tr>
+<tr>
+<td>PROVE-007</td>
+<td>research</td>
+<td>Recursive aggregation of many proofs into one</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:PROVE -->
+
+<h2 id="cot-disclosed-reasoning">COT: disclosed reasoning</h2>
+<p>Each vote carries reasoning, and the commitment covers it, so reasoning cannot be rewritten after the outcome is known. Rulings record each juror's reasoning hash. Next: step-wise reasons that cite a pin per step, so a challenge can point at the step where the logic broke. In the proven lane, reasoning uses the 1,024-token window (full reasoning roughly doubles cost per contract, modeled), so proven jurors give short reasons. Written reasoning is evidence to check, not a guarantee of what drove the answer.</p>
+<!-- reqs:COT -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>COT-001</td>
+<td>built</td>
+<td>Each vote carries reasoning; the commitment covers it, so it cannot be rewritten after the fact</td>
+</tr>
+<tr>
+<td>COT-002</td>
+<td>built</td>
+<td>Rulings record a hash of each juror's reasoning; dissents keep their reasoning</td>
+</tr>
+<tr>
+<td>COT-003</td>
+<td>designed</td>
+<td>Structured, step-wise reasons with a cited pin per step; challenges cite a step. <em>Gap: Reasoning is two or three free-text sentences today.</em></td>
+</tr>
+<tr>
+<td>COT-004</td>
+<td>designed</td>
+<td>Short reasons in the proven lane; full reasoning off chain by hash in unproven tiers</td>
+</tr>
+<tr>
+<td>COT-005</td>
+<td>research</td>
+<td>Disagreement graph: structured objections against a rule or evidence item, versioned across rulings</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:COT -->
+
+<h2 id="gov-constitution-ethics-and-amendments">GOV: constitution, ethics and amendments</h2>
+<p>Block 0 is a draft Constitution with Embedded Ethics, to be ratified by the first jury consensus. Every governance change passes a constitution check, then an ethics check. Amendments go through seven stages and can never weaken entrenched clauses.</p>
+<!-- reqs:GOV -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GOV-001</td>
+<td>designed</td>
+<td>Constitution Draft 0 with Article 1 (no foundation, no VC, no coin, no fundraising, no secret team, no community fund, no treasury)</td>
+</tr>
+<tr>
+<td>GOV-002</td>
+<td>designed</td>
+<td>Ethics gate: allow, refuse or escalate at intake; doubt resolves toward refusal; no bypass. <em>Gap: Specified, not built.</em></td>
+</tr>
+<tr>
+<td>GOV-003</td>
+<td>designed</td>
+<td>Amendment process: seven stages, entrenched clauses, verafy.amendment/1. <em>Gap: Specified, not built.</em></td>
+</tr>
+<tr>
+<td>GOV-004</td>
+<td>designed</td>
+<td>Eleven design principles</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:GOV -->
+
+<h2 id="sol-settling-on-solana">SOL: settling on Solana</h2>
+<p>In theory, no separate chain is needed: the three draft SIMDs describe every part of this as ordinary Solana programs, with no changes to Solana. Two pieces would still need adding: fair juror draws (slot data can be nudged) and availability for the off-chain data. Proof packing needs a small amendment so many attestations can point at one shared proof. A dedicated Verafy Chain is worth building only if the Solana version hits real limits.</p>
+<!-- reqs:SOL -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SOL-001</td>
+<td>designed</td>
+<td>Three draft SIMDs: inference programs, attestations, rulings; no validator changes</td>
+</tr>
+<tr>
+<td>SOL-002</td>
+<td>planned</td>
+<td>A Solana devnet program implementing commit, reveal and the Ruling account; one harness ruling settled on devnet. <em>Gap: The strongest proof that no new chain is needed.</em></td>
+</tr>
+<tr>
+<td>SOL-003</td>
+<td>designed</td>
+<td>SIMD amendment: packed proofs shared by many attestations (proof hash, slot and manifest hash). <em>Gap: Text not yet drafted into the attestations SIMD.</em></td>
+</tr>
+<tr>
+<td>SOL-004</td>
+<td>planned</td>
+<td>Fair juror draws on Solana (commit-reveal randomness or a VRF), since slot data can be nudged</td>
+</tr>
+<tr>
+<td>SOL-005</td>
+<td>planned</td>
+<td>Availability for off-chain refs on Solana through the challenge window</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:SOL -->
+
+<h2 id="econ-economics">ECON: economics</h2>
+<p>All of it lives in <code>packages/economics</code>, with tests that pin every vector, and renders at <a href="https://harness.verafy.ai/economics">harness.verafy.ai/economics</a>. Headline results (modeled, defaults: an H100 at $4.00 an hour, FlashProve's vendor-reported speed):</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>Per decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unpacked, five jurors each proving</td>
+<td>$0.1043</td>
+</tr>
+<tr>
+<td>Atomized, packed, proven once</td>
+<td>$0.0059</td>
+</tr>
+<tr>
+<td>Plus a screen settling half the atoms and 70% of checks (assumed)</td>
+<td>$0.0039</td>
+</tr>
+</tbody>
+</table></div>
+<p>Once packed, the fidelity checks cost more than the proofs (at 1,000 contracts: $3.26 against $1.29), so the next savings are in cheaper checks. A cascade from a screen to frontier models comes out about 4 times cheaper and 3 times faster on average than sending everything to a frontier jury (illustrative tier shares), but a hard question pays every tier.</p>
+<!-- reqs:ECON -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ECON-001</td>
+<td>built</td>
+<td>Proven block model: per proof, per block, per decision; warm-up; capacity; break-even; roles</td>
+</tr>
+<tr>
+<td>ECON-002</td>
+<td>built</td>
+<td>Proof packing, atomize, dedupe and a fast screen in the model</td>
+</tr>
+<tr>
+<td>ECON-003</td>
+<td>built</td>
+<td>Cascade model: average and typical cost and time across tiers, and the worst case</td>
+</tr>
+<tr>
+<td>ECON-004</td>
+<td>built</td>
+<td>Calculator page harness.verafy.ai/economics from the same functions</td>
+</tr>
+<tr>
+<td>ECON-005</td>
+<td>built</td>
+<td>Calculator: cascade tiers, reasoning length, screen savings and Solana costs on the economics page</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:ECON -->
+
+<h2 id="agent-plugins">AGENT: plugins</h2>
+<p>Your agent is a client, never a juror: the MCP server has no vote, key or funds tool, contract text comes back as evidence, and live calls need a flag and a spend cap.</p>
+<!-- reqs:AGENT -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AGENT-001</td>
+<td>built</td>
+<td>Zero-dependency MCP server: eight tools; no vote, key or funds tool; live calls behind a flag and a spend cap</td>
+</tr>
+<tr>
+<td>AGENT-002</td>
+<td>built</td>
+<td>Integrations for Claude Code, Codex, Cursor, Gemini CLI, Goose, Hermes Agent, OpenClaw and any MCP client</td>
+</tr>
+<tr>
+<td>AGENT-003</td>
+<td>planned (needs Rex)</td>
+<td>Publish the MCP server to npm and submit to agent catalogs</td>
+</tr>
+<tr>
+<td>AGENT-004</td>
+<td>planned</td>
+<td>MCP tools for routing (verafy_route) and packing (verafy_pack)</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:AGENT -->
+
+<h2 id="site-sites-and-docs">SITE: sites and docs</h2>
+<!-- reqs:SITE -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SITE-001</td>
+<td>built</td>
+<td>harness.verafy.ai: landing, run, testnet, coin agnostic, economics</td>
+</tr>
+<tr>
+<td>SITE-002</td>
+<td>built</td>
+<td>Versioned spec with stable requirement IDs, a changelog and a generated scorecard</td>
+</tr>
+<tr>
+<td>SITE-003</td>
+<td>built</td>
+<td>Spec page and release-notes blog on harness.verafy.ai</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:SITE -->
+
+<h2 id="ops-security-and-operations">OPS: security and operations</h2>
+<!-- reqs:OPS -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OPS-001</td>
+<td>built</td>
+<td>No secret in output: tests plant a key and check no tool or log prints it</td>
+</tr>
+<tr>
+<td>OPS-002</td>
+<td>built</td>
+<td>Context is evidence: injected instructions in context are returned as evidence and change nothing</td>
+</tr>
+<tr>
+<td>OPS-003</td>
+<td>planned</td>
+<td>Monitoring: per-harness health, spend, faults and alerts</td>
+</tr>
+<tr>
+<td>OPS-004</td>
+<td>planned</td>
+<td>Threat model document covering keys, queue, provers, screens and the banker</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:OPS -->
+
+<h2 id="ext-collaborations-and-data">EXT: collaborations and data</h2>
+<p>Muse (semantic version control) proposed two small experiments: targeted certification from semantic diffs, and poisoned evidence with signed provenance. Both fit the harness as pinned manifests, with no dependency in core.</p>
+<!-- reqs:EXT -->
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EXT-001</td>
+<td>research</td>
+<td>Muse experiment A: targeted certification from semantic diffs vs full-context review</td>
+</tr>
+<tr>
+<td>EXT-002</td>
+<td>research</td>
+<td>Muse experiment B: poisoned evidence with and without signed provenance manifests</td>
+</tr>
+</tbody>
+</table></div>
+<!-- /reqs:EXT -->
+
+<h2 id="decisions-waiting-on-rex">Decisions waiting on Rex</h2>
+<p>Requirements marked <em>needs Rex</em> in the tables, plus: the block-close defaults, prove-once for L2, packing defaults, allowed brief modes, the Banker's target token, treasury, chains, caps and screening, whether to rent a FlashProve machine, and whether to publish the MCP server.</p>
+<h2 id="scorecard">Scorecard</h2>
+<p>Generated by <code>npm run score -- --write</code> from <a href="https://github.com/Verafyai/verafyHarness/blob/main/docs/spec/requirements.json">requirements.json</a>. Do not edit by hand.</p>
+<p><strong>Overall: 56%</strong> of the spec, weighted. 105 requirements: 8 verified, 46 built, 21 planned, 5 partial, 5 research, 20 designed.</p>
+<p>A requirement scores its status (verified 100%, built 80%, partial 50%, designed 25%, planned 10%, research 0%) only if every check passes. A score is how far the build is along the spec, not a measure of quality.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Requirements</th>
+<th>Score</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CORE: Core protocol: contracts, commit and reveal, agreement, exits</td>
+<td>9</td>
+<td>93%</td>
+<td><code>███████████████████░</code></td>
+</tr>
+<tr>
+<td>JURY: Juries, live runs, audits and challenges</td>
+<td>9</td>
+<td>59%</td>
+<td><code>████████████░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>CHAIN: Verafy Chain node (verafyChain repo)</td>
+<td>6</td>
+<td>57%</td>
+<td><code>████████████░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>SETTLE: TinySVM: exact settlement next to the AI</td>
+<td>6</td>
+<td>58%</td>
+<td><code>████████████░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>LIGHT: Light client: reading source chains</td>
+<td>4</td>
+<td>83%</td>
+<td><code>█████████████████░░░</code></td>
+</tr>
+<tr>
+<td>BANK: Routing agent: keyblock, banker, wallet, API router, deposits</td>
+<td>12</td>
+<td>49%</td>
+<td><code>██████████░░░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>PACK: Proof packing and the prompt compressor</td>
+<td>11</td>
+<td>57%</td>
+<td><code>███████████░░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>ROUTE: Multi-model routing: screens, tiers, calibration</td>
+<td>9</td>
+<td>61%</td>
+<td><code>████████████░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>PROVE: Proofs of inference</td>
+<td>7</td>
+<td>25%</td>
+<td><code>█████░░░░░░░░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>COT: Disclosed reasoning</td>
+<td>5</td>
+<td>49%</td>
+<td><code>██████████░░░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>GOV: Constitution, Embedded Ethics, amendments</td>
+<td>4</td>
+<td>25%</td>
+<td><code>█████░░░░░░░░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>SOL: Solana settlement through the three SIMDs</td>
+<td>5</td>
+<td>17%</td>
+<td><code>███░░░░░░░░░░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>ECON: Economics and the calculator</td>
+<td>5</td>
+<td>80%</td>
+<td><code>████████████████░░░░</code></td>
+</tr>
+<tr>
+<td>AGENT: Agent plugins and the MCP server</td>
+<td>4</td>
+<td>57%</td>
+<td><code>███████████░░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>SITE: Sites, docs and the spec</td>
+<td>3</td>
+<td>80%</td>
+<td><code>████████████████░░░░</code></td>
+</tr>
+<tr>
+<td>OPS: Security and operations</td>
+<td>4</td>
+<td>49%</td>
+<td><code>██████████░░░░░░░░░░</code></td>
+</tr>
+<tr>
+<td>EXT: External collaborations and data</td>
+<td>2</td>
+<td>0%</td>
+<td><code>░░░░░░░░░░░░░░░░░░░░</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="gaps-by-impact">Gaps, by impact</h2>
+<p>Impact is weight times the points still missing. Needs Rex marks a decision only Rex can make.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>Requirement</th>
+<th>Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JURY-009</td>
+<td>planned</td>
+<td>Harness daemon: a long-running process that watches for funded contracts and takes seats</td>
+<td>Blocks the network, MCP daemon tools and paused-contract resumption</td>
+</tr>
+<tr>
+<td>PACK-011</td>
+<td>planned</td>
+<td>Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end</td>
+<td>The packer is a tested library; no harness run or block uses it yet, and no real prover is attached</td>
+</tr>
+<tr>
+<td>PROVE-006</td>
+<td>planned, needs Rex</td>
+<td>Measured DeepProve run on packed questions; FlashProve proving-harness runbook</td>
+<td>Needs a machine; FlashProve needs Rex to rent an H100 and accept the Llama license</td>
+</tr>
+<tr>
+<td>ROUTE-007</td>
+<td>planned</td>
+<td>A labeled calibration set of atoms with known answers, and a Jev calibration run</td>
+<td>Needs Jev access; until then the screen settles nothing</td>
+</tr>
+<tr>
+<td>SOL-002</td>
+<td>planned</td>
+<td>A Solana devnet program implementing commit, reveal and the Ruling account; one harness ruling settled on devnet</td>
+<td>The strongest proof that no new chain is needed</td>
+</tr>
+<tr>
+<td>BANK-006</td>
+<td>designed</td>
+<td>BankerService: deposit state machine (detect, classify, hold, quote, simulate, swap, sweep, record), idempotent by txid</td>
+<td>No deposit watcher or state machine yet</td>
+</tr>
+<tr>
+<td>BANK-007</td>
+<td>designed</td>
+<td>Real venue adapters: Jupiter on Solana, an EVM aggregator, a bridge; price sanity against a reference</td>
+<td>Only the fixed-rate test venue exists</td>
+</tr>
+<tr>
+<td>GOV-002</td>
+<td>designed</td>
+<td>Ethics gate: allow, refuse or escalate at intake; doubt resolves toward refusal; no bypass</td>
+<td>Specified, not built</td>
+</tr>
+<tr>
+<td>PROVE-002</td>
+<td>designed</td>
+<td>Prover and Verifier interfaces with mock, DeepProve and FlashProve adapters</td>
+<td>packages/prove does not exist</td>
+</tr>
+<tr>
+<td>PROVE-003</td>
+<td>designed</td>
+<td>Commit, reveal, then attach the proof before a deadline; L2 final only when every counted proof verifies</td>
+<td></td>
+</tr>
+<tr>
+<td>PROVE-004</td>
+<td>designed</td>
+<td>Prove once, verify many while one model is provable; verifiers drawn from the block hash</td>
+<td></td>
+</tr>
+<tr>
+<td>SOL-001</td>
+<td>designed</td>
+<td>Three draft SIMDs: inference programs, attestations, rulings; no validator changes</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-012</td>
+<td>planned</td>
+<td>Rent GPU and VM hosts on demand for open-weights and proving routes</td>
+<td></td>
+</tr>
+<tr>
+<td>CHAIN-005</td>
+<td>planned</td>
+<td>Registry on chain, sealer liveness, bonds and slashing, libp2p gossip</td>
+<td>Needed for a network of independently operated harnesses</td>
+</tr>
+<tr>
+<td>JURY-006</td>
+<td>planned</td>
+<td>Challenge bonds: lock on open, return on overturn, forfeit on affirm</td>
+<td>Not built; needed before challenges can run on a network</td>
+</tr>
+<tr>
+<td>JURY-007</td>
+<td>planned</td>
+<td>Track record: agreement with final rulings and forecast scores per harness</td>
+<td>No per-harness history yet; needed for bonds and for routing weights</td>
+</tr>
+<tr>
+<td>OPS-003</td>
+<td>planned</td>
+<td>Monitoring: per-harness health, spend, faults and alerts</td>
+<td></td>
+</tr>
+<tr>
+<td>OPS-004</td>
+<td>planned</td>
+<td>Threat model document covering keys, queue, provers, screens and the banker</td>
+<td></td>
+</tr>
+<tr>
+<td>PACK-007</td>
+<td>planned</td>
+<td>Real token counts with the target model's tokenizer</td>
+<td>The packer estimates about four characters per token</td>
+</tr>
+<tr>
+<td>ROUTE-008</td>
+<td>planned</td>
+<td>Wire the router into the harness and the chain intake, with per-contract allowScreen, stakes and floors in the contract format</td>
+<td>The router is a library; contracts cannot declare allowScreen or floorTier yet</td>
+</tr>
+<tr>
+<td>SETTLE-004</td>
+<td>planned, needs Rex</td>
+<td>Integer micro-units in runtime.js; TinySVM as the default runtime</td>
+<td>Needs Rex: changes some future diffs by one micro-unit</td>
+</tr>
+<tr>
+<td>SOL-004</td>
+<td>planned</td>
+<td>Fair juror draws on Solana (commit-reveal randomness or a VRF), since slot data can be nudged</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-008</td>
+<td>designed</td>
+<td>Token allowlist by address; quarantine unknown tokens; dust; sanctions screen; daily caps; kill switch</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-009</td>
+<td>designed</td>
+<td>Gas reserves per chain; exact approvals; simulate before send; append-only ledger with cost basis</td>
+<td></td>
+</tr>
+<tr>
+<td>COT-003</td>
+<td>designed</td>
+<td>Structured, step-wise reasons with a cited pin per step; challenges cite a step</td>
+<td>Reasoning is two or three free-text sentences today</td>
+</tr>
+<tr>
+<td>GOV-001</td>
+<td>designed</td>
+<td>Constitution Draft 0 with Article 1 (no foundation, no VC, no coin, no fundraising, no secret team, no community fund, no treasury)</td>
+<td></td>
+</tr>
+<tr>
+<td>GOV-003</td>
+<td>designed</td>
+<td>Amendment process: seven stages, entrenched clauses, verafy.amendment/1</td>
+<td>Specified, not built</td>
+</tr>
+<tr>
+<td>JURY-008</td>
+<td>partial</td>
+<td>100 live rulings across the four market types, with audits and costs published</td>
+<td>Only the first five live rulings are published</td>
+</tr>
+<tr>
+<td>PACK-006</td>
+<td>partial</td>
+<td>Fidelity check: an unproven multi-lab panel rules a plan FAITHFUL before it is used</td>
+<td>The question exists; running the panel and gating packing on it is not wired</td>
+</tr>
+<tr>
+<td>PACK-008</td>
+<td>designed</td>
+<td>Prompt compressor: briefs for contracts that cannot be atomized; party-agreed or checked</td>
+<td>Brief mode is modeled in economics, not built in the packer</td>
+</tr>
+<tr>
+<td>PROVE-001</td>
+<td>partial</td>
+<td>Proof hashes on votes; a proof itself on chain fails verification</td>
+<td>Hashes only; no prover is wired</td>
+</tr>
+<tr>
+<td>PROVE-005</td>
+<td>designed</td>
+<td>One Merkle root per block over manifests and proof hashes; sampled verification with challenges</td>
+<td></td>
+</tr>
+<tr>
+<td>SOL-003</td>
+<td>designed</td>
+<td>SIMD amendment: packed proofs shared by many attestations (proof hash, slot and manifest hash)</td>
+<td>Text not yet drafted into the attestations SIMD</td>
+</tr>
+<tr>
+<td>CHAIN-004</td>
+<td>partial</td>
+<td>Encrypted queue: contracts sealed t of n until the jury is drawn</td>
+<td>Prototype: each author deals the shares; real distributed key generation and verifiable shares are planned</td>
+</tr>
+<tr>
+<td>COT-005</td>
+<td>research</td>
+<td>Disagreement graph: structured objections against a rule or evidence item, versioned across rulings</td>
+<td></td>
+</tr>
+<tr>
+<td>EXT-001</td>
+<td>research</td>
+<td>Muse experiment A: targeted certification from semantic diffs vs full-context review</td>
+<td></td>
+</tr>
+<tr>
+<td>EXT-002</td>
+<td>research</td>
+<td>Muse experiment B: poisoned evidence with and without signed provenance manifests</td>
+<td></td>
+</tr>
+<tr>
+<td>PROVE-007</td>
+<td>research</td>
+<td>Recursive aggregation of many proofs into one</td>
+<td></td>
+</tr>
+<tr>
+<td>SETTLE-006</td>
+<td>research</td>
+<td>Settlement core compiled into weights (svmLLM), proven with the judgment</td>
+<td></td>
+</tr>
+<tr>
+<td>AGENT-003</td>
+<td>planned, needs Rex</td>
+<td>Publish the MCP server to npm and submit to agent catalogs</td>
+<td></td>
+</tr>
+<tr>
+<td>AGENT-004</td>
+<td>planned</td>
+<td>MCP tools for routing (verafy_route) and packing (verafy_pack)</td>
+<td></td>
+</tr>
+<tr>
+<td>CHAIN-006</td>
+<td>planned</td>
+<td>Escalated juries accepted by the chain; challenge juries that share no lab</td>
+<td></td>
+</tr>
+<tr>
+<td>ROUTE-009</td>
+<td>planned</td>
+<td>Skip tiers when stakes or question type make escalation likely</td>
+<td></td>
+</tr>
+<tr>
+<td>SETTLE-005</td>
+<td>planned</td>
+<td>Phase 2: Anza's solana-svm crate; nodes re-run settlement when they verify a block</td>
+<td></td>
+</tr>
+<tr>
+<td>SOL-005</td>
+<td>planned</td>
+<td>Availability for off-chain refs on Solana through the challenge window</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-010</td>
+<td>designed</td>
+<td>Banker advisor: a read-only model that reports and flags, holding no keys</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-011</td>
+<td>designed, needs Rex</td>
+<td>Service mode (converting other people's funds) disabled in code until legal review</td>
+<td></td>
+</tr>
+<tr>
+<td>COT-004</td>
+<td>designed</td>
+<td>Short reasons in the proven lane; full reasoning off chain by hash in unproven tiers</td>
+<td></td>
+</tr>
+<tr>
+<td>GOV-004</td>
+<td>designed</td>
+<td>Eleven design principles</td>
+<td></td>
+</tr>
+<tr>
+<td>PACK-009</td>
+<td>designed</td>
+<td>Long contracts split by claims with a proven combine step</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-001</td>
+<td>built</td>
+<td>Keyblock: keys encrypted at rest; scoped keys with expiry, use limits and revocation</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-002</td>
+<td>built</td>
+<td>Payment wallet: allowlisted payees, caps, approval threshold, bond reserve never spent</td>
+<td></td>
+</tr>
+<tr>
+<td>CHAIN-001</td>
+<td>built</td>
+<td>Node: mempool, jury coordination, gossip, sealer rotation, block store, verification</td>
+<td></td>
+</tr>
+<tr>
+<td>LIGHT-003</td>
+<td>built</td>
+<td>Intake checks escrow funding; outbox confirms triggers; disagreement pauses, never guesses</td>
+<td></td>
+</tr>
+<tr>
+<td>OPS-001</td>
+<td>built</td>
+<td>No secret in output: tests plant a key and check no tool or log prints it</td>
+<td></td>
+</tr>
+<tr>
+<td>PACK-001</td>
+<td>built</td>
+<td>Atoms: one question, closed answer type, only deciding facts, each with a pin</td>
+<td></td>
+</tr>
+<tr>
+<td>PACK-002</td>
+<td>built</td>
+<td>Atom plans with an exact composition rule; UNKNOWN goes to the declared fallback</td>
+<td></td>
+</tr>
+<tr>
+<td>PACK-003</td>
+<td>built</td>
+<td>Dedupe across contracts by atom hash; first-fit packing into 1,024-token requests; block-hash slot order (library, tested with mocks)</td>
+<td></td>
+</tr>
+<tr>
+<td>ROUTE-001</td>
+<td>built</td>
+<td>Tiered router: screen, then panels from small to frontier; a unanimous panel stops, a split one escalates</td>
+<td></td>
+</tr>
+<tr>
+<td>ROUTE-002</td>
+<td>built</td>
+<td>The contract's floor is never lowered; L2 never uses a screen's answer; stakes cap screen settlement</td>
+<td></td>
+</tr>
+<tr>
+<td>ROUTE-003</td>
+<td>built</td>
+<td>Shadow mode by default: the screen sizes juries and logs what it would settle</td>
+<td></td>
+</tr>
+<tr>
+<td>ROUTE-004</td>
+<td>built</td>
+<td>Calibration: per-type cutoffs from the Wilson lower bound; recheck withdraws a cutoff when live accuracy drops</td>
+<td></td>
+</tr>
+<tr>
+<td>SETTLE-001</td>
+<td>built</td>
+<td>TinySVM phase 1: LiteSVM sidecar restricted to pinned programs and a compute cap</td>
+<td></td>
+</tr>
+<tr>
+<td>SETTLE-002</td>
+<td>built</td>
+<td>Built-in programs escrow, bond and ledger; exit programs graded_payout, ranked_split, milestone_escrow</td>
+<td></td>
+</tr>
+<tr>
+<td>SETTLE-003</td>
+<td>built</td>
+<td>runtime.js and TinySVM side by side; any disagreement is a fault</td>
+<td></td>
+</tr>
+<tr>
+<td>LIGHT-004</td>
+<td>partial</td>
+<td>Ethereum sync-committee verification through Helios</td>
+<td>Adapter only, tested with Helios absent</td>
+</tr>
+<tr>
+<td>AGENT-001</td>
+<td>built</td>
+<td>Zero-dependency MCP server: eight tools; no vote, key or funds tool; live calls behind a flag and a spend cap</td>
+<td></td>
+</tr>
+<tr>
+<td>AGENT-002</td>
+<td>built</td>
+<td>Integrations for Claude Code, Codex, Cursor, Gemini CLI, Goose, Hermes Agent, OpenClaw and any MCP client</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-003</td>
+<td>built</td>
+<td>Banker core: accept allowed tokens, best quote across approved venues, slippage limit, ensure and pay</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-004</td>
+<td>built</td>
+<td>API router: keyed calls, metering, per-call or accrued billing</td>
+<td></td>
+</tr>
+<tr>
+<td>BANK-005</td>
+<td>built</td>
+<td>Inference routing by assurance level, L0 to L2; L2 never to a hosted API</td>
+<td></td>
+</tr>
+<tr>
+<td>CHAIN-002</td>
+<td>built</td>
+<td>Availability layer: context served by hash through the challenge window</td>
+<td></td>
+</tr>
+<tr>
+<td>CHAIN-003</td>
+<td>built</td>
+<td>Batching: blocks close by value or by time, with a pro rata cost split</td>
+<td></td>
+</tr>
+<tr>
+<td>CORE-006</td>
+<td>built</td>
+<td>Rulings re-verifiable from their round record (ruleFromRecords, verifyRuling)</td>
+<td></td>
+</tr>
+<tr>
+<td>CORE-007</td>
+<td>built</td>
+<td>Quorum-signed triggers verafy.trigger/1 for calls to other chains</td>
+<td></td>
+</tr>
+<tr>
+<td>CORE-008</td>
+<td>built</td>
+<td>Batching fields minBatch and maxWaitSeconds, without changing existing hashes</td>
+<td></td>
+</tr>
+<tr>
+<td>CORE-009</td>
+<td>built</td>
+<td>Exit programs with bounded params, aggregated from votes</td>
+<td></td>
+</tr>
+<tr>
+<td>COT-001</td>
+<td>built</td>
+<td>Each vote carries reasoning; the commitment covers it, so it cannot be rewritten after the fact</td>
+<td></td>
+</tr>
+<tr>
+<td>COT-002</td>
+<td>built</td>
+<td>Rulings record a hash of each juror's reasoning; dissents keep their reasoning</td>
+<td></td>
+</tr>
+<tr>
+<td>ECON-001</td>
+<td>built</td>
+<td>Proven block model: per proof, per block, per decision; warm-up; capacity; break-even; roles</td>
+<td></td>
+</tr>
+<tr>
+<td>ECON-002</td>
+<td>built</td>
+<td>Proof packing, atomize, dedupe and a fast screen in the model</td>
+<td></td>
+</tr>
+<tr>
+<td>ECON-004</td>
+<td>built</td>
+<td>Calculator page harness.verafy.ai/economics from the same functions</td>
+<td></td>
+</tr>
+<tr>
+<td>JURY-003</td>
+<td>built</td>
+<td>Retry and back-off for rate-limited models</td>
+<td></td>
+</tr>
+<tr>
+<td>JURY-004</td>
+<td>built</td>
+<td>Auditors from other labs re-check sealed rulings</td>
+<td></td>
+</tr>
+<tr>
+<td>JURY-005</td>
+<td>built</td>
+<td>Challenges append affirm, overturn or supersede; escalation funds a wider jury</td>
+<td></td>
+</tr>
+<tr>
+<td>LIGHT-002</td>
+<td>built</td>
+<td>EVM multi-RPC reader for any chain id</td>
+<td></td>
+</tr>
+<tr>
+<td>OPS-002</td>
+<td>built</td>
+<td>Context is evidence: injected instructions in context are returned as evidence and change nothing</td>
+<td></td>
+</tr>
+<tr>
+<td>PACK-004</td>
+<td>built</td>
+<td>Strict reply reading: every slot exactly once, typed answers, nothing else</td>
+<td></td>
+</tr>
+<tr>
+<td>PACK-005</td>
+<td>built</td>
+<td>Atomizer: drafts a plan with any model and checks every cited pin is real</td>
+<td></td>
+</tr>
+<tr>
+<td>PACK-010</td>
+<td>built</td>
+<td>Route before packing: only atoms in the proven lane reach the packer</td>
+<td></td>
+</tr>
+<tr>
+<td>ROUTE-005</td>
+<td>built</td>
+<td>Audits drawn from the block hash re-check settled answers at the top tier</td>
+<td></td>
+</tr>
+<tr>
+<td>ROUTE-006</td>
+<td>built</td>
+<td>Screen adapters: a Jev adapter taking any client call, and a scripted screen</td>
+<td></td>
+</tr>
+<tr>
+<td>ECON-003</td>
+<td>built</td>
+<td>Cascade model: average and typical cost and time across tiers, and the worst case</td>
+<td></td>
+</tr>
+<tr>
+<td>ECON-005</td>
+<td>built</td>
+<td>Calculator: cascade tiers, reasoning length, screen savings and Solana costs on the economics page</td>
+<td></td>
+</tr>
+<tr>
+<td>SITE-001</td>
+<td>built</td>
+<td>harness.verafy.ai: landing, run, testnet, coin agnostic, economics</td>
+<td></td>
+</tr>
+<tr>
+<td>SITE-002</td>
+<td>built</td>
+<td>Versioned spec with stable requirement IDs, a changelog and a generated scorecard</td>
+<td></td>
+</tr>
+<tr>
+<td>SITE-003</td>
+<td>built</td>
+<td>Spec page and release-notes blog on harness.verafy.ai</td>
+<td></td>
+</tr>
+</tbody>
+</table></div></article></div>
+<footer class="wrap foot">
+  <p>Verafy Harness is the validator for Verafy Chain, a Verafy research concept. It is a prototype, not a running network, and there is no token.</p>
+  <p>Code: <a href="https://github.com/Verafyai/verafyHarness">Verafyai/verafyHarness</a>, MIT, built on <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>. The concept: <a href="https://chain.verafy.ai">chain.verafy.ai</a>.</p>
+</footer>
+<script>(function(){var links=[].slice.call(document.querySelectorAll('.side a'));var hs=links.map(function(a){return document.getElementById(decodeURIComponent(a.hash.slice(1)))}).filter(Boolean);function on(){var y=window.scrollY+120,cur=null;hs.forEach(function(h){if(h.offsetTop<=y)cur=h.id});links.forEach(function(a){a.classList.toggle('on',decodeURIComponent(a.hash.slice(1))===cur)})}window.addEventListener('scroll',on,{passive:true});on()})();</script>
+</body>
+</html>

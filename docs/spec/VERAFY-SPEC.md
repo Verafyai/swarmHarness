@@ -1,0 +1,322 @@
+# Verafy specification
+
+**Version 0.0.1-alpha**, November 6, 2026. Covers Verafy Harness (this repo) and Verafy Chain ([Verafyai/verafyChain](https://github.com/Verafyai/verafyChain)).
+
+<!-- score -->
+**Scored 56% overall** at v0.0.1-alpha (see [SCORECARD.md](SCORECARD.md)).
+<!-- /score -->
+
+This is an alpha spec for a prototype. Nothing here describes a running network, and there is no token. Every number is labeled **measured** (our own runs, with a date), **vendor-reported** (by whoever built the tool), **modeled** (computed from those, in `packages/economics`) or **illustrative** (an assumption to replace).
+
+## How to read this spec
+
+- **Requirement IDs are stable.** `AREA-NNN` never changes meaning; a dropped requirement keeps its ID, marked removed in the changelog.
+- **Status** is one of verified, built, partial, designed, planned or research (defined in [requirements.json](requirements.json)). The tables below are generated from that file by `npm run score -- --write`, so the status here always matches what the scoring pass checks.
+- **The scoring pass** (`npm run score`) checks each claim against the code: a file, a function, or a test in `npm test`. A claim whose check fails scores zero. See [SCORECARD.md](SCORECARD.md).
+- **Versioning.** Semantic versions with a pre-release tag. Alpha means the shape can still change. A change of status, a new requirement or a reworded one bumps the patch number; a change of architecture bumps the minor number. Every version is a git tag and a GitHub release, with notes in [CHANGELOG.md](CHANGELOG.md).
+
+## The system in one picture
+
+```
+ contract in words ──▶ ethics gate ──▶ atomizer ──▶ router ───────────────┬──▶ settled (screen or panel)
+ (verafy.asc/1)        (planned)        PACK         ROUTE                 │
+                                                       │ L2 only           │
+                                                       ▼                   │
+                                       packer ──▶ prover, proven once ──▶ verifiers (sampled)
+                                       PACK       PROVE                    │
+                                                                           ▼
+                        jury rules: commit, reveal, agreement against the bar (CORE, JURY)
+                                                                           │
+                                     TinySVM settles the exit exactly (SETTLE)
+                                                                           │
+                    record: Verafy Chain block (CHAIN) or Solana accounts per the SIMDs (SOL)
+                                                                           │
+                 banker pays and gets paid in existing tokens; light client watches escrow (BANK, LIGHT)
+```
+
+## Principles that bind every part
+
+From [PRINCIPLES.md](https://github.com/Verafyai/verafyChain/blob/main/PRINCIPLES.md): payment agnostic (no token, ever); natural language first; embedded ethics; checkable and verifiable; agent friendly; context is evidence; no single model or lab; nothing is erased; legible to people; open and forkable; honest about what runs. A design that conflicts with a principle loses, or goes through the amendment process.
+
+## CORE: the protocol
+
+A contract is a compressed intention: instructions, pinned context, a question with a closed answer type, a bar, payment and declared exits. Jurors commit to a hashed vote, then reveal it; agreement is measured against the bar; a below-bar ruling never pays jurors; the exit's diff must conserve totals.
+
+<!-- reqs:CORE -->
+| ID | Status | Requirement |
+|---|---|---|
+| CORE-001 | verified | Contract format verafy.asc/1 with validation; swarm.asc/0 still validates and keeps its hash |
+| CORE-002 | verified | Pinned context: every context entry checked by SHA-256 before a model reads it |
+| CORE-003 | verified | Commit then reveal with Ed25519 signatures and attestations |
+| CORE-004 | verified | Agreement against the bar: verdict, forecast and graded; below-bar exits never pay jurors |
+| CORE-005 | verified | Exits and diffs conserve totals; declared exits only |
+| CORE-006 | built | Rulings re-verifiable from their round record (ruleFromRecords, verifyRuling) |
+| CORE-007 | built | Quorum-signed triggers verafy.trigger/1 for calls to other chains |
+| CORE-008 | built | Batching fields minBatch and maxWaitSeconds, without changing existing hashes |
+| CORE-009 | built | Exit programs with bounded params, aggregated from votes |
+<!-- /reqs:CORE -->
+
+## JURY: juries, live runs, audits and challenges
+
+Juries span labs and are drawn from the parent block hash. Auditors from other labs re-check sealed rulings; challenges append, never erase; a below-bar ruling's escrow funds a wider jury.
+
+<!-- reqs:JURY -->
+| ID | Status | Requirement |
+|---|---|---|
+| JURY-001 | verified | Live juries across five labs; measured Nov 6, 2026: five contracts, 5.9 to 30.1 s each, $0.0163 in total |
+| JURY-002 | verified | Juror mode inside DeepSeek Harness: five labs sealed a block from their reveals |
+| JURY-003 | built | Retry and back-off for rate-limited models |
+| JURY-004 | built | Auditors from other labs re-check sealed rulings |
+| JURY-005 | built | Challenges append affirm, overturn or supersede; escalation funds a wider jury |
+| JURY-006 | planned | Challenge bonds: lock on open, return on overturn, forfeit on affirm. *Gap: Not built; needed before challenges can run on a network.* |
+| JURY-007 | planned | Track record: agreement with final rulings and forecast scores per harness. *Gap: No per-harness history yet; needed for bonds and for routing weights.* |
+| JURY-008 | partial | 100 live rulings across the four market types, with audits and costs published. *Gap: Only the first five live rulings are published.* |
+| JURY-009 | planned | Harness daemon: a long-running process that watches for funded contracts and takes seats. *Gap: Blocks the network, MCP daemon tools and paused-contract resumption.* |
+<!-- /reqs:JURY -->
+
+## CHAIN: the Verafy Chain node
+
+A block exists only when a jury rules. The node keeps a mempool of funded contracts, coordinates juries, gossips commitments and reveals, rotates sealers and verifies every block. Batching closes an L2 block by value or by time; the encrypted queue keeps contracts sealed until the jury is drawn.
+
+<!-- reqs:CHAIN -->
+| ID | Status | Requirement |
+|---|---|---|
+| CHAIN-001 | built | Node: mempool, jury coordination, gossip, sealer rotation, block store, verification |
+| CHAIN-002 | built | Availability layer: context served by hash through the challenge window |
+| CHAIN-003 | built | Batching: blocks close by value or by time, with a pro rata cost split |
+| CHAIN-004 | partial | Encrypted queue: contracts sealed t of n until the jury is drawn. *Gap: Prototype: each author deals the shares; real distributed key generation and verifiable shares are planned.* |
+| CHAIN-005 | planned | Registry on chain, sealer liveness, bonds and slashing, libp2p gossip. *Gap: Needed for a network of independently operated harnesses.* |
+| CHAIN-006 | planned | Escalated juries accepted by the chain; challenge juries that share no lab |
+<!-- /reqs:CHAIN -->
+
+## SETTLE: TinySVM
+
+The AI judges and TinySVM settles: a restricted LiteSVM sidecar that runs only pinned programs (escrow, bond, ledger and exit programs) under a compute cap. It runs side by side with `runtime.js`, and any disagreement is a fault. TinySVM decides nothing.
+
+<!-- reqs:SETTLE -->
+| ID | Status | Requirement |
+|---|---|---|
+| SETTLE-001 | built | TinySVM phase 1: LiteSVM sidecar restricted to pinned programs and a compute cap |
+| SETTLE-002 | built | Built-in programs escrow, bond and ledger; exit programs graded_payout, ranked_split, milestone_escrow |
+| SETTLE-003 | built | runtime.js and TinySVM side by side; any disagreement is a fault |
+| SETTLE-004 | planned (needs Rex) | Integer micro-units in runtime.js; TinySVM as the default runtime. *Gap: Needs Rex: changes some future diffs by one micro-unit.* |
+| SETTLE-005 | planned | Phase 2: Anza's solana-svm crate; nodes re-run settlement when they verify a block |
+| SETTLE-006 | research | Settlement core compiled into weights (svmLLM), proven with the judgment |
+<!-- /reqs:SETTLE -->
+
+## LIGHT: reading source chains
+
+Escrow stays on its own chain. The harness reads it from several independent RPC providers and treats disagreement as unknown, never a guess. Intake checks funding before a jury is drawn; the outbox confirms a trigger landed.
+
+<!-- reqs:LIGHT -->
+| ID | Status | Requirement |
+|---|---|---|
+| LIGHT-001 | verified | Solana multi-RPC reader; one read-only devnet run measured Nov 6, 2026 |
+| LIGHT-002 | built | EVM multi-RPC reader for any chain id |
+| LIGHT-003 | built | Intake checks escrow funding; outbox confirms triggers; disagreement pauses, never guesses |
+| LIGHT-004 | partial | Ethereum sync-committee verification through Helios. *Gap: Adapter only, tested with Helios absent.* |
+<!-- /reqs:LIGHT -->
+
+## BANK: the routing agent
+
+Four blocks: the keyblock (keys encrypted, scoped keys out), the banker (accept any allowed token, convert at the best checked quote), the API router (pay AI APIs, provers and hosts, metered) and the payment wallet (caps, allowlist, never the bond). The Banker is a deterministic service, not an AI agent; a read-only advisor may report and flag but holds no keys. Full design in [banker.md](banker.md).
+
+<!-- reqs:BANK -->
+| ID | Status | Requirement |
+|---|---|---|
+| BANK-001 | built | Keyblock: keys encrypted at rest; scoped keys with expiry, use limits and revocation |
+| BANK-002 | built | Payment wallet: allowlisted payees, caps, approval threshold, bond reserve never spent |
+| BANK-003 | built | Banker core: accept allowed tokens, best quote across approved venues, slippage limit, ensure and pay |
+| BANK-004 | built | API router: keyed calls, metering, per-call or accrued billing |
+| BANK-005 | built | Inference routing by assurance level, L0 to L2; L2 never to a hosted API |
+| BANK-006 | designed | BankerService: deposit state machine (detect, classify, hold, quote, simulate, swap, sweep, record), idempotent by txid. *Gap: No deposit watcher or state machine yet.* |
+| BANK-007 | designed | Real venue adapters: Jupiter on Solana, an EVM aggregator, a bridge; price sanity against a reference. *Gap: Only the fixed-rate test venue exists.* |
+| BANK-008 | designed | Token allowlist by address; quarantine unknown tokens; dust; sanctions screen; daily caps; kill switch |
+| BANK-009 | designed | Gas reserves per chain; exact approvals; simulate before send; append-only ledger with cost basis |
+| BANK-010 | designed | Banker advisor: a read-only model that reports and flags, holding no keys |
+| BANK-011 | designed (needs Rex) | Service mode (converting other people's funds) disabled in code until legal review |
+| BANK-012 | planned | Rent GPU and VM hosts on demand for open-weights and proving routes |
+<!-- /reqs:BANK -->
+
+## PACK: proof packing and the prompt compressor
+
+FlashProve proves at most 1,024 tokens, about 750 words, per request; each proof takes about 9 s of H100 time, produces 18.78 MB and takes 17 s to verify (vendor-reported). Proving one request per proof wastes the window and pays for every proof in full. So requests are compiled before any model sees them:
+
+1. **Atomize.** Each contract becomes atoms: one question each, a closed answer type, only the deciding facts, every fact pinned. An exact composition rule, written as code with integer math, turns atom answers into the contract's outcome. UNKNOWN goes to the contract's declared fallback, never a guess.
+2. **Dedupe.** The same question over the same evidence has the same hash, so contracts that share a question share one slot and one proof.
+3. **Pack.** Atoms fill 1,024-token requests first-fit, about 16 to 18 per request in tests; slot order is shuffled by the block hash; a reply that misses or mangles any slot is rejected whole.
+4. **Compress what can't be atomized.** A brief (the question, the exits and only the deciding facts, each cited) stands in for a long contract. Plain dense English, never invented shorthand: models read English tokens best.
+5. **Check fidelity.** A proof covers the atoms, not whether they capture the contract. Every plan or brief is agreed by the parties or ruled FAITHFUL by an unproven panel from several labs before it is used.
+
+In a test block, 60 contracts became 120 atoms, 61 after dedupe, in 4 requests at 85% fill (measured on the packer with mock models).
+
+<!-- reqs:PACK -->
+| ID | Status | Requirement |
+|---|---|---|
+| PACK-001 | built | Atoms: one question, closed answer type, only deciding facts, each with a pin |
+| PACK-002 | built | Atom plans with an exact composition rule; UNKNOWN goes to the declared fallback |
+| PACK-003 | built | Dedupe across contracts by atom hash; first-fit packing into 1,024-token requests; block-hash slot order (library, tested with mocks) |
+| PACK-004 | built | Strict reply reading: every slot exactly once, typed answers, nothing else |
+| PACK-005 | built | Atomizer: drafts a plan with any model and checks every cited pin is real |
+| PACK-006 | partial | Fidelity check: an unproven multi-lab panel rules a plan FAITHFUL before it is used. *Gap: The question exists; running the panel and gating packing on it is not wired.* |
+| PACK-007 | planned | Real token counts with the target model's tokenizer. *Gap: The packer estimates about four characters per token.* |
+| PACK-008 | designed | Prompt compressor: briefs for contracts that cannot be atomized; party-agreed or checked. *Gap: Brief mode is modeled in economics, not built in the packer.* |
+| PACK-009 | designed | Long contracts split by claims with a proven combine step |
+| PACK-010 | built | Route before packing: only atoms in the proven lane reach the packer |
+| PACK-011 | planned | Packing wired into harness runs and chain intake: atomize, route, pack, prove, assemble, end to end. *Gap: The packer is a tested library; no harness run or block uses it yet, and no real prover is attached.* |
+<!-- /reqs:PACK -->
+
+## ROUTE: multi-model routing
+
+Every question starts at the cheapest tier that can answer it safely: a fast System 1 screen (such as Jev), then panels of small, mid-size and frontier models, each spanning labs. A unanimous panel stops; a split one moves up. Three signals decide where a question goes: the screen's probability, juror disagreement, and the question itself (its stakes, type and the contract's floor). The router is plain code; no model decides routing.
+
+Guardrails:
+
+- **Shadow mode by default.** The screen sizes juries and logs what it would have settled. It settles nothing until its cutoffs are calibrated and an operator turns settling on.
+- **Calibrated cutoffs.** Per question type, the lowest probability at which the screen's accuracy, as a Wilson lower bound on labeled examples, matches the jury it replaces. Too few examples means no cutoff. Live audits withdraw a cutoff whose accuracy drops.
+- **The contract's floor is never lowered.** The screen can only add scrutiny. L2 questions never take a screen's answer, because a closed model cannot carry a proof.
+- **Audits.** A share of settled answers, drawn from the block hash, is re-checked at the top tier.
+
+What a screen is worth is not known yet. Jev's figures are its maker's (70 to 500 ms, about $0.0004 a decision, 67.8% on its benchmark against 73 to 74% for frontier models); its coverage on our questions needs a calibration run.
+
+<!-- reqs:ROUTE -->
+| ID | Status | Requirement |
+|---|---|---|
+| ROUTE-001 | built | Tiered router: screen, then panels from small to frontier; a unanimous panel stops, a split one escalates |
+| ROUTE-002 | built | The contract's floor is never lowered; L2 never uses a screen's answer; stakes cap screen settlement |
+| ROUTE-003 | built | Shadow mode by default: the screen sizes juries and logs what it would settle |
+| ROUTE-004 | built | Calibration: per-type cutoffs from the Wilson lower bound; recheck withdraws a cutoff when live accuracy drops |
+| ROUTE-005 | built | Audits drawn from the block hash re-check settled answers at the top tier |
+| ROUTE-006 | built | Screen adapters: a Jev adapter taking any client call, and a scripted screen |
+| ROUTE-007 | planned | A labeled calibration set of atoms with known answers, and a Jev calibration run. *Gap: Needs Jev access; until then the screen settles nothing.* |
+| ROUTE-008 | planned | Wire the router into the harness and the chain intake, with per-contract allowScreen, stakes and floors in the contract format. *Gap: The router is a library; contracts cannot declare allowScreen or floorTier yet.* |
+| ROUTE-009 | planned | Skip tiers when stakes or question type make escalation likely |
+<!-- /reqs:ROUTE -->
+
+## PROVE: proofs of inference
+
+The proven lane is set by the contract, never by difficulty. While only one model is provable, each packed request is proven once by a prover drawn from the block hash, and other jurors verify; lab diversity returns when a second model is provable. Proofs are attached after the reveal; an L2 ruling is final only when every counted proof verifies; a missing or failed proof drops the vote and records a fault. Proofs and their data stay off chain; a block carries one Merkle root over them.
+
+<!-- reqs:PROVE -->
+| ID | Status | Requirement |
+|---|---|---|
+| PROVE-001 | partial | Proof hashes on votes; a proof itself on chain fails verification. *Gap: Hashes only; no prover is wired.* |
+| PROVE-002 | designed | Prover and Verifier interfaces with mock, DeepProve and FlashProve adapters. *Gap: packages/prove does not exist.* |
+| PROVE-003 | designed | Commit, reveal, then attach the proof before a deadline; L2 final only when every counted proof verifies |
+| PROVE-004 | designed | Prove once, verify many while one model is provable; verifiers drawn from the block hash |
+| PROVE-005 | designed | One Merkle root per block over manifests and proof hashes; sampled verification with challenges |
+| PROVE-006 | planned (needs Rex) | Measured DeepProve run on packed questions; FlashProve proving-harness runbook. *Gap: Needs a machine; FlashProve needs Rex to rent an H100 and accept the Llama license.* |
+| PROVE-007 | research | Recursive aggregation of many proofs into one |
+<!-- /reqs:PROVE -->
+
+## COT: disclosed reasoning
+
+Each vote carries reasoning, and the commitment covers it, so reasoning cannot be rewritten after the outcome is known. Rulings record each juror's reasoning hash. Next: step-wise reasons that cite a pin per step, so a challenge can point at the step where the logic broke. In the proven lane, reasoning uses the 1,024-token window (full reasoning roughly doubles cost per contract, modeled), so proven jurors give short reasons. Written reasoning is evidence to check, not a guarantee of what drove the answer.
+
+<!-- reqs:COT -->
+| ID | Status | Requirement |
+|---|---|---|
+| COT-001 | built | Each vote carries reasoning; the commitment covers it, so it cannot be rewritten after the fact |
+| COT-002 | built | Rulings record a hash of each juror's reasoning; dissents keep their reasoning |
+| COT-003 | designed | Structured, step-wise reasons with a cited pin per step; challenges cite a step. *Gap: Reasoning is two or three free-text sentences today.* |
+| COT-004 | designed | Short reasons in the proven lane; full reasoning off chain by hash in unproven tiers |
+| COT-005 | research | Disagreement graph: structured objections against a rule or evidence item, versioned across rulings |
+<!-- /reqs:COT -->
+
+## GOV: constitution, ethics and amendments
+
+Block 0 is a draft Constitution with Embedded Ethics, to be ratified by the first jury consensus. Every governance change passes a constitution check, then an ethics check. Amendments go through seven stages and can never weaken entrenched clauses.
+
+<!-- reqs:GOV -->
+| ID | Status | Requirement |
+|---|---|---|
+| GOV-001 | designed | Constitution Draft 0 with Article 1 (no foundation, no VC, no coin, no fundraising, no secret team, no community fund, no treasury) |
+| GOV-002 | designed | Ethics gate: allow, refuse or escalate at intake; doubt resolves toward refusal; no bypass. *Gap: Specified, not built.* |
+| GOV-003 | designed | Amendment process: seven stages, entrenched clauses, verafy.amendment/1. *Gap: Specified, not built.* |
+| GOV-004 | designed | Eleven design principles |
+<!-- /reqs:GOV -->
+
+## SOL: settling on Solana
+
+In theory, no separate chain is needed: the three draft SIMDs describe every part of this as ordinary Solana programs, with no changes to Solana. Two pieces would still need adding: fair juror draws (slot data can be nudged) and availability for the off-chain data. Proof packing needs a small amendment so many attestations can point at one shared proof. A dedicated Verafy Chain is worth building only if the Solana version hits real limits.
+
+<!-- reqs:SOL -->
+| ID | Status | Requirement |
+|---|---|---|
+| SOL-001 | designed | Three draft SIMDs: inference programs, attestations, rulings; no validator changes |
+| SOL-002 | planned | A Solana devnet program implementing commit, reveal and the Ruling account; one harness ruling settled on devnet. *Gap: The strongest proof that no new chain is needed.* |
+| SOL-003 | designed | SIMD amendment: packed proofs shared by many attestations (proof hash, slot and manifest hash). *Gap: Text not yet drafted into the attestations SIMD.* |
+| SOL-004 | planned | Fair juror draws on Solana (commit-reveal randomness or a VRF), since slot data can be nudged |
+| SOL-005 | planned | Availability for off-chain refs on Solana through the challenge window |
+<!-- /reqs:SOL -->
+
+## ECON: economics
+
+All of it lives in `packages/economics`, with tests that pin every vector, and renders at [harness.verafy.ai/economics](https://harness.verafy.ai/economics). Headline results (modeled, defaults: an H100 at $4.00 an hour, FlashProve's vendor-reported speed):
+
+| | Per decision |
+|---|---|
+| Unpacked, five jurors each proving | $0.1043 |
+| Atomized, packed, proven once | $0.0059 |
+| Plus a screen settling half the atoms and 70% of checks (assumed) | $0.0039 |
+
+Once packed, the fidelity checks cost more than the proofs (at 1,000 contracts: $3.26 against $1.29), so the next savings are in cheaper checks. A cascade from a screen to frontier models comes out about 4 times cheaper and 3 times faster on average than sending everything to a frontier jury (illustrative tier shares), but a hard question pays every tier.
+
+<!-- reqs:ECON -->
+| ID | Status | Requirement |
+|---|---|---|
+| ECON-001 | built | Proven block model: per proof, per block, per decision; warm-up; capacity; break-even; roles |
+| ECON-002 | built | Proof packing, atomize, dedupe and a fast screen in the model |
+| ECON-003 | built | Cascade model: average and typical cost and time across tiers, and the worst case |
+| ECON-004 | built | Calculator page harness.verafy.ai/economics from the same functions |
+| ECON-005 | built | Calculator: cascade tiers, reasoning length, screen savings and Solana costs on the economics page |
+<!-- /reqs:ECON -->
+
+## AGENT: plugins
+
+Your agent is a client, never a juror: the MCP server has no vote, key or funds tool, contract text comes back as evidence, and live calls need a flag and a spend cap.
+
+<!-- reqs:AGENT -->
+| ID | Status | Requirement |
+|---|---|---|
+| AGENT-001 | built | Zero-dependency MCP server: eight tools; no vote, key or funds tool; live calls behind a flag and a spend cap |
+| AGENT-002 | built | Integrations for Claude Code, Codex, Cursor, Gemini CLI, Goose, Hermes Agent, OpenClaw and any MCP client |
+| AGENT-003 | planned (needs Rex) | Publish the MCP server to npm and submit to agent catalogs |
+| AGENT-004 | planned | MCP tools for routing (verafy_route) and packing (verafy_pack) |
+<!-- /reqs:AGENT -->
+
+## SITE: sites and docs
+
+<!-- reqs:SITE -->
+| ID | Status | Requirement |
+|---|---|---|
+| SITE-001 | built | harness.verafy.ai: landing, run, testnet, coin agnostic, economics |
+| SITE-002 | built | Versioned spec with stable requirement IDs, a changelog and a generated scorecard |
+| SITE-003 | built | Spec page and release-notes blog on harness.verafy.ai |
+<!-- /reqs:SITE -->
+
+## OPS: security and operations
+
+<!-- reqs:OPS -->
+| ID | Status | Requirement |
+|---|---|---|
+| OPS-001 | built | No secret in output: tests plant a key and check no tool or log prints it |
+| OPS-002 | built | Context is evidence: injected instructions in context are returned as evidence and change nothing |
+| OPS-003 | planned | Monitoring: per-harness health, spend, faults and alerts |
+| OPS-004 | planned | Threat model document covering keys, queue, provers, screens and the banker |
+<!-- /reqs:OPS -->
+
+## EXT: collaborations and data
+
+Muse (semantic version control) proposed two small experiments: targeted certification from semantic diffs, and poisoned evidence with signed provenance. Both fit the harness as pinned manifests, with no dependency in core.
+
+<!-- reqs:EXT -->
+| ID | Status | Requirement |
+|---|---|---|
+| EXT-001 | research | Muse experiment A: targeted certification from semantic diffs vs full-context review |
+| EXT-002 | research | Muse experiment B: poisoned evidence with and without signed provenance manifests |
+<!-- /reqs:EXT -->
+
+## Decisions waiting on Rex
+
+Requirements marked *needs Rex* in the tables, plus: the block-close defaults, prove-once for L2, packing defaults, allowed brief modes, the Banker's target token, treasury, chains, caps and screening, whether to rent a FlashProve machine, and whether to publish the MCP server.

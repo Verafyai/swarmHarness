@@ -1,5 +1,5 @@
-<h1 id="economics">Economics of a proven block</h1>
-<p class="lede">What it costs to prove the AI's rulings, how big a block has to be before proving is worth it, and what the proving operator and the verifier earn. Every number on this page is <b>modeled</b> from the inputs shown. Vendor-reported figures name their source; illustrative ones are placeholders to set yourself.</p>
+<h1 id="economics">Economics</h1>
+<p class="lede">What it costs to prove an AI's rulings, how proof packing and multi-model routing cut that cost, what a fast screen like Jev is and isn't worth, what reasoning costs, and what the proving operator and the verifier earn. Every number on this page is <b>modeled</b> from the inputs shown, unless it says measured. Vendor-reported figures name their source; illustrative ones are placeholders to set yourself.</p>
 
 <section id="overview">
 <h2>The short version</h2>
@@ -9,6 +9,13 @@
   <div class="fact"><span class="big" data-out="packGain">18x</span><p>cheaper per decision with proof packing: contracts atomized into small yes or no questions, about 16 per proven request, each request proven once. 120 proofs become 3.</p></div>
 </div>
 <p class="note">Figures in this box use the defaults (an H100 at $4.00 an hour, FlashProve's vendor-reported speed, 24 contracts of about 600 words) and update with the calculator.</p>
+</section>
+
+<section id="problem">
+<h2>Why proofs need packing</h2>
+<p>Anthropic's <a href="https://www.anthropic.com/research/provable-inference">FlashProve</a> can prove that a specific model produced a specific answer. It proves at most <b>1,024 tokens, about 750 words</b>, per request: question, evidence and answer together. Each proof takes about <b>9 seconds of H100 time</b>, produces an <b>18.78 MB</b> proof and takes <b>17 seconds</b> to verify on a CPU (vendor-reported). It proves one model today, Llama 4 Maverick.</p>
+<p>The limit comes from the prover, not the model: a proof has to keep and check every intermediate value, for every token, on one machine. So proving one request per proof wastes most of every window and pays for every proof in full. And because only one model is provable, five jurors running it on the same input get the same answer: five proofs of one computation.</p>
+<p>Two fixed costs decide whether proving pays. <b>Warm-up</b>: loading a 400-billion-parameter model before proving starts, two thirds of a small unpacked block's bill. And <b>idle time</b>: a rented GPU that isn't proving still costs money. That is why blocks wait until enough funded work is queued.</p>
 </section>
 
 <section id="calculator">
@@ -51,7 +58,8 @@
 
 <section id="packing">
 <h2>Proof packing</h2>
-<p>A proof covers one request of up to 1,024 tokens, about 750 words. That limit comes from today's prover, not the model: it has to keep and check every intermediate value for every token. Proof packing fills those requests as tightly as possible and stops paying for the same proof twice. It has four parts, and the first three run today in <a href="https://github.com/Verafyai/verafyHarness/tree/main/packages/pack">packages/pack</a>.</p>
+<p>A proof covers one request of up to 1,024 tokens, about 750 words. That limit comes from today's prover, not the model: it has to keep and check every intermediate value for every token. Proof packing fills those requests as tightly as possible and stops paying for the same proof twice. It has four parts.</p>
+<div class="callout"><b>Status.</b> Atomizing, deduping, packing and strict reply reading are built in <a href="https://github.com/Verafyai/verafyHarness/tree/main/packages/pack">packages/pack</a> and tested with mock models: in a test block, 60 contracts became 120 atoms, 61 after dedupe, in 4 requests at 85% fill. They are not yet wired into a harness run, the fidelity panel is not wired, and no real prover is attached. Prove once is designed, not built.</div>
 <ol class="steps">
   <li><b>Atomize.</b> Each contract is broken into atoms: small questions that ask one thing (yes or no, a choice, or a bounded integer) and carry only the facts that decide it, each citing a pinned source. An exact composition rule turns the atoms' answers back into the contract's outcome. That rule is code, integer math only, and any UNKNOWN atom sends the contract to its declared fallback instead of a guess. Plain dense English, never invented shorthand: models read English tokens best.</li>
   <li><b>Dedupe.</b> The same atomic question over the same pinned facts has the same hash. Thirty markets that all hinge on "did the Fed cut rates on December 10?" share one slot and one proof.</li>
@@ -61,7 +69,17 @@
 <div class="callout"><b>The safeguard.</b> A proof shows the model answered the atoms correctly, not that the atoms and the rule capture the original question. So every atom plan is either agreed by the contract's parties before funding, or checked by a cheap unproven panel from several labs (the fidelity check), and auditors spot-check its citations. A plan that drops the deciding fact or reaches a different outcome fails the check, and that contract runs unpacked.</div>
 <div class="callout"><b>What the numbers show.</b> Once contracts are packed, proving stops being the big cost. At 1,000 contracts, the proving GPU costs about $1.29 and the fidelity checks about $3.26 (modeled). The next savings come from cheaper checks, not cheaper proofs.</div>
 
-<h3>Unpacked and packed, on your inputs</h3>
+<h3>What packing does not change</h3>
+<ul>
+  <li>Warm-up is paid per proving session, not per block. A proving service that stays warm across blocks pays for idle hours instead, which the utilization input models.</li>
+  <li>A long document still has to be briefed; a proven juror never reads more than 1,024 tokens at once. Long-document judgment is better run unproven (L1) with a diverse jury and auditors, or by proving only the deciding excerpts.</li>
+  <li>Prove once trades jury diversity for proof while one model is provable. Say so on any contract that uses it.</li>
+</ul>
+</section>
+
+<section id="versus">
+<h2>Unpacked and packed</h2>
+<h3>On your inputs</h3>
 <div class="tbl"><table>
   <thead><tr><th></th><th>Unpacked</th><th>Briefs, 4 per request</th><th>Atomized</th><th>Atomized, Jev screen</th></tr></thead>
   <tbody id="compare"></tbody>
@@ -71,21 +89,57 @@
 <div class="chart" id="chart" role="img" aria-label="Cost per contract falls as the block grows, for unpacked and packed blocks"></div>
 <p class="note">Both lines use your current inputs. The marker is your block size. The curve falls because warm-up is a fixed cost shared by every contract in the block.</p>
 
-<h3>Where a fast screen fits (Jev)</h3>
-<p>A System 1 model such as <a href="https://thenewstack.io/typesafe-jev-system-one/">TypeSafe's Jev</a> returns a typed answer with a calibrated probability in 70 to 500 ms for about $0.0004 a decision (vendor-reported, not reproduced). Atoms are exactly the shape it reads. It fits in three places:</p>
-<ul>
-  <li><b>Screening the fidelity checks,</b> the biggest cost after packing. Clear plans pass on the screen; unclear ones go to the multi-lab panel.</li>
-  <li><b>Settling low-stakes atoms,</b> only where a contract allows it. Those atoms are fast and cheap, but not proven.</li>
-  <li><b>Triage and sizing:</b> its probability decides which atoms need a proof at all, and how big the jury should be.</li>
-</ul>
-<p>It can't be the court. It's one hosted, closed model, so it adds no lab diversity and can't carry a proof of inference, and on its vendor's own benchmark it scored 67.8% against 73 to 74% for frontier models. Calibrated isn't the same as correct.</p>
+</section>
 
-<h3>What packing does not change</h3>
-<ul>
-  <li>Warm-up is paid per proving session, not per block. A proving service that stays warm across blocks pays for idle hours instead, which the utilization input models.</li>
-  <li>A long document still has to be briefed; a proven juror never reads more than 1,024 tokens at once. Long-document judgment is better run unproven (L1) with a diverse jury and auditors, or by proving only the deciding excerpts.</li>
-  <li>Prove once trades jury diversity for proof while one model is provable. Say so on any contract that uses it.</li>
-</ul>
+<section id="screens">
+<h2>Fast screens (Jev)</h2>
+<p>A System 1 model such as <a href="https://thenewstack.io/typesafe-jev-system-one/">TypeSafe's Jev</a> returns a typed answer with a probability in 70 to 500 ms for about $0.0004 a decision (vendor-reported, not reproduced). A jury of models from several labs takes 5.9 to 30.1 seconds per contract (measured, Nov 6, 2026). Atoms are exactly the shape a screen reads. It can do four jobs, all before or around the real jury and never instead of it:</p>
+<ol class="steps">
+  <li><b>Screen the fidelity checks,</b> the biggest cost once proofs are packed. Clear plans pass on the screen; unclear ones go to the multi-lab panel.</li>
+  <li><b>Triage atoms.</b> Where it is confident, the stakes are low and the contract allows it, its answer stands: roughly 10 to 400 times faster than a jury. Never for L2: a closed model can't carry a proof.</li>
+  <li><b>Size the jury.</b> Its probability is a cheap read on difficulty: easy questions get the contract's minimum panel, hard ones get more jurors and labs.</li>
+  <li><b>Run a fast lane</b> for what it settles, under a second instead of seconds to minutes.</li>
+</ol>
+<h3>What it might save, on your inputs at 1,000 contracts</h3>
+<div class="tbl"><table><thead><tr><th>If the screen settles</th><th>Per contract</th><th>Change</th></tr></thead><tbody id="screenTable"></tbody></table></div>
+<div class="callout"><b>These settle rates are assumptions, not measurements.</b> How much a screen can safely settle depends on how well its confidence matches its accuracy on our questions, which needs a calibration run. On its maker's own benchmark Jev scored 67.8%, against 73 to 74% for frontier models. Until calibrated, the router keeps it in <b>shadow mode</b>: it sizes juries and logs what it would have settled, and settles nothing. A screen that settles little only adds cost.</div>
+<h3>The cutoff</h3>
+<p>A screen's answer may stand only when all three hold: its probability clears the calibrated cutoff for that question type (the lowest confidence where its accuracy, as a Wilson lower bound on labeled examples, matches the jury it replaces); its chance of being wrong times the stakes is under the contract's allowed loss; and the contract allows a screen. Random audits, drawn from the block hash, keep re-checking it on live traffic and withdraw a cutoff whose accuracy drops. This is built in <a href="https://github.com/Verafyai/verafyHarness/tree/main/packages/route">packages/route</a> and tested with scripted screens.</p>
+<p>It can't be the court. It is one closed model, so it adds no lab diversity and can't carry a proof, and calibrated isn't the same as correct.</p>
+</section>
+
+<section id="cascade">
+<h2>Difficulty sorting</h2>
+<p>Don't send every question to your biggest jury. Start each one at the cheapest tier that can answer it safely, and move up only when needed: a fast screen, then panels of small, mid-size and frontier models, each spanning labs. A unanimous, confident panel stops there; a split one moves up. The screen's probability, juror disagreement and the stakes decide where each question goes, and contracts that require proof go straight to the proven lane. Set the tiers and how often questions stop at each:</p>
+<div class="calc">
+  <form class="inputs" id="cascadeInputs" aria-label="Cascade inputs"></form>
+  <div class="outputs" aria-live="polite">
+    <div class="ohead"><span class="lbl">Per question</span><span class="pill">illustrative</span></div>
+    <dl class="kv">
+      <dt>Average cost</dt><dd data-out="cAvgUsd"></dd>
+      <dt>Average time</dt><dd data-out="cAvgSec"></dd>
+      <dt>Typical time</dt><dd data-out="cMedSec"></dd>
+      <dt>Hardest question (every tier)</dt><dd data-out="cWorst"></dd>
+      <dt>Everything to the top tier</dt><dd data-out="cBase"></dd>
+      <dt>Cascade vs top tier</dt><dd data-out="cGain"></dd>
+    </dl>
+    <p class="warn" id="cascadeWarn" hidden></p>
+  </div>
+</div>
+<p class="note">Defaults: shares 30, 35, 20 and 15 percent (illustrative); the mid tier is close to the measured Nov 6 run ($0.0163 for five contracts, 5.9 to 30.1 s each); Jev figures vendor-reported. The catch: a genuinely hard question pays for every tier on the way up, so route high-stakes questions straight to the top. The router is built in packages/route; real tier shares need live traffic.</p>
+</section>
+
+<section id="reasoning">
+<h2>Reasoning and storage</h2>
+<p>Each juror's reasoning is committed with its vote, so it can't be rewritten after the outcome is known, and a challenge can point at the step where the logic broke. Proving reasoning is possible (FlashProve proves it like any output), but every reasoning token uses the 1,024-token window.</p>
+<h3>Proven reasoning, on your inputs at 1,000 contracts</h3>
+<div class="tbl"><table><thead><tr><th>Reasoning per atom</th><th>Atoms per proof</th><th>Proofs</th><th>Per contract</th><th>Time to seal</th></tr></thead><tbody id="reasonTable"></tbody></table></div>
+<p>So proven jurors give short, structured reasons; unproven tiers keep full reasoning. Storing reasoning is cheap: on chain it is a 32-byte hash per juror; the full text lives next to the chain, fetched by hash. At one ruling a second with full reasoning (about 8 KB per juror), that is about 3.5 GB a day, and one proof is bigger than about 2,300 full reasoning traces (modeled).</p>
+</section>
+
+<section id="solana">
+<h2>Settling on Solana</h2>
+<p>Under the three draft <a href="https://asc.verafy.ai">SIMDs</a>, all of this can settle on Solana as ordinary programs, with no validator changes. What lives on chain is small: commitments and hashes (32 bytes each), attestations (about half a KB), rulings with a 512-byte summary (about 4 KB). Rent is 6,960 lamports a byte at current parameters, refunded when an account closes; five certification standards, 22,712 bytes of text, compress to 5,246 bytes, about 0.0377 SOL (from the SIMD drafts). Proofs and full reasoning stay off chain by hash.</p>
 </section>
 
 <section id="machine">
@@ -136,7 +190,7 @@
   <path d="M554 100 H604" stroke="var(--rule)" stroke-width="1.5"/><path d="M554 199 H604" stroke="var(--rule)" stroke-width="1.5"/>
 </svg>
 </div>
-<p>Planned parts in the diagram: the packer and the light client are specified, not built. TinySVM phase 1 is built as an optional prototype beside runtime.js, which stays the default. A harness can also buy proofs from a proving service through its API router and verify them before counting the answer, so it never trusts the service.</p>
+<p>In the diagram, the light client is built, TinySVM phase 1 is built as an optional prototype beside runtime.js (which stays the default), and the packer is built as a library but not yet wired into a harness run. A harness can also buy proofs from a proving service through its API router and verify them before counting the answer, so it never trusts the service.</p>
 </section>
 
 <section id="earnings">
