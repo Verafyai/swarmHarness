@@ -4,7 +4,7 @@
     ['Machine', ['gpuHourUsd', 'cpuHourUsd', 'utilizationPct', 'warmupMinutes']],
     ['Proof', ['proverBatch', 'proverBatchSeconds', 'contextTokens', 'proofMB', 'verifySeconds']],
     ['Jury and block', ['jurors', 'verifiersPerProof', 'contracts', 'tokensPerContract']],
-    ['Proof packing', ['atomize', 'proveOnce', 'atomsPerContract', 'atomTokens', 'atomAnswerTokens', 'atomHeaderTokens', 'dedupePct', 'fidelityCheckUsd', 'packing', 'decisionsPerRequest', 'briefMaxTokens', 'answerTokensPerDecision', 'headerTokens']],
+    ['Proof packing', ['atomize', 'proveOnce', 'atomsPerContract', 'atomTokens', 'reasoningTokens', 'atomAnswerTokens', 'atomHeaderTokens', 'dedupePct', 'fidelityCheckUsd', 'packing', 'decisionsPerRequest', 'briefMaxTokens', 'answerTokensPerDecision', 'headerTokens']],
     ['Fast screen (System 1)', ['screen', 'screenPct', 'screenFidelityPct', 'screenUsd']],
     ['Storage and margin', ['storageUsdPerGBMonth', 'retentionMonths', 'marginPct']],
   ]
@@ -12,7 +12,7 @@
     gpuHourUsd: 'GPU, $ per hour', cpuHourUsd: 'Verifier CPU box, $ per hour', utilizationPct: 'GPU utilization, %', warmupMinutes: 'Warm-up per session, minutes',
     proverBatch: 'Requests per prover batch', proverBatchSeconds: 'Seconds per batch', contextTokens: 'Tokens per proven request', proofMB: 'Proof size, MB', verifySeconds: 'Verify time, seconds',
     jurors: 'Jurors per jury', verifiersPerProof: 'Verifiers per proof', contracts: 'Contracts in the block', tokensPerContract: 'Tokens per contract',
-    atomize: 'Atomize and pack', atomsPerContract: 'Atoms per contract', atomTokens: 'Tokens per atom slot', atomAnswerTokens: 'Answer tokens per atom', atomHeaderTokens: 'Packed header tokens', dedupePct: 'Atoms shared across contracts, %',
+    atomize: 'Atomize and pack', atomsPerContract: 'Atoms per contract', atomTokens: 'Tokens per atom slot', reasoningTokens: 'Reasoning tokens per atom (proven)', atomAnswerTokens: 'Answer tokens per atom', atomHeaderTokens: 'Packed header tokens', dedupePct: 'Atoms shared across contracts, %',
     screen: 'Use a fast screen (Jev)', screenPct: 'Atoms the screen settles, %', screenFidelityPct: 'Fidelity checks the screen settles, %', screenUsd: 'Screen cost per decision, $',
     packing: 'Briefs, fixed decisions per request', proveOnce: 'Prove once, verify many', decisionsPerRequest: 'Decisions per request', briefMaxTokens: 'Brief budget, tokens', answerTokensPerDecision: 'Answer tokens per decision', headerTokens: 'Header tokens', fidelityCheckUsd: 'Fidelity check per brief, $',
     storageUsdPerGBMonth: 'Storage, $ per GB-month', retentionMonths: 'Retention, months', marginPct: 'Operator margin, %',
@@ -144,6 +144,53 @@
       '<tr><td colspan="6" class="k">Break-even GPU utilization for the proving operator at this margin: ' + num(R.prover.breakEvenUtilizationPct, 0) + '%. Below it the GPU rent outruns the fees.</td></tr>'
 
     chart(state)
+    tables(state)
+  }
+
+  function tables(s) {
+    var b = Object.assign({}, s, { atomize: true, packing: false, proveOnce: true, contracts: 1000 })
+    var base = estimate(Object.assign({}, b, { screen: false }))
+    var rows = [['No screen', Object.assign({}, b, { screen: false })], ['Half the atoms', Object.assign({}, b, { screen: true, screenPct: 50, screenFidelityPct: 0 })],
+      ['70% of the fidelity checks', Object.assign({}, b, { screen: true, screenPct: 0, screenFidelityPct: 70 })], ['Both', Object.assign({}, b, { screen: true, screenPct: 50, screenFidelityPct: 70 })],
+      ['Nothing (screens every atom, settles none)', Object.assign({}, b, { screen: true, screenPct: 0, screenFidelityPct: 0 })]]
+    document.getElementById('screenTable').innerHTML = rows.map(function (r) {
+      var e = estimate(r[1]), d = (e.perContractUsd / base.perContractUsd - 1) * 100
+      return '<tr><td>' + r[0] + '</td><td class="v">' + money(e.perContractUsd) + '</td><td class="v ' + (d > 0.5 ? 'neg' : d < -0.5 ? 'pos' : '') + '">' + (Math.abs(d) < 0.5 ? 'baseline' : (d > 0 ? '+' : '') + num(d, 0) + '%') + '</td></tr>'
+    }).join('')
+    document.getElementById('reasonTable').innerHTML = [[0, 'None'], [40, 'Short, about 40 tokens'], [150, 'Full, about 150 tokens'], [400, 'Long, about 400 tokens']].map(function (r) {
+      var e = estimate(Object.assign({}, b, { screen: false, reasoningTokens: r[0] }))
+      return '<tr><td>' + r[1] + '</td><td class="v">' + e.atomsPerRequest + '</td><td class="v">' + num(e.proofs, 0) + '</td><td class="v">' + money(e.perContractUsd) + '</td><td class="v">' + dur(e.sealSeconds) + '</td></tr>'
+    }).join('')
+  }
+
+  var tiers = CASCADE_EXAMPLE.map(function (t) { return Object.assign({}, t) })
+  var TIERNAMES = { screen: 'Fast screen (Jev)', small: 'Small models, 3 labs', mid: 'Mid models, 5 labs', frontier: 'Frontier, 5 to 7 labs' }
+  function buildCascade() {
+    var f = document.getElementById('cascadeInputs')
+    tiers.forEach(function (t, i) {
+      var fs = document.createElement('fieldset')
+      fs.innerHTML = '<legend>Tier ' + i + ': ' + TIERNAMES[t.id] + '</legend>' +
+        '<label class="in"><span class="nm">Cost per question, $</span><input type="number" step="any" min="0" data-t="' + i + '" data-k="usd" value="' + t.usd + '"></label>' +
+        '<label class="in"><span class="nm">Seconds</span><input type="number" step="any" min="0" data-t="' + i + '" data-k="seconds" value="' + t.seconds + '"></label>' +
+        '<label class="in"><span class="nm">Questions that stop here, %</span><input type="number" step="any" min="0" max="100" data-t="' + i + '" data-k="stopShare" value="' + Math.round(t.stopShare * 100) + '"></label>'
+      f.appendChild(fs)
+    })
+    f.addEventListener('input', function (e) {
+      var el = e.target, i = +el.dataset.t, k = el.dataset.k
+      if (!(el.value !== '' && isFinite(+el.value) && +el.value >= 0)) return
+      tiers[i][k] = k === 'stopShare' ? +el.value / 100 : +el.value
+      renderCascade()
+    })
+  }
+  function renderCascade() {
+    var w = document.getElementById('cascadeWarn')
+    var sum = tiers.reduce(function (a, t) { return a + t.stopShare }, 0)
+    if (Math.abs(sum - 1) > 1e-6) { w.hidden = false; w.textContent = 'The stop shares add up to ' + num(sum * 100, 1) + '%; they need to add up to 100%.'; return }
+    w.hidden = true
+    var c = cascade(tiers)
+    out('cAvgUsd', money(c.avgUsd)); out('cAvgSec', num(c.avgSeconds, 1) + ' s'); out('cMedSec', num(c.medianSeconds, 1) + ' s')
+    out('cWorst', money(c.worstUsd) + ', ' + num(c.worstSeconds, 1) + ' s'); out('cBase', money(c.baseline.usd) + ', ' + num(c.baseline.seconds, 1) + ' s')
+    out('cGain', num(c.cheaper, 1) + 'x cheaper, ' + num(c.fasterAvg, 1) + 'x faster on average, ' + num(c.fasterMedian, 0) + 'x typical')
   }
 
   function chart(s) {
@@ -194,5 +241,5 @@
     try { navigator.clipboard.writeText(location.href); this.textContent = 'Link copied' } catch (e) {}
   })
 
-  load(); build(); fill(); sources(); render()
+  load(); build(); fill(); sources(); render(); buildCascade(); renderCascade()
 })()

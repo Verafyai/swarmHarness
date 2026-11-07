@@ -1,6 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   Harness, mockProvider, ascHash, rule, ruleFromRecords, verifyRuling, createIdentity, signMessage, sha256,
   proofRecord, checkProofRecord, proofCheck, checkProofCheck, proofVerified, needsProofs, finality,
@@ -60,4 +64,24 @@ test('an L2 round with no proofs counts no votes and escalates', async () => {
   assert.equal(ruling.passed, false)
   assert.deepEqual(ruling.round.faults.map(f => f.fault), ['no-proof', 'no-proof', 'no-proof', 'no-proof', 'no-proof'])
   assert.equal(ruling.round.reveals.length, 5, 'the reveals stay on the record')
+})
+
+test('verafy harness commit-model writes the commitment onto the pool entry, and refuses a malformed one', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'commit-model-'))
+  try {
+    const file = join(dir, 'verafy.config.json')
+    writeFileSync(file, JSON.stringify(config))
+    const cli = fileURLToPath(new URL('../../../bin/verafy.js', import.meta.url))
+    const id = sha256('a FlashProve commitment ID')
+    const ok = spawnSync(process.execPath, [cli, 'harness', 'commit-model', 'h-meta-1', id, '--config', file], { encoding: 'utf8' })
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr)
+    assert.match(ok.stdout, new RegExp(`h-meta-1: model commitment set to ${id}`))
+    const after = JSON.parse(readFileSync(file, 'utf8'))
+    assert.equal(after.pool.find(h => h.id === 'h-meta-1').modelCommitment, id)
+    assert.equal(new Harness({ ...after.pool.find(h => h.id === 'h-meta-1'), provider: null }).card.modelCommitment, id)
+    const bad = spawnSync(process.execPath, [cli, 'harness', 'commit-model', 'h-meta-1', 'NOT-HEX', '--config', file], { encoding: 'utf8' })
+    assert.equal(bad.status, 2)
+    const none = spawnSync(process.execPath, [cli, 'harness', 'commit-model', 'h-nobody', id, '--config', file], { encoding: 'utf8' })
+    assert.equal(none.status, 1)
+  } finally { rmSync(dir, { recursive: true, force: true }) }
 })
