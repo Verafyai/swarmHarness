@@ -37,6 +37,7 @@ export const DEFAULTS = {
   atomize: { value: false, label: 'design', source: 'Atomize: split each contract into small yes or no questions, dedupe them across contracts, pack as many as fit' },
   atomsPerContract: { value: 2, label: 'illustrative', source: 'Atoms one contract breaks into' },
   atomTokens: { value: 50, label: 'measured', source: 'Tokens per packed atom slot, question plus one cited fact, counted by packages/pack (about four characters per token)', url: 'https://github.com/Verafyai/verafyHarness/tree/main/packages/pack', date: '2026-11-06' },
+  reasoningTokens: { value: 0, label: 'input', source: 'Reasoning each proven juror writes per atom; every token uses the 1,024-token window' },
   atomAnswerTokens: { value: 6, label: 'illustrative', source: 'Tokens reserved per atom answer line, such as "S12: YES"' },
   atomHeaderTokens: { value: 94, label: 'measured', source: 'Tokens in the packed-request header used by packages/pack', url: 'https://github.com/Verafyai/verafyHarness/tree/main/packages/pack', date: '2026-11-06' },
   dedupePct: { value: 0, label: 'input', source: 'Share of atoms already asked by another contract in the same block' },
@@ -88,7 +89,7 @@ export function estimate(raw = {}) {
   // Unpacked: a long contract splits into ceil(tokens / context) requests.
   // Atomize: contracts split into atoms; atoms dedupe across the block; an
   // optional screen settles some; the rest pack as many per request as fit.
-  const atomsPerRequest = Math.max(1, Math.floor((i.contextTokens - i.atomHeaderTokens) / (i.atomTokens + i.atomAnswerTokens)))
+  const atomsPerRequest = Math.max(1, Math.floor((i.contextTokens - i.atomHeaderTokens) / (i.atomTokens + i.reasoningTokens + i.atomAnswerTokens)))
   const atomsTotal = i.contracts * i.atomsPerContract
   const uniqueAtoms = ceil(atomsTotal * (1 - i.dedupePct / 100))
   const screenedAtoms = i.screen ? Math.floor(uniqueAtoms * i.screenPct / 100) : 0
@@ -184,3 +185,47 @@ export function estimate(raw = {}) {
 export function curve(raw = {}, sizes = [1, 2, 4, 8, 12, 16, 24, 32, 48, 64, 96, 128, 160, 200]) {
   return sizes.map(n => ({ contracts: n, perContractUsd: estimate({ ...raw, contracts: n }).perContractUsd }))
 }
+
+/**
+ * Tiered routing (a cascade): each question starts at the cheapest tier and
+ * moves up only when needed. A question that reaches tier k pays every tier
+ * up to k. All shares here are inputs; nothing is measured until the router
+ * runs on real traffic.
+ * @param {Array<{id: string, usd: number, seconds: number, stopShare: number}>} tiers - cheapest first; stopShare is the share of questions that stop there (the shares sum to 1).
+ * @param {object} [opts] - { baseline: tier id to compare against (default: the last tier, everything sent there) }.
+ * @returns {object} average cost and time per question, the typical (median) time, the worst case, and the comparison with the baseline.
+ */
+export function cascade(tiers, { baseline } = {}) {
+  const sum = tiers.reduce((s, t) => s + t.stopShare, 0)
+  if (Math.abs(sum - 1) > 1e-9) throw new Error(`stop shares must sum to 1, got ${sum}`)
+  let reach = 1, cumUsd = 0, cumSec = 0, avgUsd = 0, avgSec = 0, cumShare = 0, medianSeconds = null
+  const rows = tiers.map(t => {
+    const row = { id: t.id, reachShare: reach, stopShare: t.stopShare }
+    avgUsd += reach * t.usd
+    cumUsd += t.usd
+    cumSec += t.seconds
+    avgSec += t.stopShare * cumSec
+    cumShare += t.stopShare
+    if (medianSeconds === null && cumShare >= 0.5) medianSeconds = cumSec
+    row.cumulativeUsd = cumUsd
+    row.cumulativeSeconds = cumSec
+    reach -= t.stopShare
+    return row
+  })
+  const base = tiers.find(t => t.id === (baseline ?? tiers.at(-1).id))
+  return {
+    rows,
+    avgUsd, avgSeconds: avgSec, medianSeconds,
+    worstUsd: cumUsd, worstSeconds: cumSec,
+    baseline: { id: base.id, usd: base.usd, seconds: base.seconds },
+    cheaper: base.usd / avgUsd, fasterAvg: base.seconds / avgSec, fasterMedian: base.seconds / medianSeconds,
+  }
+}
+
+/** The illustrative cascade from the Nov 6 analysis: shares 30, 35, 20 and 15 percent. */
+export const CASCADE_EXAMPLE = [
+  { id: 'screen', usd: 0.0004, seconds: 0.3, stopShare: 0.30 },
+  { id: 'small', usd: 0.0010, seconds: 2, stopShare: 0.35 },
+  { id: 'mid', usd: 0.0033, seconds: 10, stopShare: 0.20 },
+  { id: 'frontier', usd: 0.0300, seconds: 35, stopShare: 0.15 },
+]
