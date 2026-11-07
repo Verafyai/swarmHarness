@@ -1,1 +1,0 @@
-/home/claude/verafyharness/packages/solana/program/target/sbf-solana-solana/release/verafy_ruling.so: /home/claude/verafyharness/packages/solana/program/src/lib.rs /home/claude/verafyharness/packages/tinysvm/programs/abi/src/lib.rs
